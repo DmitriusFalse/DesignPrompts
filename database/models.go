@@ -1,0 +1,78 @@
+package database
+
+type Pack struct {
+	ID            int    `json:"id"`
+	Name          string `json:"name"`
+	Path          string `json:"path"`
+	Description   string `json:"description"`
+	DescriptionRu string `json:"description_ru"`
+	Version       string `json:"version"`
+	Author        string `json:"author"`
+	Icon          string `json:"icon"`
+	NameRu        string `json:"name_ru"`
+	Categories    string `json:"categories"`
+	CreatedAt     string `json:"created_at"`
+	UpdatedAt     string `json:"updated_at"`
+}
+
+type File struct {
+	ID              int    `json:"id"`
+	PackID          int    `json:"pack_id"`
+	FileName        string `json:"file_name"`
+	CategoryID      int    `json:"category_id"`
+	CategoryName    string `json:"category_name"`
+	SubcategoryName string `json:"subcategory_name"`
+	FileHash        string `json:"file_hash"`
+	LastSynced      string `json:"last_synced"`
+}
+
+type Tag struct {
+	ID              int    `json:"id"`
+	FileID          int    `json:"file_id"`
+	PackID          int    `json:"pack_id"`
+	TagName         string `json:"tag_name"`
+	CategoryName    string `json:"category_name"`
+	SubcategoryName string `json:"subcategory_name"`
+	Aliases         string `json:"aliases"`
+}
+
+type SavedPrompt struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	PositiveText string `json:"positive_text"`
+	NegativeText string `json:"negative_text"`
+	IsFavorite   bool   `json:"is_favorite"`
+	CreatedAt    string `json:"created_at"`
+	GenData      string `json:"gen_data"`
+	ChipsData    string `json:"chips_data"`
+}
+
+type TagPreset struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	PositiveTags string `json:"positive_tags"`
+	NegativeTags string `json:"negative_tags"`
+}
+
+type SubcategoryInfo struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
+type MainTagGroup struct {
+	ID         int      `json:"id"`
+	BlockID    int      `json:"block_id"`
+	Name       string   `json:"name"`
+	Structures []string `json:"structures"`
+	CreatedAt  string   `json:"created_at"`
+}
+
+type CustomMainTag struct {
+	ID          int      `json:"id"`
+	TagName     string   `json:"tag_name"`
+	FullText    string   `json:"full_text"`
+	BlockID     int      `json:"block_id"`
+	Subcategory string   `json:"subcategory"`
+	Structures  []string `json:"structures"`
+	CreatedAt   string   `json:"created_at"`
+}

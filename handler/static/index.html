@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html :lang="lang" x-data="app()" :class="{ 'dark': isDark }" @keydown.window.prevent.ctrl.enter="addCustomTag()" @keydown.window.prevent.alt.1="copyPrompt('positive')" @keydown.window.prevent.alt.2="copyPrompt('negative')">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1e293b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title x-text="t('app.title') + (version ? ' v' + version : '')">Design Prompts</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" type="image/x-icon" href="/static/icon.ico">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
+</head>
+<body class="bg-white dark:bg-dark-800 text-gray-900 dark:text-dark-100 h-screen overflow-hidden flex flex-col">
+  <!-- Header -->
+  <header class="flex items-center gap-4 px-4 py-2.5 border-b border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-700 shrink-0">
+    <h1 class="text-lg font-bold whitespace-nowrap" x-text="t('app.title') + (version ? ' v' + version : '')">Design Prompts</h1>
+    <button @click="openManager()" :data-tooltip="t('tooltip.manager')" class="ml-2 px-2 py-0.5 text-xs rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer whitespace-nowrap">📋 <span x-text="t('canvas.manager')"></span></button>
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-1.5">
+      <a href="https://boosty.to/sir.geronis/donate" target="_blank" rel="noopener" class="donate-link inline-flex items-center gap-1 px-0.5 rounded self-center" :title="t('donate.title')">
+        <span class="flex flex-col text-[10px] leading-tight" style="margin-top:5px">
+          <span x-text="t('donate.short1')">Подкинуть копейку</span>
+          <span x-text="t('donate.short2')">на Boosty</span>
+        </span>
+        <svg class="donate-heart" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </a>
+      <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
+      <div class="relative self-center" x-data="dropdown">
+        <button @click="toggle" @click.outside="close" :data-tooltip="t('tooltip.theme')" class="flex items-center gap-1 px-1.5 py-1 text-xs rounded cursor-pointer transition-colors hover:bg-gray-200 dark:hover:bg-dark-600 select-none whitespace-nowrap">
+          <span x-text="theme === 'auto' ? '◐' : theme === 'dark' ? '☾' : '☀'" class="text-sm"></span>
+          <span x-text="t('theme.' + theme)" class="text-gray-700 dark:text-dark-200"></span>
+          <svg x-show="!open" width="8" height="5" viewBox="0 0 10 6" class="opacity-40 shrink-0"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg x-show="open" width="8" height="5" viewBox="0 0 10 6" class="opacity-40 shrink-0"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+         <div x-show="open"
+              x-transition:enter="transition ease-out"
+              x-transition:enter-start="scale-y-0 opacity-0"
+              x-transition:enter-end="scale-y-100 opacity-100"
+              x-transition:leave="transition ease-in"
+              x-transition:leave-start="scale-y-100 opacity-100"
+              x-transition:leave-end="scale-y-0 opacity-0"
+              class="dropdown-menu bg-white dark:bg-dark-600 rounded-lg shadow-lg z-50 py-0.5"
+              :class="openUp ? 'origin-bottom' : 'origin-top'"
+              :style="panelStyle"
+              style="transition-duration:100ms">
+          <button @click="theme='auto';localStorage.setItem('theme','auto');close()" class="w-full text-left px-2 py-0.5 text-xs flex items-center gap-1 rounded" :class="theme==='auto' ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'"><span>◐</span><span x-text="t('theme.auto')"></span></button>
+          <button @click="theme='dark';localStorage.setItem('theme','dark');close()" class="w-full text-left px-2 py-0.5 text-xs flex items-center gap-1 rounded" :class="theme==='dark' ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'"><span>☾</span><span x-text="t('theme.dark')"></span></button>
+          <button @click="theme='light';localStorage.setItem('theme','light');close()" class="w-full text-left px-2 py-0.5 text-xs flex items-center gap-1 rounded" :class="theme==='light' ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'"><span>☀</span><span x-text="t('theme.light')"></span></button>
+        </div>
+      </div>
+      <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
+      <span @click="lang = (lang === 'ru' ? 'en' : 'ru'); localStorage.setItem('lang', lang); loadTranslations()" :data-tooltip="t('tooltip.lang')" class="inline-flex items-center gap-0.5 cursor-pointer select-none text-sm font-medium leading-none self-center py-0.5">
+        <span :class="{'text-blue-600 dark:text-blue-400': lang === 'ru', 'text-gray-400 dark:text-dark-400': lang !== 'ru'}">RU</span>
+        <span class="w-px h-3 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
+        <span :class="{'text-blue-600 dark:text-blue-400': lang === 'en', 'text-gray-400 dark:text-dark-400': lang !== 'en'}">EN</span>
+      </span>
+      <button x-show="pwaInstallable" @click="installPwa()" :data-tooltip="t('tooltip.install')" class="inline-flex items-center self-center text-gray-400 dark:text-dark-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-0.5">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+      <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
+      <span class="text-xs text-gray-400 dark:text-dark-400 font-medium self-center select-none mr-1">Генерация</span>
+      <label class="toggle self-center" x-bind:class="{ 'toggle-active': comfyEnabled }" :data-tooltip="t('tooltip.comfy')">
+        <input type="checkbox" class="toggle-input" x-model="comfyEnabled" @change="toggleComfy">
+        <span class="toggle-track"><span class="toggle-knob"></span></span>
+      </label>
+      <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
+      <a href="/settings" :data-tooltip="t('tooltip.settings')" class="inline-flex items-center self-center text-gray-400 dark:text-dark-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-0.5">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="flex flex-1 overflow-hidden" id="layout-body">
+    <!-- LEFT: Tags Sidebar -->
+    <div :style="leftStyle" class="shrink-0 overflow-hidden flex flex-col" style="width:50%">
+    <aside class="flex-1 min-w-0 border-r border-gray-200 dark:border-dark-600 flex flex-col bg-gray-50 dark:bg-dark-700 overflow-hidden">
+      <!-- Presets -->
+      <div class="px-4 py-2 border-b border-gray-200 dark:border-dark-600">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5" x-text="t('presets.label')">Пресеты</div>
+        <div class="flex flex-wrap gap-1">
+          <template x-for="(data, name) in presetData" :key="name">
+            <button @click="applyPreset(name)" class="px-2.5 py-1 text-xs rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-900 dark:text-dark-100 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 transition-colors cursor-pointer" x-text="name"></button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Sidebar tabs -->
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab" :class="{ active: sidebarTab === 'const' }" @click="sidebarTab = 'const'" :data-tooltip="t('tooltip.sidebar_const')" x-text="t('sidebar.const')"></button>
+        <button class="sidebar-tab" :class="{ active: sidebarTab === 'tree' }" @click="sidebarTab = 'tree'" :data-tooltip="t('tooltip.sidebar_tree')" x-text="t('sidebar.tree')"></button>
+        <button class="sidebar-tab" :class="{ active: sidebarTab === 'main' }" @click="sidebarTab = 'main'" :data-tooltip="t('tooltip.sidebar_main')" x-text="t('sidebar.main')"></button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto">
+        <div x-show="sidebarTab === 'const'" class="border-b border-gray-200 dark:border-dark-600">
+          <template x-for="cat in constantTags" :key="cat.name">
+          <div>
+            <button @click="constOpen[cat.name] = !constOpen[cat.name]" class="cursor-pointer w-full flex items-center justify-between px-4 py-2 text-xs font-semibold uppercase tracking-wide bg-blue-50 dark:bg-dark-500 hover:bg-blue-100 dark:hover:bg-dark-600 text-gray-900 dark:text-dark-100">
+              <span class="flex items-center gap-1.5">
+                <span x-show="getCategoryColor(cat)" class="tag-color-dot shrink-0" :style="{ '--dot-color': getCategoryColor(cat) }"></span>
+                <span x-text="t(cat.tkey || cat.name)"></span>
+                <span class="ml-1 text-[10px]" :class="counterColorClass(selectedCountInCategory(cat))"><span x-show="selectedCountInCategory(cat) > 0" x-text="selectedCountInCategory(cat) + '/'"></span><span x-text="totalInCategory(cat)"></span></span>
+              </span>
+              <span x-text="constOpen[cat.name] ? '\u25BC' : '\u25B6'" class="text-xs shrink-0"></span>
+            </button>
+            <div x-show="constOpen[cat.name]" class="px-3 pb-1">
+              <template x-if="cat.tags">
+                <div class="flex flex-wrap gap-1">
+                  <template x-for="tag in cat.tags" :key="tag">
+                    <span class="tag-pill-wrapper">
+                      <span class="tag-pill text-xs" :class="selectedClass(tag)" @click="addTag({ tag_name: tag, category_name: 'const', subcategory_name: cat.subcat || cat.tkey?.split('.').pop() || cat.name })">
+                        <span x-text="tag" class="max-w-40 truncate"></span>
+                      </span>
+                      <span class="hover-actions">
+                        <button @click.stop="copyTagName(tag)" :data-title="t('tag.copy')">📋</button>
+                        <button class="neg" @click.stop="addNegativeTag({ tag_name: tag, category_name: 'const', subcategory_name: cat.subcat || cat.tkey?.split('.').pop() || cat.name })" :data-title="t('tag.neg')">−</button>
+                      </span>
+                    </span>
+                  </template>
+                </div>
+              </template>
+              <template x-if="cat.subcategories?.length">
+                <template x-for="sub in cat.subcategories" :key="sub.name">
+      <div class="flex">
+                    <button @click="constSubOpen[cat.name+'_'+sub.name] = !constSubOpen[cat.name+'_'+sub.name]" class="cursor-pointer w-full flex items-center justify-between px-2 py-0.5 text-xs font-medium hover:bg-gray-100 dark:hover:bg-dark-600 text-gray-500 dark:text-dark-400">
+                      <span class="flex items-center gap-1">
+                        <span x-show="getCategoryColor(cat)" class="tag-color-dot shrink-0" :style="{ '--dot-color': getCategoryColor(cat) }"></span>
+                        <span x-text="sub.name"></span>
+                        <span class="ml-1 text-[10px]" :class="counterColorClass(selectedCountInSub(sub))"><span x-show="selectedCountInSub(sub) > 0" x-text="selectedCountInSub(sub) + '/'"></span><span x-text="totalInSub(sub)"></span></span>
+                      </span>
+                      <span x-text="constSubOpen[cat.name+'_'+sub.name] ? '\u25BC' : '\u25B6'" class="text-xs shrink-0"></span>
+                    </button>
+                    <div x-show="constSubOpen[cat.name+'_'+sub.name]" class="flex flex-wrap gap-1 px-2 py-1">
+                      <template x-for="tag in sub.tags" :key="tag">
+                    <span class="tag-pill-wrapper">
+                          <span class="tag-pill text-xs" :class="selectedClass(tag)" @click="addTag({ tag_name: tag, category_name: 'const', subcategory_name: cat.tkey?.split('.').pop() || sub.name })">
+                            <span x-text="tag" class="max-w-40 truncate"></span>
+                          </span>
+                          <span class="hover-actions">
+                            <button @click.stop="copyTagName(tag)" :data-title="t('tag.copy')">📋</button>
+                            <button class="neg" @click.stop="addNegativeTag({ tag_name: tag, category_name: 'const', subcategory_name: cat.tkey?.split('.').pop() || sub.name })" :data-title="t('tag.neg')">−</button>
+                          </span>
+                        </span>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+              </template>
+            </div>
+            </div>
+            </template>
+          </div>
+
+        <div x-show="sidebarTab === 'main'">
+          <template x-for="block in currentStructureAllBlocks" :key="'main'+block.id">
+            <div>
+              <div class="px-4 py-2 text-sm font-semibold uppercase tracking-wide bg-blue-50 dark:bg-dark-500 border-b border-gray-200 dark:border-dark-600 flex items-center gap-2">
+                <span x-show="BLOCK_COLORS[block.id]" class="tag-color-dot shrink-0" :style="{ '--dot-color': BLOCK_COLORS[block.id] }"></span>
+                <span x-text="structureBlockLabel(block)"></span>
+                <button @click.stop="openMainTagAdd(block.id, '', $event)" :data-tooltip="t('tooltip.main_add_tag')" class="ml-auto text-xs px-1.5 py-0.5 rounded border border-green-500 text-green-600 dark:text-green-400 transition-colors cursor-pointer" x-text="t('main.add_tag')"></button>
+                <button @click.stop="openMainGroupAdd(block.id, $event)" :data-tooltip="t('tooltip.main_add_group')" class="text-xs px-1.5 py-0.5 rounded border border-yellow-500 text-yellow-500 dark:text-yellow-500 transition-colors cursor-pointer" x-text="t('main.add_group')"></button>
+              </div>
+              <!-- Ungrouped tags -->
+              <div x-show="mainTagsByBlockAndSubcat(block.id, '').length > 0 || tagsWithInactiveGroup(block.id).length > 0" class="px-3 py-1 flex flex-wrap gap-1">
+                <template x-for="item in mainTagsByBlockAndSubcat(block.id, '')" :key="item.id">
+                  <span class="tag-pill-wrapper">
+                    <span class="tag-pill text-xs" :class="selectedClass(item.tag_name)" @click="addCustomMainTag(item)">
+                      <span x-text="item.tag_name" class="max-w-40 truncate"></span>
+                    </span>
+                    <span class="hover-actions">
+                      <button @click.stop="openEditMainTag(item)" :title="t('main.edit')">✎</button>
+                      <button @click.stop="deleteMainTag(item)" :data-title="t('main.delete')">✕</button>
+                      <button class="neg" @click.stop="addCustomMainTagNegative(item)" :data-title="t('tag.neg')">−</button>
+                    </span>
+                  </span>
+                </template>
+                <template x-for="item in tagsWithInactiveGroup(block.id)" :key="'inact'+item.id">
+                  <span class="tag-pill-wrapper">
+                    <span class="tag-pill text-xs" :class="selectedClass(item.tag_name)" @click="addCustomMainTag(item)">
+                      <span x-text="item.tag_name" class="max-w-40 truncate"></span>
+                    </span>
+                    <span class="hover-actions">
+                      <button @click.stop="openEditMainTag(item)" :title="t('main.edit')">✎</button>
+                      <button @click.stop="deleteMainTag(item)" :data-title="t('main.delete')">✕</button>
+                      <button class="neg" @click.stop="addCustomMainTagNegative(item)" :data-title="t('tag.neg')">−</button>
+                    </span>
+                  </span>
+                </template>
+              </div>
+              <!-- Groups -->
+              <template x-for="group in groupsByBlock(block.id)" :key="'grp'+group.id">
+                <div>
+                  <div class="px-4 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400 bg-gray-50 dark:bg-dark-500/50 border-b border-gray-100 dark:border-dark-600 flex items-center gap-2">
+                    <span x-text="group.name" class="flex-1 truncate"></span>
+                    <button @click.stop="openMainTagAdd(block.id, group.name, $event)" :data-tooltip="t('tooltip.main_add_tag')" class="text-xs px-1.5 py-0.5 rounded border border-green-500 text-green-600 dark:text-green-400 transition-colors cursor-pointer" x-text="t('main.add_tag')"></button>
+                    <button @click.stop="deleteMainTagGroup(group)" :data-tooltip="t('main.delete')" class="text-xs p-1 rounded text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors cursor-pointer" x-text="t('main.delete')"></button>
+                  </div>
+                  <div x-show="mainTagsByBlockAndSubcat(block.id, group.name).length > 0" class="px-3 py-1 flex flex-wrap gap-1">
+                    <template x-for="item in mainTagsByBlockAndSubcat(block.id, group.name)" :key="item.id">
+                      <span class="tag-pill-wrapper">
+                        <span class="tag-pill text-xs" :class="selectedClass(item.tag_name)" @click="addCustomMainTag(item)">
+                          <span x-text="item.tag_name" class="max-w-40 truncate"></span>
+                        </span>
+                        <span class="hover-actions">
+                          <button @click.stop="openEditMainTag(item)" :title="t('main.edit')">✎</button>
+                          <button @click.stop="deleteMainTag(item)" :data-title="t('main.delete')">✕</button>
+                          <button class="neg" @click.stop="addCustomMainTagNegative(item)" :data-title="t('tag.neg')">−</button>
+                        </span>
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+        <div x-show="sidebarTab === 'tree'">
+        <!-- Pack selector -->
+        <div class="px-4 py-2 border-b border-gray-200 dark:border-dark-600">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5" x-text="t('packs.label')">Наборы</div>
+          <div class="flex items-center gap-2">
+            <div class="relative flex-1" x-data="dropdown">
+              <button @click="toggle" @click.outside="close" class="w-full flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-dark-600 cursor-pointer transition-colors border border-gray-300 dark:border-dark-500">
+                <span x-text="currentPack.icon || '📦'"></span>
+                <span class="flex-1 truncate text-left" x-text="currentPack.name"></span>
+                <svg width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div x-show="open" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle">
+                <template x-for="p in packs" :key="p.id">
+                  <button @click="selectedPackId = p.id; refreshFreshCategories(p.id); loadTree(); close()" class="w-full text-left px-3 py-1.5 text-sm cursor-pointer transition-colors flex items-center gap-1.5" :class="selectedPackId === p.id ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
+                    <span x-text="p.icon || '📦'"></span>
+                    <span x-text="lang === 'ru' && p.name_ru ? p.name_ru : p.name"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+            <button @click="syncTags()" :disabled="syncing" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 text-sm cursor-pointer transition-colors hover:bg-gray-100 dark:hover:bg-dark-500 shrink-0" :title="t('app.sync')">
+              <span x-text="syncing ? '⟳' : '⟳'" class="text-base"></span>
+            </button>
+          </div>
+        </div>
+        <!-- Block-grouped categories -->
+        <template x-for="blockId in [1,2,3,4,5,6,7,8,9]" :key="'tb'+blockId">
+          <div x-show="treeByBlock(blockId).length > 0">
+            <div class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wide bg-gray-200 dark:bg-dark-600 text-gray-900 dark:text-dark-100 border-b border-gray-200 dark:border-dark-600">
+              <span x-show="BLOCK_COLORS[blockId]" class="tag-color-dot shrink-0" :style="{ '--dot-color': BLOCK_COLORS[blockId] }"></span>
+              <span x-text="t('block.' + blockId)"></span>
+            </div>
+            <template x-for="cat in treeByBlock(blockId)" :key="cat.name">
+              <div>
+                <button @click="toggleCategory(cat)" class="cursor-pointer w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-600 text-gray-900 dark:text-dark-100">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span x-text="tCat(cat.name)"></span>
+                    <span class="text-[10px] text-gray-400" x-text="cat.count"></span>
+                  </div>
+                  <span x-text="treeOpen[cat.name] ? '\u25BC' : '\u25B6'" class="text-xs shrink-0"></span>
+                </button>
+                <div x-show="treeOpen[cat.name]">
+                  <div class="px-4 py-2 flex flex-wrap gap-1.5">
+                    <template x-for="item in (cat._tags || [])" :key="item.id">
+                      <span class="tag-pill-wrapper">
+                        <span class="tag-pill" :class="selectedClass(item.tag_name)" @click="addTag(item)">
+                          <span x-text="item.tag_name" :title="item.aliases" class="max-w-60 truncate"></span>
+                        </span>
+                        <span class="hover-actions">
+                          <button @click.stop="copyTagName(item.tag_name)" :data-title="t('tag.copy')">📋</button>
+                          <button class="neg" @click.stop="addNegativeTag(item)" :data-title="t('tag.neg')">−</button>
+                        </span>
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+    <!-- VERTICAL RESIZER (left/center) -->
+    <div class="resizer-x" @mousedown="resizerStart($event, 'left')">
+      <svg class="grip-icon" viewBox="0 0 12 24" aria-hidden="true">
+        <rect x="4" y="2" width="4" height="6" rx="2"/>
+        <rect x="4" y="9" width="4" height="6" rx="2"/>
+        <rect x="4" y="16" width="4" height="6" rx="2"/>
+      </svg>
+    </div>
+
+    <!-- CENTER: split vertically -->
+    <div class="flex-1 min-w-0 flex flex-col overflow-hidden">
+
+    <!-- TOP: Workspace -->
+    <div class="overflow-hidden flex flex-col" :style="{ height: comfyEnabled ? workComfyRatio + '%' : '100%' }">
+
+      <!-- Chips (always visible) -->
+      <div class="p-4 border-b border-gray-200 dark:border-dark-600 overflow-y-auto min-h-0 flex flex-col gap-4">
+        <!-- Row 1: canvas name -->
+        <div class="flex items-center gap-2 mb-1">
+          <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wide"><span x-text="t('workspace.canvas')">Холст</span><span x-show="canvasName"><span x-text="': ' + canvasName"></span></span></div>
+        </div>
+        <!-- Row 2: toolbar -->
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <!-- New Canvas -->
+          <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+            <button @click="newCanvas()" class="text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer select-none whitespace-nowrap flex items-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+              <span x-text="t('canvas.new_title')"></span>
+            </button>
+            <div x-show="show" class="tooltip" x-text="t('tooltip.new_canvas')"></div>
+          </div>
+          <!-- Save -->
+          <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+            <button @click="openSaveModal()" class="text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer select-none whitespace-nowrap flex items-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span x-text="t('canvas.save_title')"></span>
+            </button>
+            <div x-show="show" class="tooltip" x-text="t('tooltip.save_canvas')"></div>
+          </div>
+          <!-- Rename -->
+          <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex" x-show="canvasName">
+            <button @click="openRenameModal()" class="text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer select-none">✎</button>
+            <div x-show="show" class="tooltip" x-text="t('tooltip.rename_canvas')"></div>
+          </div>
+          <!-- Structure label + dropdown -->
+          <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap">Тип ИИ:</span>
+          <div class="relative" x-data="dropdown">
+            <button @click="toggle" @click.outside="close" class="flex items-center justify-between gap-1 px-2 py-1 text-xs rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors select-none">
+              <span class="truncate text-left" x-text="t(currentStructure.labelKey)"></span>
+              <svg x-show="!open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg x-show="open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div x-show="open" x-transition:enter="transition ease-out" x-transition:enter-start="scale-y-0 opacity-0" x-transition:enter-end="scale-y-100 opacity-100" x-transition:leave="transition ease-in" x-transition:leave-start="scale-y-100 opacity-100" x-transition:leave-end="scale-y-0 opacity-0" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle" style="transition-duration:150ms">
+              <template x-for="s in PROMPT_STRUCTURES" :key="s.id">
+                <button @click="promptStructure = s.id; close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-xs cursor-pointer transition-colors flex items-center" :class="promptStructure === s.id ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
+                  <span x-text="t(s.labelKey)"></span>
+                </button>
+              </template>
+            </div>
+          </div>
+        </div>
+        <!-- Row 3: BREAK + GROUPING + Schedule -->
+        <div class="flex items-center gap-2 mb-1">
+          <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+            <span draggable="true" @dragstart="dragBreakSource($event)" @dragend="onDragEnd($event)" class="break-btn text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 cursor-grab select-none">BREAK</span>
+            <div x-show="show" class="tooltip tooltip-wide">
+              <div class="font-bold mb-1" x-text="t('tooltip.break_title')"></div>
+              <p class="text-gray-200" x-text="t('tooltip.break_desc')"></p>
+            </div>
+          </div>
+          <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+            <span draggable="true" @dragstart="dragGroupSource($event)" @dragend="onDragEnd($event)" class="break-btn text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 cursor-grab select-none">ГРУППИРОВКА</span>
+            <div x-show="show" class="tooltip tooltip-wide">
+              <div class="font-bold mb-1" x-text="t('tooltip.grouping_title')"></div>
+              <p class="text-gray-200" x-text="t('tooltip.grouping_desc')"></p>
+            </div>
+          </div>
+          <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+            <span draggable="true" @dragstart="dragDynamicSource($event)" @dragend="onDragEnd($event)" class="break-btn text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 cursor-grab select-none" x-text="t('tooltip.dynamic_btn')">Dynamic Prompt</span>
+            <div x-show="show" class="tooltip tooltip-wide">
+              <div class="font-bold mb-1" x-text="t('tooltip.dynamic_title')"></div>
+              <p class="text-gray-200" x-text="t('tooltip.dynamic_desc')"></p>
+            </div>
+          </div>
+        </div>
+        <!-- Positive Prompt label -->
+        <div class="flex items-center gap-2">
+          <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wide" x-text="t('workspace.positive_prompt')">Позитивный промпт</div>
+          <button @click="clearPositiveChips()" :data-tooltip="t('tooltip.clear_pos')" class="px-2 py-0.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" x-text="t('actions.clear_tags')">Очистить</button>
+        </div>
+        <!-- Positive blocks (dynamic from structure) -->
+        <div>
+          <template x-for="block in currentStructureBlocks" :key="'pb'+block.id">
+            <div class="block-section"
+                 :data-block-id="block.id"
+                 @dragover="onDragOver($event)"
+                 @dragenter="onDragEnter($event)"
+                 @dragleave="onDragLeave($event)"
+                 @drop.prevent="onDrop($event, 'positive')">
+               <div class="block-header">
+                <span x-text="structureBlockLabel(block)"></span>
+                <span class="count" x-text="'(' + positiveByBlock(block.id).length + ')'"></span>
+              </div>
+                <div class="flex flex-wrap gap-1">
+                  <!-- Regular chips -->
+                  <template x-for="ch in positiveByBlock(block.id).filter(c => c.category !== 'group' && c.category !== 'dynamic')" :key="ch._key || ch.name">
+                    <span class="chip chip-positive" draggable="true"
+                          @dragstart="onDragStart($event, ch)"
+                          @dragend="onDragEnd($event)"
+                          @click="removeChip('positive', ch.name)"
+                          :data-chip-key="ch._key"
+                          :title="chipCategoryName(ch)">
+                      <span x-show="getColorForChip(ch)" class="tag-color-dot" :style="{ '--dot-color': getColorForChip(ch) }"></span>
+                      <span x-text="ch.name" class="max-w-32 truncate"></span>
+                      <input type="number" step="0.01" min="0" max="99"
+                             x-model="ch.weight"
+                             @input="notifyChipChange()"
+                             placeholder="1.0"
+                             class="tag-weight-input"
+                             @click.stop
+                             @mousedown.stop>
+                      <button @click.stop="openEditChip(ch)" class="chip-btn" title="Edit">✎</button>
+                      <span class="chip-btn chip-btn-x">x</span>
+                    </span>
+                  </template>
+                  <!-- Group chips -->
+                  <template x-for="ch in positiveByBlock(block.id).filter(c => c.category === 'group')" :key="ch._key">
+                    <div class="group-chip" draggable="true"
+                         :data-chip-key="ch._key"
+                         @dragstart="onDragStart($event, ch)"
+                         @dragend="onDragEnd($event)"
+                         @dragover.prevent="onGroupDragOver($event, ch)"
+                         @dragenter.prevent="onGroupDragEnter($event)"
+                         @dragleave="onGroupDragLeave($event)"
+                         @drop.prevent="onGroupDrop($event, ch)">
+                      <div class="group-chip-header">
+                        <span class="group-chip-label">( <span x-text="groupLabelText(ch)"></span> )</span>
+                        <input type="number" step="0.001" min="0" max="99"
+                               x-model="ch.weight"
+                               @input="notifyChipChange()"
+                               placeholder="1.0"
+                               class="group-weight-input"
+                               :title="ch.weight ? 'weight: ' + ch.weight : ''"
+                               @click.stop
+                               @mousedown.stop>
+                        <button @click="removeGroupChip(ch)" class="chip-btn chip-btn-x">x</button>
+                      </div>
+                      <div class="group-chip-children" x-show="(ch._groupChildren || []).length > 0">
+                        <template x-for="child in (ch._groupChildren || [])" :key="child.name">
+                          <span class="chip chip-positive text-xs" draggable="true"
+                                 :class="{ 'chip-dynamic-bg': child._category === 'dynamic' }"
+                                :data-chip-key="ch._key + '-' + child.name"
+                                @dragstart.stop="onGroupChildDragStart($event, ch, child)"
+                                @dragend="onDragEnd($event)">
+                            <span x-text="childDisplayName(child)" class="max-w-24 truncate"></span>
+                            <input type="number" step="0.01" min="0" max="99"
+                                   x-model="child.weight"
+                                   @input="notifyChipChange()"
+                                   placeholder="1.0"
+                                   class="tag-weight-input"
+                                   style="width:36px"
+                                   @click.stop
+                                   @mousedown.stop>
+                            <button @click.stop="removeChildFromGroup(ch, child.name)" class="chip-btn chip-btn-x">x</button>
+                          </span>
+                        </template>
+                      </div>
+                      <div class="group-chip-dropzone" x-show="(ch._groupChildren || []).length === 0">
+                        <span class="text-gray-400 text-[10px]">drop tags here</span>
+                      </div>
+                    </div>
+                  </template>
+                  <!-- Dynamic Prompt chips -->
+                  <template x-for="ch in positiveByBlock(block.id).filter(c => c.category === 'dynamic')" :key="ch._key">
+                    <span class="chip-dynamic" draggable="true"
+                          :data-chip-key="ch._key"
+                          @dragstart="onDragStart($event, ch)"
+                          @dragend="onDragEnd($event)">
+                      [
+                      <span class="dyn-slot" :class="{ 'dyn-filled': ch.from_tag }"
+                            @dragover.prevent @drop.prevent="onDynamicDrop($event, ch, 'from')">
+                        <template x-if="ch.from_tag && ch.from_tag._category === 'group'">
+                          <span class="dyn-group-full" draggable="true"
+                                @dragstart.stop="onDynamicChildDragStart($event, ch, 'from')"
+                                @dragend="onDragEnd($event)">
+                            <span class="dyn-group-full-paren">(</span>
+                            <template x-for="gc in (ch.from_tag._groupChildren || [])" :key="gc.name">
+                              <span class="dyn-group-full-child">
+                                <span x-text="gc.name" class="max-w-16 truncate"></span>
+                                <input type="number" step="0.01" min="0" max="99"
+                                       x-model="gc.weight"
+                                       @input="notifyChipChange()"
+                                       class="tag-weight-input"
+                                       style="width:32px"
+                                       @click.stop @mousedown.stop>
+                              </span>
+                            </template>
+                            <span class="dyn-group-full-paren">)</span>
+                            <input type="number" step="0.001" min="0" max="99"
+                                   x-model="ch.from_tag.weight"
+                                   @input="notifyChipChange()"
+                                   class="group-weight-input"
+                                   placeholder="1.0"
+                                   @click.stop @mousedown.stop>
+                            <button @click.stop="removeDynamicTag(ch, 'from')" class="chip-btn chip-btn-x">x</button>
+                          </span>
+                        </template>
+                        <template x-if="ch.from_tag && ch.from_tag._category !== 'group'">
+                          <span class="dyn-tag" draggable="true"
+                                :class="{ 'dyn-tag-dynamic': ch.from_tag._category === 'dynamic' }"
+                                @dragstart.stop="onDynamicChildDragStart($event, ch, 'from')"
+                                @dragend="onDragEnd($event)">
+                            <span x-text="childDisplayName(ch.from_tag)" class="max-w-20 truncate"></span>
+                            <button @click.stop="removeDynamicTag(ch, 'from')" class="chip-btn chip-btn-x">x</button>
+                          </span>
+                        </template>
+                        <template x-if="!ch.from_tag">
+                          <span class="dyn-placeholder" x-text="t('dynamic.from')">from</span>
+                        </template>
+                      </span>
+                      :
+                      <span class="dyn-slot" :class="{ 'dyn-filled': ch.to_tag }"
+                            @dragover.prevent @drop.prevent="onDynamicDrop($event, ch, 'to')">
+                        <template x-if="ch.to_tag && ch.to_tag._category === 'group'">
+                          <span class="dyn-group-full" draggable="true"
+                                @dragstart.stop="onDynamicChildDragStart($event, ch, 'to')"
+                                @dragend="onDragEnd($event)">
+                            <span class="dyn-group-full-paren">(</span>
+                            <template x-for="gc in (ch.to_tag._groupChildren || [])" :key="gc.name">
+                              <span class="dyn-group-full-child">
+                                <span x-text="gc.name" class="max-w-16 truncate"></span>
+                                <input type="number" step="0.01" min="0" max="99"
+                                       x-model="gc.weight"
+                                       @input="notifyChipChange()"
+                                       class="tag-weight-input"
+                                       style="width:32px"
+                                       @click.stop @mousedown.stop>
+                              </span>
+                            </template>
+                            <span class="dyn-group-full-paren">)</span>
+                            <input type="number" step="0.001" min="0" max="99"
+                                   x-model="ch.to_tag.weight"
+                                   @input="notifyChipChange()"
+                                   class="group-weight-input"
+                                   placeholder="1.0"
+                                   @click.stop @mousedown.stop>
+                            <button @click.stop="removeDynamicTag(ch, 'to')" class="chip-btn chip-btn-x">x</button>
+                          </span>
+                        </template>
+                        <template x-if="ch.to_tag && ch.to_tag._category !== 'group'">
+                          <span class="dyn-tag" draggable="true"
+                                :class="{ 'dyn-tag-dynamic': ch.to_tag._category === 'dynamic' }"
+                                @dragstart.stop="onDynamicChildDragStart($event, ch, 'to')"
+                                @dragend="onDragEnd($event)">
+                            <span x-text="childDisplayName(ch.to_tag)" class="max-w-20 truncate"></span>
+                            <button @click.stop="removeDynamicTag(ch, 'to')" class="chip-btn chip-btn-x">x</button>
+                          </span>
+                        </template>
+                      </span>
+                      :
+                      <input type="number" step="0.1" min="0" max="1"
+                             x-model="ch.when"
+                             @input="notifyChipChange()"
+                             class="dyn-step" @click.stop @mousedown.stop>
+                      ]
+                    </span>
+                  </template>
+               </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Negative block -->
+        <div>
+          <div class="block-section"
+               :data-block-id="currentStructure.negativeBlockId"
+               @dragover="onDragOver($event)"
+               @dragenter="onDragEnter($event)"
+               @dragleave="onDragLeave($event)"
+               @drop.prevent="onDrop($event, 'negative')">
+            <div class="block-header">
+              <span class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
+                <span x-text="t('block.' + currentStructure.negativeBlockId)"></span>
+              </span>
+              <span class="count" x-text="'(' + negativeChips.length + ')'"></span>
+              <button @click="clearNegativeChips()" :data-tooltip="t('tooltip.clear_neg')" class="ml-auto px-2 py-0.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" x-text="t('actions.clear_tags')">Очистить</button>
+            </div>
+            <div class="flex flex-wrap gap-1">
+              <template x-for="ch in negativeChips" :key="ch._key || ch.name">
+                <span class="chip chip-negative" draggable="true"
+                      @dragstart="onDragStart($event, ch)"
+                      @dragend="onDragEnd($event)"
+                      @click="removeChip('negative', ch.name)"
+                      :data-chip-key="ch._key"
+                      :title="chipCategoryName(ch)">
+                  <span x-show="getColorForChip(ch)" class="tag-color-dot" :style="{ '--dot-color': getColorForChip(ch) }"></span>
+                  <span x-text="ch.name" class="max-w-48 truncate"></span>
+                  <button @click.stop="openEditChip(ch)" class="chip-btn" title="Edit">✎</button>
+                  <span class="chip-btn chip-btn-x">x</span>
+                </span>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsible prompts section -->
+      <div class="p-2 border-b border-gray-200 dark:border-dark-600">
+        <button @click="promptsOpen = !promptsOpen" :data-tooltip="t('tooltip.prompts_toggle')" class="w-full flex items-center justify-between px-2 py-1.5 text-sm font-medium rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors">
+          <div class="flex items-center gap-2">
+            <span x-text="promptsOpen ? '▼' : '▶'" class="text-xs"></span>
+            <span x-text="t('workspace.prompts')">Промпты</span>
+          </div>
+        </button>
+        <div x-show="promptsOpen" class="space-y-3 overflow-y-auto min-h-0" style="max-height:calc(100vh - 300px)">
+          <!-- Custom input -->
+          <div>
+            <div class="flex items-center gap-1.5">
+              <input type="text" x-model="customTag" @keydown.enter="addCustomTag(false)" :placeholder="t('custom.placeholder')" class="flex-1 border rounded px-2 py-1 text-xs bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 min-w-0">
+              <button @click="addCustomTag(false)" :data-tooltip="t('tooltip.custom_pos')" class="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">+</button>
+              <button @click="addCustomTag(true)" :data-tooltip="t('tooltip.custom_neg')" class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">−</button>
+            </div>
+          </div>
+
+          <!-- Positive prompt -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-semibold" x-text="t('prompt.positive')">Позитивный</span>
+              <button @click="copyPrompt('positive')" :data-tooltip="t('tooltip.copy_pos')" class="px-2 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700" x-text="t('prompt.copy')">📋</button>
+            </div>
+            <textarea :value="positivePrompt" readonly class="w-full border rounded p-2 text-xs bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 resize-none font-mono" style="height:180px"></textarea>
+          </div>
+
+          <!-- Negative prompt -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-semibold" x-text="t('prompt.negative')">Негативный</span>
+              <button @click="copyPrompt('negative')" :data-tooltip="t('tooltip.copy_neg')" class="px-2 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700" x-text="t('prompt.copy')">📋</button>
+            </div>
+            <textarea :value="negativePrompt" readonly class="w-full border rounded p-2 text-xs bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 resize-none font-mono" style="height:180px"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HORIZONTAL RESIZER -->
+    <template x-if="comfyEnabled">
+    <div class="resizer-y" @mousedown="resizerStart($event, 'work')">
+      <svg class="grip-icon" viewBox="0 0 24 12" aria-hidden="true">
+        <rect x="2" y="4" width="6" height="4" rx="2"/>
+        <rect x="9" y="4" width="6" height="4" rx="2"/>
+        <rect x="16" y="4" width="6" height="4" rx="2"/>
+      </svg>
+    </div>
+    </template>
+
+    <!-- BOTTOM: Generation (only when comfy enabled) -->
+    <template x-if="comfyEnabled">
+    <div class="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+          <div class="gen-group-title" x-text="t('comfy.group_main') || 'Основные'">Основные</div>
+          <div class="gen-row">
+            <span class="gen-label" x-text="t('comfy.workflow')">Workflow</span>
+            <div class="relative" style="flex:1;max-width:300px" x-data="dropdown">
+              <button @click="toggle" @click.outside="close" class="w-full flex items-center justify-between gap-1 px-2 py-1 text-sm rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors">
+                <span class="truncate text-left" x-text="selectedWorkflow || t('comfy.no_workflow')"></span>
+                <svg x-show="!open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg x-show="open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div x-show="open" x-transition:enter="transition ease-out" x-transition:enter-start="scale-y-0 opacity-0" x-transition:enter-end="scale-y-100 opacity-100" x-transition:leave="transition ease-in" x-transition:leave-start="scale-y-100 opacity-100" x-transition:leave-end="scale-y-0 opacity-0" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle" style="transition-duration:150ms">
+                <template x-for="wf in workflows" :key="wf.name">
+                  <button @click="selectedWorkflow = wf.name; close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-sm rounded-lg cursor-pointer transition-colors flex items-center" :class="selectedWorkflow === wf.name ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
+                    <span x-text="wf.label"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+            <span class="gen-refresh" @click="refreshGenerationData()" :data-tooltip="t('tooltip.comfy_refresh')">⟳</span>
+          </div>
+          <div class="gen-row">
+            <span class="gen-label" x-text="t('comfy.checkpoint')">Модель</span>
+            <div class="relative" style="flex:1;max-width:300px" x-data="dropdown">
+              <button @click="toggle" @click.outside="close" class="w-full flex items-center justify-between gap-1 px-2 py-1 text-sm rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors">
+                <span class="truncate text-left" x-text="selectedCheckpoint || t('comfy.no_workflow')"></span>
+                <svg x-show="!open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg x-show="open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div x-show="open" x-transition:enter="transition ease-out" x-transition:enter-start="scale-y-0 opacity-0" x-transition:enter-end="scale-y-100 opacity-100" x-transition:leave="transition ease-in" x-transition:leave-start="scale-y-100 opacity-100" x-transition:leave-end="scale-y-0 opacity-0" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle" style="transition-duration:150ms">
+                <template x-for="ckpt in checkpoints" :key="ckpt">
+                  <button @click="selectedCheckpoint = ckpt; close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-sm rounded-lg cursor-pointer transition-colors flex items-center" :class="selectedCheckpoint === ckpt ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
+                    <span x-text="ckpt"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div class="gen-row">
+            <span class="gen-label" x-text="t('comfy.resolution')">Разрешение</span>
+            <div class="relative" style="flex:1;max-width:300px" x-data="dropdown">
+              <button @click="toggle" @click.outside="close" class="w-full flex items-center justify-between gap-1 px-2 py-1 text-sm rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors">
+                <span class="truncate text-left" x-text="selectedResolutionText"></span>
+                <svg x-show="!open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg x-show="open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div x-show="open" x-transition:enter="transition ease-out" x-transition:enter-start="scale-y-0 opacity-0" x-transition:enter-end="scale-y-100 opacity-100" x-transition:leave="transition ease-in" x-transition:leave-start="scale-y-100 opacity-100" x-transition:leave-end="scale-y-0 opacity-0" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle" style="transition-duration:150ms">
+                <template x-for="res in resolutions" :key="res.dims">
+                  <button @click="selectedResolution = res.dims; close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-sm rounded-lg cursor-pointer transition-colors flex items-center" :class="selectedResolution === res.dims ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
+                    <span x-text="res.name + ' - ' + res.dims"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div class="gen-row">
+            <span class="gen-label" x-text="t('comfy.sampler')">Семплер</span>
+            <div class="relative" style="flex:1;max-width:300px" x-data="dropdown">
+              <button @click="toggle" @click.outside="close" class="w-full flex items-center justify-between gap-1 px-2 py-1 text-sm rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors">
+                <span class="truncate text-left" x-text="selectedSampler"></span>
+                <svg x-show="!open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg x-show="open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div x-show="open" x-transition:enter="transition ease-out" x-transition:enter-start="scale-y-0 opacity-0" x-transition:enter-end="scale-y-100 opacity-100" x-transition:leave="transition ease-in" x-transition:leave-start="scale-y-100 opacity-100" x-transition:leave-end="scale-y-0 opacity-0" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle" style="transition-duration:150ms">
+                <template x-for="s in samplers" :key="s">
+                  <button @click="selectedSampler = s; close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-sm rounded-lg cursor-pointer transition-colors flex items-center" :class="selectedSampler === s ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
+                    <span x-text="s"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div class="gen-row">
+            <span class="gen-label" x-text="t('comfy.scheduler')">Шедулер</span>
+            <div class="relative" style="flex:1;max-width:300px" x-data="dropdown">
+              <button @click="toggle" @click.outside="close" class="w-full flex items-center justify-between gap-1 px-2 py-1 text-sm rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors">
+                <span class="truncate text-left" x-text="selectedScheduler"></span>
+                <svg x-show="!open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg x-show="open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div x-show="open" x-transition:enter="transition ease-out" x-transition:enter-start="scale-y-0 opacity-0" x-transition:enter-end="scale-y-100 opacity-100" x-transition:leave="transition ease-in" x-transition:leave-start="scale-y-100 opacity-100" x-transition:leave-end="scale-y-0 opacity-0" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle" style="transition-duration:150ms">
+                <template x-for="s in schedulers" :key="s">
+                  <button @click="selectedScheduler = s; close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-sm rounded-lg cursor-pointer transition-colors flex items-center" :class="selectedScheduler === s ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
+                    <span x-text="s"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div class="gen-row">
+            <span class="gen-label" x-text="t('comfy.steps')">Шаги</span>
+            <input type="range" min="1" max="100" x-model.number="steps" class="border rounded">
+            <input type="number" min="1" max="100" x-model.number="steps" class="border rounded px-2 py-1 text-sm">
+          </div>
+          <div class="gen-row">
+            <span class="gen-label" x-text="t('comfy.cfg')">CFG</span>
+            <input type="range" min="1" max="30" step="0.5" x-model.number="cfg" class="border rounded">
+            <input type="number" min="1" max="30" step="0.5" x-model.number="cfg" class="border rounded px-2 py-1 text-sm" style="width:70px">
+          </div>
+
+          <div class="gen-group-title" x-text="t('comfy.group_extra') || 'Дополнительно'">Дополнительно</div>
+          <div class="gen-row">
+            <span class="gen-label" x-text="t('comfy.seed')">Seed</span>
+            <input type="number" x-model.number="seed" min="0" max="2147483647" class="border rounded px-2 py-1 text-sm font-mono bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500" style="width:150px">
+            <label class="flex items-center gap-1 text-xs cursor-pointer select-none">
+              <input type="checkbox" x-model="seedFixed" class="w-3.5 h-3.5">
+              <span x-text="t('comfy.seed_fix')">Фиксированный Seed</span>
+            </label>
+          </div>
+
+          <button @click="generate()" :data-tooltip="t('tooltip.generate')" class="btn-gen w-full mt-4" :class="generating ? 'btn-gen-busy' : 'btn-gen-ready'" x-text="generating ? t('comfy.generating') : t('comfy.generate')"></button>
+    </div>
+    </template>
+  </div>
+
+    <template x-if="comfyEnabled">
+      <div class="flex">
+        <!-- VERTICAL RESIZER (center/right) -->
+        <div class="resizer-x" @mousedown="resizerStart($event, 'right')">
+          <svg class="grip-icon" viewBox="0 0 12 24" aria-hidden="true">
+            <rect x="4" y="2" width="4" height="6" rx="2"/>
+            <rect x="4" y="9" width="4" height="6" rx="2"/>
+            <rect x="4" y="16" width="4" height="6" rx="2"/>
+          </svg>
+        </div>
+
+        <!-- RIGHT PREVIEW PANEL -->
+        <div class="preview-panel shrink-0" :style="{ width: rightWidth + 'px' }">
+          <div class="preview-tabs">
+            <button class="preview-tab" :class="{ active: previewTab === 'images' }" @click="previewTab = 'images'" x-text="t('preview.title')">Прошлые генерации</button>
+          </div>
+
+          <div x-show="previewTab === 'images'" class="overflow-y-auto flex-1 p-2 flex flex-wrap gap-2" style="align-content: flex-start;">
+            <template x-for="item in paginatedItems()" :key="item.url">
+              <div x-data="{ hovered: false }" @mouseenter="hovered = true" @mouseleave="hovered = false" class="shrink-0 overflow-hidden rounded border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors relative" style="width:120px;height:120px" @click="openViewer(item.idx)">
+                <img :src="item.url" alt="" style="object-fit:cover;object-position:center top;width:100%;height:100%">
+                <button x-show="hovered" @click.stop="restoreFromGenerationHistory(item.idx)" style="position:absolute;top:4px;right:4px;width:24px;height:24px" class="flex items-center justify-center rounded bg-black/40 hover:bg-black/60">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></polyline></svg>
+                </button>
+              </div>
+            </template>
+            <div x-show="generationHistory.length === 0" class="w-full flex items-center justify-center text-gray-400 dark:text-dark-400 text-xs py-8">
+              <span x-text="t('preview.placeholder')">Нажмите Сгенерировать</span>
+            </div>
+            <div x-show="generationHistory.length > 0" class="paginator w-full" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 0 4px;width:100%">
+              <select x-model="previewPerPage" @change="previewPage = 1" style="font-size:11px;padding:2px 4px;border-radius:4px;border:1px solid var(--c-border);background:var(--c-bg-white);color:var(--c-text-500)">
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="75">75</option>
+                <option value="100">100</option>
+              </select>
+              <span style="font-size:11px;color:var(--c-text-500)">
+                <span x-text="previewPage"></span>/<span x-text="totalPages()"></span>
+              </span>
+              <button @click="prevPreviewPage()" :disabled="previewPage <= 1" style="font-size:11px;padding:2px 6px;border-radius:4px;border:1px solid var(--c-border);background:var(--c-bg-white);color:var(--c-text-500);cursor:pointer" :style="previewPage <= 1 ? 'opacity:0.3;cursor:default' : ''">&lsaquo;</button>
+              <button @click="nextPreviewPage()" :disabled="previewPage >= totalPages()" style="font-size:11px;padding:2px 6px;border-radius:4px;border:1px solid var(--c-border);background:var(--c-bg-white);color:var(--c-text-500);cursor:pointer" :style="previewPage >= totalPages() ? 'opacity:0.3;cursor:default' : ''">&rsaquo;</button>
+            </div>
+          </div>
+
+          <div x-show="generating" class="preview-progress">
+            <div class="progress-bar">
+              <div class="progress-bar-fill" :style="'width: ' + generationProgress + '%'"></div>
+            </div>
+            <div class="text-xs text-gray-400 text-center mt-1" x-text="generationStatus"></div>
+          </div>
+        </div>
+      </div>
+    </template>
+</div>
+
+  <!-- Fullscreen image viewer -->
+  <div x-show="viewerImage" class="fixed inset-0 flex items-center justify-center" style="z-index:9999;background:rgba(0,0,0,0.9)" @click.self="closeViewer()" @keydown.escape.window="closeViewer()" @keydown.left.window="prevImage()" @keydown.right.window="nextImage()">
+    <button @click="closeViewer()" style="position:absolute;top:12px;right:12px" class="flex items-center gap-1.5 px-3 py-1.5 rounded bg-black/40 hover:bg-black/60 text-white text-sm cursor-pointer">
+      <span>✕</span>
+      <span x-text="t('preview.viewer.close')">Закрыть</span>
+    </button>
+    <button @click="restoreFromCurrentImage()" style="position:absolute;top:12px;right:90px" class="flex items-center gap-1.5 px-3 py-1.5 rounded bg-black/40 hover:bg-black/60 text-white text-sm cursor-pointer" title="Восстановить">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></polyline></svg>
+      <span>Восстановить</span>
+    </button>
+    <button @click="prevImage()" x-show="generationHistory.length > 1" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:48px;height:48px" class="flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white text-3xl cursor-pointer">‹</button>
+    <button @click="nextImage()" x-show="generationHistory.length > 1" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:48px;height:48px" class="flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white text-3xl cursor-pointer">›</button>
+    <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.7);font-size:14px" class="bg-black/40 px-3 py-1 rounded select-none" x-text="(viewerIndex + 1) + ' / ' + generationHistory.length"></div>
+    <div x-show="restoreWarnings.length > 0" style="position:absolute;bottom:50px;left:50%;transform:translateX(-50%)" class="bg-red-900/80 text-red-200 text-xs px-4 py-2 rounded select-none flex flex-col gap-1">
+      <template x-for="w in restoreWarnings" :key="w.field">
+        <div><span class="font-semibold" x-text="w.field"></span>: <span x-text="w.value"></span> <span class="text-red-300">(не найдено)</span></div>
+      </template>
+    </div>
+    <img :src="viewerImage" alt="Preview" style="max-width:95vw;max-height:90vh;object-fit:contain" class="select-none">
+  </div>
+
+  <!-- Main tag add modal -->
+  <div x-show="mainTagModal" class="fixed inset-0 z-50" style="background:transparent">
+    <div class="fixed inset-0 bg-black/40" @click="closeMainTagModal()"></div>
+    <div class="fixed bg-white dark:bg-dark-700 rounded-lg shadow-xl p-6 w-96 text-sm" :style="_mainTagAnchor ? { top: _mainTagAnchor.top + 'px', left: _mainTagAnchor.left + 'px' } : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }" @click.stop>
+      <div class="text-base font-semibold mb-4" x-text="_editingMainTagId ? t('main.edit_title') : t('main.modal_title')"></div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('main.tag_name')"></label>
+          <input type="text" x-model="mainTagForm.tag_name" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500" @keydown.enter="saveMainTag()">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('main.full_text')"></label>
+          <textarea x-model="mainTagForm.full_text" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 resize-none" rows="3"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('main.category')"></label>
+          <select x-model="mainTagForm.block_id" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+            <template x-for="block in currentStructureAllBlocks" :key="'cat'+block.id">
+              <option :value="block.id" x-text="block.id + '. ' + structureBlockLabel(block)"></option>
+            </template>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('main.subcategory')"></label>
+          <select x-model="mainTagForm.subcategory" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+            <option value="" x-text="t('main.group_empty')"></option>
+            <template x-for="group in groupsByBlock(mainTagForm.block_id)" :key="'grp'+group.id">
+              <option :value="group.name" x-text="group.name"></option>
+            </template>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('main.structures')"></label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="s in PROMPT_STRUCTURES" :key="s.id">
+              <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none">
+                <input type="checkbox" :value="s.id" x-model="mainTagForm.structures" class="rounded border-gray-300 dark:border-dark-500">
+                <span x-text="t(s.labelKey)"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button @click="closeMainTagModal()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer" x-text="t('main.cancel')"></button>
+        <button @click="saveMainTag()" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors cursor-pointer" x-text="t('main.save')"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main group add modal -->
+  <div x-show="mainGroupModal" class="fixed inset-0 z-50" style="background:transparent">
+    <div class="fixed inset-0 bg-black/40" @click="closeMainGroupModal()"></div>
+    <div class="fixed bg-white dark:bg-dark-700 rounded-lg shadow-xl p-6 w-80 text-sm" :style="_mainGroupAnchor ? { top: _mainGroupAnchor.top + 'px', left: _mainGroupAnchor.left + 'px' } : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }" @click.stop>
+      <div class="text-base font-semibold mb-4" x-text="t('main.add_group_title')"></div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('main.group_name')"></label>
+          <input type="text" x-model="mainGroupForm.name" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500" @keydown.enter="saveMainGroup()">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('main.structures')"></label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="s in PROMPT_STRUCTURES" :key="s.id">
+              <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none">
+                <input type="checkbox" :value="s.id" x-model="mainGroupForm.structures" class="rounded border-gray-300 dark:border-dark-500">
+                <span x-text="t(s.labelKey)"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button @click="closeMainGroupModal()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer" x-text="t('main.cancel')"></button>
+        <button @click="saveMainGroup()" class="px-3 py-1.5 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors cursor-pointer" x-text="t('main.save')"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit chip modal -->
+  <div x-show="editChipModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40" @click="closeEditChipModal()"></div>
+    <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl p-6 w-96 text-sm" @click.stop>
+      <div class="text-base font-semibold mb-4" x-text="t('chip.edit_title')"></div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('chip.tag_name')"></label>
+          <input type="text" x-model="editChipForm.name" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500" @keydown.enter="saveEditChip()">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('chip.full_text')"></label>
+          <textarea x-model="editChipForm.prompt_text" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 resize-none" rows="3"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('chip.category')"></label>
+          <select x-model="editChipForm.block_id" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+            <template x-for="block in currentStructureAllBlocks" :key="'editcat'+block.id">
+              <option :value="block.id" x-text="block.id + '. ' + structureBlockLabel(block)"></option>
+            </template>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button @click="closeEditChipModal()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer" x-text="t('chip.cancel')"></button>
+        <button @click="saveEditChip()" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors cursor-pointer" x-text="t('chip.save')"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save canvas modal -->
+  <div x-show="saveModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40" @click="closeSaveModal()"></div>
+    <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl p-6 w-80 text-sm" @click.stop>
+      <div class="text-base font-semibold mb-4" x-text="t('canvas.save_title')"></div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('canvas.save_name')"></label>
+        <input type="text" x-model="saveForm.name" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500" @keydown.enter="saveCanvas()">
+      </div>
+      <div x-show="saveForm.showDuplicateCheckbox" class="mt-3 flex items-center gap-2">
+        <input type="checkbox" id="duplicate-chk" x-model="saveForm.duplicate" class="rounded border-gray-300 dark:border-dark-500">
+        <label for="duplicate-chk" class="text-xs text-gray-500 dark:text-dark-400" x-text="t('canvas.duplicate')"></label>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button @click="closeSaveModal()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer" x-text="t('canvas.cancel')"></button>
+        <button @click="saveCanvas()" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors cursor-pointer" x-text="t('canvas.save')"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename canvas modal -->
+  <div x-show="renameModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40" @click="closeRenameModal()"></div>
+    <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl p-6 w-80 text-sm" @click.stop>
+      <div class="text-base font-semibold mb-4" x-text="t('canvas.rename_title')"></div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('canvas.save_name')"></label>
+        <input type="text" x-model="renameForm.name" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500" @keydown.enter="renameCanvas()">
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button @click="closeRenameModal()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer" x-text="t('canvas.cancel')"></button>
+        <button @click="renameCanvas()" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors cursor-pointer" x-text="t('canvas.rename')"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manager prompts modal -->
+  <div x-show="managerModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40" @click="closeManager()"></div>
+    <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl p-6 w-96 text-sm max-h-[80vh] flex flex-col" @click.stop>
+      <div class="text-base font-semibold mb-4" x-text="t('canvas.manager_title')"></div>
+      <div class="overflow-y-auto flex-1 space-y-2">
+        <template x-for="item in savedPrompts" :key="item.id">
+          <div class="flex items-center justify-between px-3 py-2 rounded border border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-600">
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-medium truncate" x-text="item.name"></div>
+              <div class="text-[10px] text-gray-400" x-text="item.created_at"></div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0 ml-2">
+              <button @click="restoreFromSaved(item)" class="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors cursor-pointer" x-text="t('canvas.open')"></button>
+              <button @click="deleteSavedPrompt(item)" class="px-2 py-1 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer">🗑</button>
+            </div>
+          </div>
+        </template>
+        <div x-show="savedPrompts.length === 0" class="text-center text-gray-400 dark:text-dark-400 text-sm py-8" x-text="t('canvas.empty')"></div>
+      </div>
+      <div class="flex justify-end mt-4">
+        <button @click="closeManager()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer" x-text="t('canvas.close')"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tree loading modal -->
+  <div x-show="treeModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40"></div>
+    <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl p-6 w-80 text-center">
+      <div class="text-sm font-medium mb-3" x-text="t('modal.loading.title')">Загрузка тегов...</div>
+      <div class="w-full bg-gray-200 dark:bg-dark-500 rounded-full h-2.5">
+        <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-150" :style="'width: ' + treeModalProgress + '%'"></div>
+      </div>
+      <div class="text-xs text-gray-400 mt-2" x-text="treeModalProgress + '%'"></div>
+    </div>
+  </div>
+
+  <div x-show="toastVisible" class="toast">
+    <span x-text="toastText"></span>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

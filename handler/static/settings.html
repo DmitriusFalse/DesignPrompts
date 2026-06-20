@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru" x-data="settingsApp()" :class="{ 'dark': isDark }">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1e293b">
+  <title x-text="t('settings.title')">Настройки — Design Prompts</title>
+  <link rel="icon" type="image/x-icon" href="/static/icon.ico">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="manifest" href="/static/manifest.json">
+</head>
+<body class="bg-white dark:bg-dark-800 text-gray-900 dark:text-dark-100 min-h-screen">
+  <header class="flex items-center gap-3 px-4 py-2 border-b border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-700">
+    <h1 class="text-lg font-bold" x-text="t('settings.title')">Настройки</h1>
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-1.5">
+      <a href="https://boosty.to/sir.geronis/donate" target="_blank" rel="noopener" class="donate-link inline-flex items-center gap-1 px-0.5 rounded self-center" :title="t('donate.title')">
+        <span class="flex flex-col text-[10px] leading-tight" style="margin-top:5px">
+          <span x-text="t('donate.short1')">Подкинуть копейку</span>
+          <span x-text="t('donate.short2')">на Boosty</span>
+        </span>
+        <svg class="donate-heart" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </a>
+      <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
+      <div class="relative self-center" x-data="{ tpOpen: false }">
+        <button @click="tpOpen = !tpOpen" @click.outside="tpOpen = false" class="flex items-center gap-1 px-1.5 py-1 text-xs rounded cursor-pointer transition-colors hover:bg-gray-200 dark:hover:bg-dark-600 select-none whitespace-nowrap">
+          <span x-text="theme === 'auto' ? '◐' : theme === 'dark' ? '☾' : '☀'" class="text-sm"></span>
+          <span x-text="t('theme.' + theme)" class="text-gray-700 dark:text-dark-200"></span>
+          <svg x-show="!tpOpen" width="8" height="5" viewBox="0 0 10 6" class="opacity-40 shrink-0"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg x-show="tpOpen" width="8" height="5" viewBox="0 0 10 6" class="opacity-40 shrink-0"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div x-show="tpOpen"
+             x-transition:enter="transition ease-out origin-top"
+             x-transition:enter-start="scale-y-0 opacity-0"
+             x-transition:enter-end="scale-y-100 opacity-100"
+             x-transition:leave="transition ease-in origin-top"
+             x-transition:leave-start="scale-y-100 opacity-100"
+             x-transition:leave-end="scale-y-0 opacity-0"
+             class="absolute top-full right-0 mt-0.5 bg-white dark:bg-dark-600 rounded-lg shadow-lg z-50 py-0.5 min-w-[90px]"
+             style="transition-duration:100ms">
+          <button @click="theme='auto';localStorage.setItem('theme','auto');tpOpen=false" class="w-full text-left px-2 py-0.5 text-xs flex items-center gap-1 rounded" :class="theme==='auto' ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'"><span>◐</span><span x-text="t('theme.auto')"></span></button>
+          <button @click="theme='dark';localStorage.setItem('theme','dark');tpOpen=false" class="w-full text-left px-2 py-0.5 text-xs flex items-center gap-1 rounded" :class="theme==='dark' ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'"><span>☾</span><span x-text="t('theme.dark')"></span></button>
+          <button @click="theme='light';localStorage.setItem('theme','light');tpOpen=false" class="w-full text-left px-2 py-0.5 text-xs flex items-center gap-1 rounded" :class="theme==='light' ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'"><span>☀</span><span x-text="t('theme.light')"></span></button>
+        </div>
+      </div>
+      <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
+      <span @click="lang = (lang === 'ru' ? 'en' : 'ru'); localStorage.setItem('lang', lang); loadTranslations()" class="inline-flex items-center gap-0.5 cursor-pointer select-none text-sm font-medium leading-none self-center py-0.5">
+        <span :class="{'text-blue-600 dark:text-blue-400': lang === 'ru', 'text-gray-400 dark:text-dark-400': lang !== 'ru'}">RU</span>
+        <span class="w-px h-3 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
+        <span :class="{'text-blue-600 dark:text-blue-400': lang === 'en', 'text-gray-400 dark:text-dark-400': lang !== 'en'}">EN</span>
+      </span>
+      <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
+      <a href="/" class="self-center text-sm text-blue-600 dark:text-blue-400 hover:underline px-0.5" x-text="t('settings.back')">На главную</a>
+    </div>
+  </header>
+
+  <main class="p-4 max-w-4xl mx-auto space-y-6">
+
+    <!-- App Settings -->
+    <section>
+      <h2 class="text-lg font-semibold mb-3" x-text="t('settings.app_settings')">Настройки приложения</h2>
+      <div class="border border-gray-200 dark:border-dark-600 rounded-lg overflow-hidden">
+        <table class="w-full border-collapse text-sm">
+          <tbody>
+            <tr class="border-b border-gray-100 dark:border-dark-700">
+              <td class="px-4 py-2.5 text-gray-500 dark:text-dark-400 font-medium" x-text="t('settings.port')">Порт</td>
+              <td class="px-4 py-2.5">
+                <input type="number" x-model="cfg.port" class="w-24 border rounded px-2 py-1 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+              </td>
+            </tr>
+            <tr class="border-b border-gray-100 dark:border-dark-700">
+              <td class="px-4 py-2.5 text-gray-500 dark:text-dark-400 font-medium" x-text="t('settings.tags_path')">Путь к тегам</td>
+              <td class="px-4 py-2.5">
+                <input type="text" x-model="cfg.tags_path" placeholder="./tags" class="w-full border rounded px-2 py-1 text-xs font-mono bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+              </td>
+            </tr>
+            <tr class="border-b border-gray-100 dark:border-dark-700">
+              <td class="px-4 py-2.5 text-gray-500 dark:text-dark-400 font-medium" x-text="t('settings.db_path')">Путь к БД</td>
+              <td class="px-4 py-2.5">
+                <input type="text" x-model="cfg.db_path" placeholder="./data.db" class="w-full border rounded px-2 py-1 text-xs font-mono bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+              </td>
+            </tr>
+            <tr class="border-b border-gray-100 dark:border-dark-700">
+              <td class="px-4 py-2.5 text-gray-500 dark:text-dark-400 font-medium" x-text="t('settings.log_level')">Уровень лога</td>
+              <td class="px-4 py-2.5">
+                <select x-model="cfg.log_level" class="border rounded px-2 py-1 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500" title="error — только ошибки, debug — подробный лог">
+                  <option value="error">error — только ошибки</option>
+                  <option value="debug">debug — подробный лог</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2.5 text-gray-500 dark:text-dark-400 font-medium" x-text="t('settings.logs_dir')">Папка логов</td>
+              <td class="px-4 py-2.5">
+                <input type="text" x-model="cfg.logs_dir" placeholder="./logs" class="w-full border rounded px-2 py-1 text-xs font-mono bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Pack Management -->
+    <section>
+      <h2 class="text-lg font-semibold mb-3" x-text="t('settings.packs')">Управление наборами</h2>
+      <div class="border border-gray-200 dark:border-dark-600 rounded-lg overflow-hidden">
+        <template x-for="p in packs" :key="p.id">
+          <div class="flex items-start gap-3 p-3 border-b border-gray-100 dark:border-dark-700">
+            <div class="shrink-0 w-8 h-8 flex items-center justify-center rounded bg-gray-100 dark:bg-dark-600 text-base">
+              <span x-text="p.icon || '📦'"></span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-sm" x-text="lang === 'ru' && p.name_ru ? p.name_ru : p.name"></span>
+                <span x-show="p.version" class="text-[10px] text-gray-400 dark:text-dark-400 bg-gray-100 dark:bg-dark-600 px-1.5 py-0.5 rounded" x-text="'v' + p.version"></span>
+              </div>
+              <div x-show="p.description" class="text-xs text-gray-400 dark:text-dark-400 mt-0.5" x-text="lang === 'ru' && p.description_ru ? p.description_ru : p.description"></div>
+              <div class="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                <span x-show="p.author" x-text="t('packs.author') + ': ' + p.author"></span>
+                <span x-text="t('packs.categories') + ': ' + p.categories_list.length"></span>
+                <span class="font-mono" x-text="p.path"></span>
+              </div>
+            </div>
+            <div class="shrink-0 flex gap-1">
+              <button @click="rescan(p)" class="px-2.5 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700" x-text="t('packs.rescan')">Пересканировать</button>
+              <button @click="deletePack(p)" class="px-2.5 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700" x-text="t('packs.delete')">Удалить</button>
+            </div>
+          </div>
+        </template>
+      </div>
+      <div x-show="packs.length === 0" class="text-center py-8 text-gray-400" x-text="t('packs.empty')">Нет паков</div>
+    </section>
+
+    <!-- ComfyUI Settings -->
+    <section>
+      <h2 class="text-lg font-semibold mb-3">ComfyUI</h2>
+      <div class="border border-gray-200 dark:border-dark-600 rounded-lg overflow-hidden">
+        <table class="w-full border-collapse text-sm">
+          <tbody>
+            <tr class="border-b border-gray-100 dark:border-dark-700">
+              <td class="px-4 py-2.5 text-gray-500 dark:text-dark-400 font-medium" x-text="t('comfy.enable')">Включить генерацию</td>
+              <td class="px-4 py-2.5">
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" x-model="cfg.comfy_enabled" class="w-4 h-4">
+                </label>
+              </td>
+            </tr>
+            <tr class="border-b border-gray-100 dark:border-dark-700">
+              <td class="px-4 py-2.5 text-gray-500 dark:text-dark-400 font-medium" x-text="t('comfy.address')">Адрес ComfyUI</td>
+              <td class="px-4 py-2.5">
+                <input type="text" x-model="cfg.comfy_address" placeholder="http://127.0.0.1:8188" class="w-full border rounded px-2 py-1 text-xs font-mono bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+              </td>
+            </tr>
+            <tr class="border-b border-gray-100 dark:border-dark-700">
+              <td class="px-4 py-2.5 text-gray-500 dark:text-dark-400 font-medium" x-text="t('comfy.save_path')">Путь сохранения</td>
+              <td class="px-4 py-2.5">
+                <input type="text" x-model="cfg.save_path" placeholder="./output" class="w-full border rounded px-2 py-1 text-xs font-mono bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+              </td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2.5 text-gray-500 dark:text-dark-400 font-medium align-top" x-text="t('comfy.resolutions')">Разрешения</td>
+              <td class="px-4 py-2.5">
+                <textarea x-model="cfg.resolutions" rows="9" style="width:200px" class="border rounded px-2 py-1 text-xs font-mono bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 resize-y" placeholder="Square 1:1#512x512&#10;Landscape 3:2#1152x768&#10;Widescreen 16:9#1280x720"></textarea>
+                <div class="text-xs text-gray-400 mt-1" x-text="t('comfy.resolutions_hint')"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Restore History -->
+    <section>
+      <h2 class="text-lg font-semibold mb-3" x-text="t('comfy.restore_history')">Восстановить историю</h2>
+      <div class="border border-gray-200 dark:border-dark-600 rounded-lg p-4">
+        <p class="text-xs text-gray-500 dark:text-dark-400 mb-3" x-text="t('comfy.restore_history_hint')">Сканирует папку сохранения на наличие PNG с метаданными генерации</p>
+        <div class="flex items-center gap-3">
+          <button @click="restoreHistory()" :disabled="restoring" class="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50" x-text="restoring ? t('comfy.restoring') : t('comfy.restore_history_btn')">Сканировать</button>
+          <span x-show="restoreMsg" x-text="restoreMsg" class="text-sm" :class="restoreOk ? 'text-green-600' : 'text-red-600'"></span>
+        </div>
+      </div>
+    </section>
+
+    <div class="flex items-center gap-3 mt-3">
+      <button @click="saveConfig()" class="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700" x-text="t('settings.save')">Сохранить</button>
+      <span x-show="saveMsg" x-text="saveMsg" class="text-sm" :class="saveOk ? 'text-green-600' : 'text-red-600'"></span>
+    </div>
+  </main>
+
+  <script>
+    function settingsApp() {
+      return {
+        theme: localStorage.getItem('theme') || 'auto',
+        lang: localStorage.getItem('lang') || ((navigator.language || '').startsWith('ru') ? 'ru' : 'en'),
+        translations: {},
+
+        t(key) {
+          return this.translations[key] || key;
+        },
+
+        async loadTranslations() {
+          try {
+            const res = await fetch(`/static/i18n/${this.lang}.json`);
+            this.translations = await res.json();
+          } catch (e) {
+            console.error(e);
+            this.translations = {};
+          }
+        },
+
+        get isDark() {
+          if (this.theme === 'dark') return true;
+          if (this.theme === 'light') return false;
+          return window.matchMedia('(prefers-color-scheme: dark)').matches;
+        },
+
+        cfg: {},
+        packs: [],
+        saveMsg: '',
+        saveOk: false,
+        restoring: false,
+        restoreMsg: '',
+        restoreOk: false,
+
+        async init() {
+          this.loadTranslations();
+          await this.loadConfig();
+          await this.loadPacks();
+        },
+
+        async loadConfig() {
+          try {
+            const res = await fetch('/api/config');
+            this.cfg = await res.json();
+          } catch (e) {
+            console.error('loadConfig:', e);
+          }
+        },
+
+        async loadPacks() {
+          try {
+            const res = await fetch('/api/packs');
+            const list = await res.json();
+            for (const p of list) {
+              try {
+                p.categories_list = JSON.parse(p.categories || '[]');
+              } catch(e) {
+                p.categories_list = [];
+              }
+            }
+            this.packs = list;
+          } catch (e) {
+            console.error(e);
+          }
+        },
+
+        async rescan() {
+          await fetch('/api/sync', { method: 'POST' });
+          await this.loadPacks();
+        },
+
+        async deletePack(pack) {
+          const name = this.lang === 'ru' && pack.name_ru ? pack.name_ru : pack.name;
+          if (!confirm(this.t('packs.confirm_delete').replace('{name}', name))) return;
+          await fetch(`/api/packs?id=${pack.id}`, { method: 'DELETE' });
+          await this.loadPacks();
+        },
+
+        async saveConfig() {
+          this.saveMsg = '';
+          try {
+            const res = await fetch('/api/config', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(this.cfg)
+            });
+            if (res.ok) {
+              this.saveMsg = this.t('settings.saved');
+              this.saveOk = true;
+            } else {
+              const data = await res.json().catch(() => ({}));
+              this.saveMsg = data.error || 'Error';
+              this.saveOk = false;
+            }
+          } catch (e) {
+            this.saveMsg = e.message;
+            this.saveOk = false;
+          }
+          setTimeout(() => this.saveMsg = '', 5000);
+        },
+
+        async restoreHistory() {
+          this.restoring = true;
+          this.restoreMsg = '';
+          this.restoreOk = false;
+          try {
+            const res = await fetch('/api/comfy/scan-history', { method: 'POST' });
+            if (!res.ok) { this.restoreMsg = 'Error: ' + res.status; return; }
+            const data = await res.json();
+            const files = data.files || [];
+            if (files.length === 0) {
+              this.restoreMsg = this.t('comfy.restore_history_empty') || 'PNG с метаданными не найдены';
+              return;
+            }
+            const urls = files.map(f => '/api/comfy/image?filename=' + encodeURIComponent(f) + '&subfolder=&type=output');
+            localStorage.setItem('generation_history', JSON.stringify(urls));
+            this.restoreMsg = (this.t('comfy.restore_history_done') || 'Добавлено {n} изображений').replace('{n}', urls.length);
+            this.restoreOk = true;
+          } catch(e) {
+            this.restoreMsg = e.message;
+          }
+          this.restoring = false;
+        }
+      };
+    }
+  </script>
+</body>
+</html>

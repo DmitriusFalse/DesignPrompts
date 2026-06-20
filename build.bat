@@ -1,0 +1,81 @@
+@echo off
+setlocal enabledelayedexpansion
+
+echo === Design Prompts ===
+echo.
+
+:: Check if Go is installed
+go version >nul 2>nul
+if errorlevel 1 (
+    echo Go not found.
+    echo Download from https://go.dev/dl/ and install Go, then run this script again.
+    pause
+    exit /b 1
+)
+
+set GOOS=windows
+set GOARCH=amd64
+set CGO_ENABLED=1
+
+set BUILD_DIR=build
+if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
+
+echo [1/2] Downloading dependencies...
+call go mod download
+if %errorlevel% neq 0 (
+    echo Error downloading dependencies
+    pause
+    exit /b 1
+)
+
+:: Increment build number
+set VERSION_FILE=version.txt
+if exist "%VERSION_FILE%" (
+    set /p VERSION=<"%VERSION_FILE%"
+    for /f "tokens=1,2,3 delims=." %%a in ("!VERSION!") do (
+        set MAJOR=%%a
+        set MINOR=%%b
+        set BUILD=%%c
+    )
+    set /a BUILD+=1
+    >"%VERSION_FILE%" echo !MAJOR!.!MINOR!.!BUILD!
+)
+
+echo [2/2] Building binary...
+:: -s -w: strip debug info
+:: -H=windowsgui: hide console window
+:: -trimpath: remove build paths
+go build -ldflags="-s -w -H=windowsgui" -trimpath -o "%BUILD_DIR%\DesignPrompts.exe"
+if %errorlevel% neq 0 (
+    echo Build failed
+    pause
+    exit /b 1
+)
+
+:: Copy config alongside the binary
+copy /Y config.json "%BUILD_DIR%\config.json" >nul
+
+:: Copy tags folder alongside the binary
+if exist "tags" (
+    if exist "%BUILD_DIR%\tags" rd /s /q "%BUILD_DIR%\tags"
+    xcopy /E /I /Q "tags" "%BUILD_DIR%\tags" >nul
+)
+
+:: Copy workflows alongside the binary
+if exist "Workflows" (
+    if exist "%BUILD_DIR%\Workflows" rd /s /q "%BUILD_DIR%\Workflows"
+    xcopy /E /I /Q "Workflows" "%BUILD_DIR%\Workflows" >nul
+)
+
+:: Clean up junk files left after tests
+if exist "%BUILD_DIR%\*.log" del "%BUILD_DIR%\*.log"
+
+echo.
+echo Done! Binary: %BUILD_DIR%\DesignPrompts.exe
+
+for %%f in ("%BUILD_DIR%\DesignPrompts.exe") do (
+    echo Size: %%~zf bytes
+)
+
+endlocal
+pause
