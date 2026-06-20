@@ -194,6 +194,8 @@
   "structure.mj.b6": "Стиль",
   "structure.mj.b7": "Aspect Ratio (--ar)",
   "structure.mj.b8": "Stylize (--s)",
+  "structure.mj.b9": "MJ Version (--v)",
+  "structure.mj.b10": "Style (--style)",
 
   "structure.d3.b1": "Тип изображения и объект",
   "structure.d3.b2": "Действие / Поза",

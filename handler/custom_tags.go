@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"danbooru-prompt-builder/database"
+	"design-prompt/database"
 )
 
 func handleCustomMainTags(repo *database.Repo) http.HandlerFunc {

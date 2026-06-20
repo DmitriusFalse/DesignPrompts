@@ -194,6 +194,8 @@
   "structure.mj.b6": "Style",
   "structure.mj.b7": "Aspect Ratio (--ar)",
   "structure.mj.b8": "Stylize (--s)",
+  "structure.mj.b9": "MJ Version (--v)",
+  "structure.mj.b10": "Style (--style)",
 
   "structure.d3.b1": "Image Type & Subject",
   "structure.d3.b2": "Action / Pose",

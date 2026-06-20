@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"danbooru-prompt-builder/config"
-	"danbooru-prompt-builder/database"
-	"danbooru-prompt-builder/sync"
+	"design-prompt/config"
+	"design-prompt/database"
+	"design-prompt/sync"
 )
 
 func RegisterRoutes(mux *http.ServeMux, db *sql.DB, cfg *config.Config, syncSvc *sync.Service, configPath string) {

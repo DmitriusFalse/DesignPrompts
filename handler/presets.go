@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"danbooru-prompt-builder/database"
+	"design-prompt/database"
 )
 
 func handlePresets(repo *database.Repo) http.HandlerFunc {

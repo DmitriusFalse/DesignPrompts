@@ -1,4 +1,4 @@
-module danbooru-prompt-builder
+module design-prompt
 
 go 1.26.1
 

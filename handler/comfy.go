@@ -16,7 +16,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"danbooru-prompt-builder/config"
+	"design-prompt/config"
 )
 
 var transparentGIF = []byte{

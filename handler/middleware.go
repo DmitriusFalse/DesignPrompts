@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"danbooru-prompt-builder/logger"
+	"design-prompt/logger"
 )
 
 func apiMiddleware(next http.HandlerFunc) http.HandlerFunc {

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"danbooru-prompt-builder/config"
+	"design-prompt/config"
 )
 
 func handleConfig(cfg *config.Config, configPath string) http.HandlerFunc {

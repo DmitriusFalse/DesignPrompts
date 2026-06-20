@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"testing"
 
-	"danbooru-prompt-builder/config"
-	"danbooru-prompt-builder/database"
-	"danbooru-prompt-builder/sync"
+	"design-prompt/config"
+	"design-prompt/database"
+	"design-prompt/sync"
 )
 
 type testEnv struct {

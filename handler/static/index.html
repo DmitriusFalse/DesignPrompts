@@ -383,7 +383,7 @@
           <template x-for="block in currentStructureBlocks" :key="'pb'+block.id">
             <div class="block-section"
                  :data-block-id="block.id"
-                 @dragover="onDragOver($event)"
+                 @dragover.prevent="onDragOver($event)"
                  @dragenter="onDragEnter($event)"
                  @dragleave="onDragLeave($event)"
                  @drop.prevent="onDrop($event, 'positive')">
@@ -392,167 +392,143 @@
                 <span class="count" x-text="'(' + positiveByBlock(block.id).length + ')'"></span>
               </div>
                 <div class="flex flex-wrap gap-1">
-                  <!-- Regular chips -->
-                  <template x-for="ch in positiveByBlock(block.id).filter(c => c.category !== 'group' && c.category !== 'dynamic')" :key="ch._key || ch.name">
-                    <span class="chip chip-positive" draggable="true"
-                          @dragstart="onDragStart($event, ch)"
-                          @dragend="onDragEnd($event)"
-                          @click="removeChip('positive', ch.name)"
-                          :data-chip-key="ch._key"
-                          :title="chipCategoryName(ch)">
-                      <span x-show="getColorForChip(ch)" class="tag-color-dot" :style="{ '--dot-color': getColorForChip(ch) }"></span>
-                      <span x-text="ch.name" class="max-w-32 truncate"></span>
-                      <input type="number" step="0.01" min="0" max="99"
-                             x-model="ch.weight"
-                             @input="notifyChipChange()"
-                             placeholder="1.0"
-                             class="tag-weight-input"
-                             @click.stop
-                             @mousedown.stop>
-                      <button @click.stop="openEditChip(ch)" class="chip-btn" title="Edit">✎</button>
-                      <span class="chip-btn chip-btn-x">x</span>
-                    </span>
-                  </template>
-                  <!-- Group chips -->
-                  <template x-for="ch in positiveByBlock(block.id).filter(c => c.category === 'group')" :key="ch._key">
-                    <div class="group-chip" draggable="true"
-                         :data-chip-key="ch._key"
-                         @dragstart="onDragStart($event, ch)"
-                         @dragend="onDragEnd($event)"
-                         @dragover.prevent="onGroupDragOver($event, ch)"
-                         @dragenter.prevent="onGroupDragEnter($event)"
-                         @dragleave="onGroupDragLeave($event)"
-                         @drop.prevent="onGroupDrop($event, ch)">
-                      <div class="group-chip-header">
-                        <span class="group-chip-label">( <span x-text="groupLabelText(ch)"></span> )</span>
-                        <input type="number" step="0.001" min="0" max="99"
-                               x-model="ch.weight"
-                               @input="notifyChipChange()"
-                               placeholder="1.0"
-                               class="group-weight-input"
-                               :title="ch.weight ? 'weight: ' + ch.weight : ''"
-                               @click.stop
-                               @mousedown.stop>
-                        <button @click="removeGroupChip(ch)" class="chip-btn chip-btn-x">x</button>
-                      </div>
-                      <div class="group-chip-children" x-show="(ch._groupChildren || []).length > 0">
-                        <template x-for="child in (ch._groupChildren || [])" :key="child.name">
-                          <span class="chip chip-positive text-xs" draggable="true"
-                                 :class="{ 'chip-dynamic-bg': child._category === 'dynamic' }"
-                                :data-chip-key="ch._key + '-' + child.name"
-                                @dragstart.stop="onGroupChildDragStart($event, ch, child)"
-                                @dragend="onDragEnd($event)">
-                            <span x-text="childDisplayName(child)" class="max-w-24 truncate"></span>
-                            <input type="number" step="0.01" min="0" max="99"
-                                   x-model="child.weight"
+                  <template x-for="ch in positiveByBlock(block.id)" :key="ch._key || ch.name">
+                    <span style="display:contents">
+                      <!-- Regular chip -->
+                      <template x-if="ch.category !== 'group' && ch.category !== 'dynamic'">
+                        <span class="chip chip-positive" draggable="true"
+                              @dragstart="onDragStart($event, ch)"
+                              @dragend="onDragEnd($event)"
+                              @click="removeChip('positive', ch.name)"
+                              :data-chip-key="ch._key"
+                              :title="chipCategoryName(ch)">
+                          <span x-show="getColorForChip(ch)" class="tag-color-dot" :style="{ '--dot-color': getColorForChip(ch) }"></span>
+                          <span x-text="ch.name" class="max-w-32 truncate"></span>
+                          <input type="number" step="0.01" min="0" max="99"
+                                 x-model="ch.weight"
+                                 @input="notifyChipChange()"
+                                 placeholder="1.0"
+                                 class="tag-weight-input"
+                                 @click.stop
+                                 @mousedown.stop>
+                          <button @click.stop="openEditChip(ch)" class="chip-btn" title="Edit">✎</button>
+                          <span class="chip-btn chip-btn-x">x</span>
+                        </span>
+                      </template>
+                      <!-- Group chip -->
+                      <template x-if="ch.category === 'group'">
+                        <div class="group-chip" draggable="true"
+                             :data-chip-key="ch._key"
+                             @dragstart="onDragStart($event, ch)"
+                             @dragend="onDragEnd($event)"
+                             @dragover.prevent="onGroupDragOver($event, ch)"
+                             @dragenter.prevent="onGroupDragEnter($event)"
+                             @dragleave="onGroupDragLeave($event)"
+                             @drop.prevent="onGroupDrop($event, ch)">
+                          <div class="group-chip-header">
+                            <span class="group-chip-label">( <span x-text="groupLabelText(ch)"></span> )</span>
+                            <input type="number" step="0.001" min="0" max="99"
+                                   x-model="ch.weight"
                                    @input="notifyChipChange()"
                                    placeholder="1.0"
-                                   class="tag-weight-input"
-                                   style="width:36px"
+                                   class="group-weight-input"
+                                   :title="ch.weight ? 'weight: ' + ch.weight : ''"
                                    @click.stop
                                    @mousedown.stop>
-                            <button @click.stop="removeChildFromGroup(ch, child.name)" class="chip-btn chip-btn-x">x</button>
-                          </span>
-                        </template>
-                      </div>
-                      <div class="group-chip-dropzone" x-show="(ch._groupChildren || []).length === 0">
-                        <span class="text-gray-400 text-[10px]">drop tags here</span>
-                      </div>
-                    </div>
-                  </template>
-                  <!-- Dynamic Prompt chips -->
-                  <template x-for="ch in positiveByBlock(block.id).filter(c => c.category === 'dynamic')" :key="ch._key">
-                    <span class="chip-dynamic" draggable="true"
-                          :data-chip-key="ch._key"
-                          @dragstart="onDragStart($event, ch)"
-                          @dragend="onDragEnd($event)">
-                      [
-                      <span class="dyn-slot" :class="{ 'dyn-filled': ch.from_tag }"
-                            @dragover.prevent @drop.prevent="onDynamicDrop($event, ch, 'from')">
-                        <template x-if="ch.from_tag && ch.from_tag._category === 'group'">
-                          <span class="dyn-group-full" draggable="true"
-                                @dragstart.stop="onDynamicChildDragStart($event, ch, 'from')"
-                                @dragend="onDragEnd($event)">
-                            <span class="dyn-group-full-paren">(</span>
-                            <template x-for="gc in (ch.from_tag._groupChildren || [])" :key="gc.name">
-                              <span class="dyn-group-full-child">
-                                <span x-text="gc.name" class="max-w-16 truncate"></span>
+                            <button @click="removeGroupChip(ch)" class="chip-btn chip-btn-x">x</button>
+                          </div>
+                          <div class="group-chip-children" x-show="(ch._groupChildren || []).length > 0">
+                            <template x-for="child in (ch._groupChildren || [])" :key="child.name">
+                              <span class="chip chip-positive text-xs" draggable="true"
+                                     :class="{ 'chip-dynamic-bg': child._category === 'dynamic' }"
+                                    :data-chip-key="ch._key + '-' + child.name"
+                                    @dragstart.stop="onGroupChildDragStart($event, ch, child)"
+                                    @dragend="onDragEnd($event)">
+                                <span x-text="childDisplayName(child)" class="max-w-24 truncate"></span>
                                 <input type="number" step="0.01" min="0" max="99"
-                                       x-model="gc.weight"
+                                       x-model="child.weight"
                                        @input="notifyChipChange()"
+                                       placeholder="1.0"
                                        class="tag-weight-input"
-                                       style="width:32px"
-                                       @click.stop @mousedown.stop>
+                                       style="width:36px"
+                                       @click.stop
+                                       @mousedown.stop>
+                                <button @click.stop="removeChildFromGroup(ch, child.name)" class="chip-btn chip-btn-x">x</button>
                               </span>
                             </template>
-                            <span class="dyn-group-full-paren">)</span>
-                            <input type="number" step="0.001" min="0" max="99"
-                                   x-model="ch.from_tag.weight"
-                                   @input="notifyChipChange()"
-                                   class="group-weight-input"
-                                   placeholder="1.0"
-                                   @click.stop @mousedown.stop>
-                            <button @click.stop="removeDynamicTag(ch, 'from')" class="chip-btn chip-btn-x">x</button>
-                          </span>
-                        </template>
-                        <template x-if="ch.from_tag && ch.from_tag._category !== 'group'">
-                          <span class="dyn-tag" draggable="true"
-                                :class="{ 'dyn-tag-dynamic': ch.from_tag._category === 'dynamic' }"
-                                @dragstart.stop="onDynamicChildDragStart($event, ch, 'from')"
-                                @dragend="onDragEnd($event)">
-                            <span x-text="childDisplayName(ch.from_tag)" class="max-w-20 truncate"></span>
-                            <button @click.stop="removeDynamicTag(ch, 'from')" class="chip-btn chip-btn-x">x</button>
-                          </span>
-                        </template>
-                        <template x-if="!ch.from_tag">
-                          <span class="dyn-placeholder" x-text="t('dynamic.from')">from</span>
-                        </template>
+                          </div>
+                          <div class="group-chip-dropzone" x-show="(ch._groupChildren || []).length === 0">
+                            <span class="text-gray-400 text-[10px]">drop tags here</span>
+                          </div>
+                        </div>
+                      </template>
+                      <!-- Dynamic Prompt chip -->
+                      <template x-if="ch.category === 'dynamic'">
+                        <span class="chip-dynamic" draggable="true"
+                              :data-chip-key="ch._key"
+                              @dragstart="onDragStart($event, ch)"
+                              @dragend="onDragEnd($event)">
+                        [
+                        <span class="dyn-slot" :class="{ 'dyn-filled': ch.from_tag }"
+                              @dragover.prevent @drop.prevent="onDynamicDrop($event, ch, 'from')">
+                          <template x-if="ch.from_tag && ch.from_tag._category === 'group'">
+                            <span class="dyn-group-full" draggable="true"
+                                  @dragstart.stop="onDynamicChildDragStart($event, ch, 'from')"
+                                  @dragend="onDragEnd($event)">
+                              <template x-for="gc in (ch.from_tag._groupChildren || [])" :key="gc.name">
+                                <span class="dyn-group-full-child">
+                                  <span x-text="gc.name" class="max-w-16 truncate"></span>
+                                </span>
+                              </template>
+                              <button @click.stop="removeDynamicTag(ch, 'from')" class="chip-btn chip-btn-x">x</button>
+                            </span>
+                          </template>
+                          <template x-if="ch.from_tag && ch.from_tag._category !== 'group'">
+                            <span class="dyn-tag" draggable="true"
+                                  :class="{ 'dyn-tag-dynamic': ch.from_tag._category === 'dynamic' }"
+                                  @dragstart.stop="onDynamicChildDragStart($event, ch, 'from')"
+                                  @dragend="onDragEnd($event)">
+                              <span x-text="childDisplayName(ch.from_tag)" class="max-w-20 truncate"></span>
+                              <button @click.stop="removeDynamicTag(ch, 'from')" class="chip-btn chip-btn-x">x</button>
+                            </span>
+                          </template>
+                          <template x-if="!ch.from_tag">
+                            <span class="dyn-placeholder" x-text="t('dynamic.from')">from</span>
+                          </template>
+                        </span>
+                        :
+                        <span class="dyn-slot" :class="{ 'dyn-filled': ch.to_tag }"
+                              @dragover.prevent @drop.prevent="onDynamicDrop($event, ch, 'to')">
+                          <template x-if="ch.to_tag && ch.to_tag._category === 'group'">
+                            <span class="dyn-group-full" draggable="true"
+                                  @dragstart.stop="onDynamicChildDragStart($event, ch, 'to')"
+                                  @dragend="onDragEnd($event)">
+                              <template x-for="gc in (ch.to_tag._groupChildren || [])" :key="gc.name">
+                                <span class="dyn-group-full-child">
+                                  <span x-text="gc.name" class="max-w-16 truncate"></span>
+                                </span>
+                              </template>
+                              <button @click.stop="removeDynamicTag(ch, 'to')" class="chip-btn chip-btn-x">x</button>
+                            </span>
+                          </template>
+                          <template x-if="ch.to_tag && ch.to_tag._category !== 'group'">
+                            <span class="dyn-tag" draggable="true"
+                                  :class="{ 'dyn-tag-dynamic': ch.to_tag._category === 'dynamic' }"
+                                  @dragstart.stop="onDynamicChildDragStart($event, ch, 'to')"
+                                  @dragend="onDragEnd($event)">
+                              <span x-text="childDisplayName(ch.to_tag)" class="max-w-20 truncate"></span>
+                              <button @click.stop="removeDynamicTag(ch, 'to')" class="chip-btn chip-btn-x">x</button>
+                            </span>
+                          </template>
+                        </span>
+                        :
+                        <input type="number" step="0.1" min="0" max="1"
+                               x-model="ch.when"
+                               @input="notifyChipChange()"
+                               class="dyn-step" @click.stop @mousedown.stop>
+                        ]
                       </span>
-                      :
-                      <span class="dyn-slot" :class="{ 'dyn-filled': ch.to_tag }"
-                            @dragover.prevent @drop.prevent="onDynamicDrop($event, ch, 'to')">
-                        <template x-if="ch.to_tag && ch.to_tag._category === 'group'">
-                          <span class="dyn-group-full" draggable="true"
-                                @dragstart.stop="onDynamicChildDragStart($event, ch, 'to')"
-                                @dragend="onDragEnd($event)">
-                            <span class="dyn-group-full-paren">(</span>
-                            <template x-for="gc in (ch.to_tag._groupChildren || [])" :key="gc.name">
-                              <span class="dyn-group-full-child">
-                                <span x-text="gc.name" class="max-w-16 truncate"></span>
-                                <input type="number" step="0.01" min="0" max="99"
-                                       x-model="gc.weight"
-                                       @input="notifyChipChange()"
-                                       class="tag-weight-input"
-                                       style="width:32px"
-                                       @click.stop @mousedown.stop>
-                              </span>
-                            </template>
-                            <span class="dyn-group-full-paren">)</span>
-                            <input type="number" step="0.001" min="0" max="99"
-                                   x-model="ch.to_tag.weight"
-                                   @input="notifyChipChange()"
-                                   class="group-weight-input"
-                                   placeholder="1.0"
-                                   @click.stop @mousedown.stop>
-                            <button @click.stop="removeDynamicTag(ch, 'to')" class="chip-btn chip-btn-x">x</button>
-                          </span>
-                        </template>
-                        <template x-if="ch.to_tag && ch.to_tag._category !== 'group'">
-                          <span class="dyn-tag" draggable="true"
-                                :class="{ 'dyn-tag-dynamic': ch.to_tag._category === 'dynamic' }"
-                                @dragstart.stop="onDynamicChildDragStart($event, ch, 'to')"
-                                @dragend="onDragEnd($event)">
-                            <span x-text="childDisplayName(ch.to_tag)" class="max-w-20 truncate"></span>
-                            <button @click.stop="removeDynamicTag(ch, 'to')" class="chip-btn chip-btn-x">x</button>
-                          </span>
-                        </template>
-                      </span>
-                      :
-                      <input type="number" step="0.1" min="0" max="1"
-                             x-model="ch.when"
-                             @input="notifyChipChange()"
-                             class="dyn-step" @click.stop @mousedown.stop>
-                      ]
+                      </template>
                     </span>
                   </template>
                </div>

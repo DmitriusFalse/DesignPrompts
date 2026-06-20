@@ -856,8 +856,7 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 .group-weight-input,
-.tag-weight-input,
-.sched-step {
+.tag-weight-input {
   width: 52px;
   font-size: 10px;
   padding: 1px 3px;

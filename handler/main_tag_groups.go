@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"danbooru-prompt-builder/database"
+	"design-prompt/database"
 )
 
 func handleMainTagGroups(repo *database.Repo) http.HandlerFunc {

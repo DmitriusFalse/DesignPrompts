@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"danbooru-prompt-builder/database"
-	"danbooru-prompt-builder/sync"
+	"design-prompt/database"
+	"design-prompt/sync"
 )
 
 func handleGetPackByID(repo *database.Repo) http.HandlerFunc {

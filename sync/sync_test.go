@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"danbooru-prompt-builder/database"
+	"design-prompt/database"
 )
 
 func TestSync_NewPack(t *testing.T) {

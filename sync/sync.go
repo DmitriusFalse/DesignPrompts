@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"danbooru-prompt-builder/database"
-	"danbooru-prompt-builder/logger"
+	"design-prompt/database"
+	"design-prompt/logger"
 )
 
 type Service struct {

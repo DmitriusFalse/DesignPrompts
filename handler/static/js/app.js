@@ -81,13 +81,18 @@ const PROMPT_STRUCTURES = [
       { id: 6, labelKey: 'structure.mj.b6' },
       { id: 7, labelKey: 'structure.mj.b7' },
       { id: 8, labelKey: 'structure.mj.b8' },
+      { id: 9, labelKey: 'structure.mj.b9' },
+      { id: 10, labelKey: 'structure.mj.b10' },
     ],
     renderPositive(blocks, t) {
       const p = blocks.map(g => g.join(', '));
-      const ar = p[6] || '16:9';
-      const st = p[7] || '250';
       const parts = [p[0], p[1], p[2], p[3], p[4], p[5]].filter(Boolean);
-      return parts.join(', ') + ' --ar ' + ar + ' --v 6 --style raw --s ' + st;
+      let result = parts.join(', ');
+      if (p[6]) result += ' --ar ' + p[6];
+      if (p[8]) result += ' --v ' + p[8];
+      if (p[9]) result += ' --style ' + p[9];
+      if (p[7]) result += ' --s ' + p[7];
+      return result;
     },
     renderNegative(chips, t) {
       if (!chips.length) return '';
@@ -817,6 +822,8 @@ function app() {
           tgtArr.splice(insertIdx, 0, chip);
         }
       }
+      this.positiveChips = this.positiveChips.slice();
+      this.negativeChips = this.negativeChips.slice();
       this.dragState = null;
       this.dropTarget = null;
       this.notifyChipChange();
@@ -877,7 +884,23 @@ function app() {
       const name = ds.name;
       if (!name || name === 'BREAK' || name === 'GROUP' || name === 'DYNAMIC') return;
       const chip = [...this.positiveChips, ...this.negativeChips].find(c => c.name === name);
-      if (!chip || chip.category === 'group') return;
+      if (!chip || chip.category === 'group') {
+        // Reorder: insert chip after target group
+        const srcChip = [...this.positiveChips, ...this.negativeChips].find(c => c._key === ds.key);
+        if (srcChip && srcChip !== group) {
+          const srcArr = this.positiveChips.includes(srcChip) ? this.positiveChips : this.negativeChips;
+          const srcIdx = srcArr.indexOf(srcChip);
+          if (srcIdx >= 0) srcArr.splice(srcIdx, 1);
+          const tgtIdx = this.positiveChips.indexOf(group);
+          if (tgtIdx >= 0) this.positiveChips.splice(tgtIdx + 1, 0, srcChip);
+          this.positiveChips = this.positiveChips.slice();
+          if (srcArr !== this.positiveChips) this.negativeChips = this.negativeChips.slice();
+        }
+        this.dragState = null;
+        this.dropTarget = null;
+        this.notifyChipChange();
+        return;
+      }
       const srcArr = this.positiveChips.includes(chip) ? this.positiveChips : this.negativeChips;
       const idx = srcArr.indexOf(chip);
       if (idx >= 0) srcArr.splice(idx, 1);
@@ -923,7 +946,7 @@ function app() {
           const newTag = { name: tagData.name, prompt_text: tagData.prompt_text || tagData.name };
           if (tagData._category) { newTag._category = tagData._category; }
           if (tagData._category === 'dynamic') { newTag.from_tag = tagData.from_tag; newTag.to_tag = tagData.to_tag; newTag.when = tagData.when; }
-          if (tagData._category === 'group') { newTag._groupChildren = (tagData._groupChildren || []).map(c => ({ ...c })); }
+          if (tagData._category === 'group') { newTag._groupChildren = (tagData._groupChildren || []).map(c => ({ name: c.name, prompt_text: c.prompt_text || c.name })); }
           dynChip[slot === 'from' ? 'from_tag' : 'to_tag'] = newTag;
         }
         this.dragState = null;
@@ -941,7 +964,7 @@ function app() {
           const newTag = { name: childData.name, prompt_text: childData.prompt_text || childData.name };
           if (childData._category) { newTag._category = childData._category; }
           if (childData._category === 'dynamic') { newTag.from_tag = childData.from_tag; newTag.to_tag = childData.to_tag; newTag.when = childData.when; }
-          if (childData._category === 'group') { newTag._groupChildren = (childData._groupChildren || []).map(c => ({ ...c })); }
+          if (childData._category === 'group') { newTag._groupChildren = (childData._groupChildren || []).map(c => ({ name: c.name, prompt_text: c.prompt_text || c.name })); }
           dynChip[slot === 'from' ? 'from_tag' : 'to_tag'] = newTag;
         }
         this.dragState = null;
@@ -958,13 +981,30 @@ function app() {
         const idx = srcArr.indexOf(chip);
         if (idx >= 0) srcArr.splice(idx, 1);
         dynChip[slot === 'from' ? 'from_tag' : 'to_tag'] = { name: chip.name, prompt_text: chip.prompt_text || chip.name };
+        this.dragState = null;
+        this.notifyChipChange();
+        return;
       }
       // Drop group chip into dynamic slot
       if (chip && chip.category === 'group') {
         const srcArr = this.positiveChips.includes(chip) ? this.positiveChips : this.negativeChips;
         const idx = srcArr.indexOf(chip);
         if (idx >= 0) srcArr.splice(idx, 1);
-        dynChip[slot === 'from' ? 'from_tag' : 'to_tag'] = { name: chip.name, prompt_text: chip.prompt_text || chip.name, _category: 'group', _groupChildren: (chip._groupChildren || []).map(c => ({ ...c })) };
+        dynChip[slot === 'from' ? 'from_tag' : 'to_tag'] = { name: chip.name, prompt_text: chip.prompt_text || chip.name, _category: 'group', _groupChildren: (chip._groupChildren || []).map(c => ({ name: c.name, prompt_text: c.prompt_text || c.name })) };
+        this.dragState = null;
+        this.notifyChipChange();
+        return;
+      }
+      // Fallback: reorder chip after target dynamic chip
+      const srcChip = allChips.find(c => c._key === ds.key);
+      if (srcChip && srcChip !== dynChip) {
+        const srcArr = this.positiveChips.includes(srcChip) ? this.positiveChips : this.negativeChips;
+        const srcIdx = srcArr.indexOf(srcChip);
+        if (srcIdx >= 0) srcArr.splice(srcIdx, 1);
+        const tgtIdx = this.positiveChips.indexOf(dynChip);
+        if (tgtIdx >= 0) this.positiveChips.splice(tgtIdx + 1, 0, srcChip);
+        this.positiveChips = this.positiveChips.slice();
+        if (srcArr !== this.positiveChips) this.negativeChips = this.negativeChips.slice();
       }
       this.dragState = null;
       this.notifyChipChange();
@@ -1178,7 +1218,7 @@ function app() {
         let from = '';
         if (child.from_tag) {
           if (child.from_tag._category === 'group') {
-            from = '(' + (child.from_tag._groupChildren || []).map(c => c.prompt_text || c.name).join(' ') + ')';
+            from = (child.from_tag._groupChildren || []).map(c => c.prompt_text || c.name).join(' ');
           } else {
             from = child.from_tag.prompt_text || child.from_tag.name;
           }
@@ -1186,7 +1226,7 @@ function app() {
         let to = '';
         if (child.to_tag) {
           if (child.to_tag._category === 'group') {
-            to = '(' + (child.to_tag._groupChildren || []).map(c => c.prompt_text || c.name).join(' ') + ')';
+            to = (child.to_tag._groupChildren || []).map(c => c.prompt_text || c.name).join(' ');
           } else {
             to = child.to_tag.prompt_text || child.to_tag.name;
           }
@@ -1634,12 +1674,16 @@ function app() {
       this.positiveChips.splice(0);
       this.negativeChips.splice(0);
 
+      const structId = this.currentStructure?.id;
       const posParts = this.splitAtBreak(data.positive);
       const posSubs = ['artist', 'general'];
       for (let i = 0; i < posParts.length; i++) {
         const sub = posSubs[i] || 'general';
         for (const n of posParts[i]) {
-          const ch = { name: n, category: 'meta', subcategory: sub, block_id: this.resolveBlockIdByName(n) };
+          if (!this._presetTagFilter(n, structId)) continue;
+          let blockId = this.resolveBlockIdByName(n);
+          blockId = this._overridePresetBlockId(n, blockId, structId);
+          const ch = { name: n, category: 'meta', subcategory: sub, block_id: blockId, _key: this._chipKey() };
           if (!this.positiveChips.some(c => c.name === ch.name)) {
             this.positiveChips.push(ch);
           }
@@ -1647,13 +1691,34 @@ function app() {
       }
 
       for (const n of data.negative) {
-        const ch = { name: n, category: 'meta', subcategory: 'general', block_id: 9 };
+        const ch = { name: n, category: 'meta', subcategory: 'general', block_id: 9, _key: this._chipKey() };
         if (!this.negativeChips.some(c => c.name === ch.name)) {
           this.negativeChips.push(ch);
         }
       }
       this.enrichChips();
       this.notifyChipChange();
+    },
+
+    _presetTagFilter(tagName, structId) {
+      const ponyTags = new Set(['score_9', 'score_8_up', 'score_7_up', 'score_6_up', 'score_5_up']);
+      if (ponyTags.has(tagName)) {
+        return structId === 'novelai' || structId === 'anime';
+      }
+      return true;
+    },
+
+    _overridePresetBlockId(tagName, blockId, structId) {
+      const ponyTags = new Set(['score_9', 'score_8_up', 'score_7_up', 'score_6_up', 'score_5_up']);
+      if (ponyTags.has(tagName) && (structId === 'novelai' || structId === 'anime')) {
+        return 1;
+      }
+      if (structId === 'midjourney' && blockId >= 7) {
+        return 1;
+      }
+      if (structId === 'flux' && blockId > 6) return 1;
+      if (structId === 'dalle3' && blockId > 7) return 1;
+      return blockId;
     },
 
     splitAtBreak(arr) {
@@ -1788,15 +1853,19 @@ function app() {
         localStorage.setItem('first_launch_done', '1');
         const data = this.presetData?.['Quality Only'];
         if (data) {
+          const structId = this.currentStructure?.id;
           for (const n of data.positive) {
             if (n === 'BREAK') continue;
-            const ch = { name: n, category: 'meta', subcategory: 'quality', block_id: this.resolveBlockIdByName(n) };
+            if (!this._presetTagFilter(n, structId)) continue;
+            let blockId = this.resolveBlockIdByName(n);
+            blockId = this._overridePresetBlockId(n, blockId, structId);
+            const ch = { name: n, category: 'meta', subcategory: 'quality', block_id: blockId, _key: this._chipKey() };
             if (!this.positiveChips.some(c => c.name === n)) {
               this.positiveChips.push(ch);
             }
           }
           for (const n of data.negative) {
-            const ch = { name: n, category: 'meta', subcategory: 'quality', block_id: 9 };
+            const ch = { name: n, category: 'meta', subcategory: 'quality', block_id: 9, _key: this._chipKey() };
             if (!this.negativeChips.some(c => c.name === n)) {
               this.negativeChips.push(ch);
             }
@@ -2056,6 +2125,15 @@ function app() {
         this.positiveChips.push(...restore.positive.filter(c => !this.positiveChips.some(x => x.name === c.name)));
         delete this._orphanChips[newId];
       }
+      // Auto-populate default chips for Midjourney parameters
+      if (newId === 'midjourney') {
+        const defaults = { 7: '16:9', 8: '250', 9: '6', 10: 'raw' };
+        for (const [blockId, val] of Object.entries(defaults)) {
+          if (!this.positiveChips.some(c => c.block_id === parseInt(blockId) && c.name === val)) {
+            this.positiveChips.push({ name: val, category: 'meta', subcategory: '', block_id: parseInt(blockId), _key: this._chipKey() });
+          }
+        }
+      }
       this.notifyChipChange();
     },
 
@@ -2072,7 +2150,7 @@ function app() {
                 let f = '';
                 if (ch.from_tag) {
                   if (ch.from_tag._category === 'group') {
-                    f = '(' + (ch.from_tag._groupChildren || []).map(gc => gc.prompt_text || gc.name).join(' ') + ')';
+                    f = (ch.from_tag._groupChildren || []).map(gc => gc.prompt_text || gc.name).join(' ');
                   } else {
                     f = ch.from_tag.prompt_text || ch.from_tag.name;
                   }
@@ -2080,7 +2158,7 @@ function app() {
                 let t = '';
                 if (ch.to_tag) {
                   if (ch.to_tag._category === 'group') {
-                    t = '(' + (ch.to_tag._groupChildren || []).map(gc => gc.prompt_text || gc.name).join(' ') + ')';
+                    t = (ch.to_tag._groupChildren || []).map(gc => gc.prompt_text || gc.name).join(' ');
                   } else {
                     t = ch.to_tag.prompt_text || ch.to_tag.name;
                   }
@@ -2109,7 +2187,7 @@ function app() {
             if (c.from_tag) {
               if (c.from_tag._category === 'group') {
                 let inner = (c.from_tag._groupChildren || []).map(gc => gc.prompt_text || gc.name).join(' ');
-                from = '(' + inner + ')';
+                from = inner;
               } else {
                 from = c.from_tag.prompt_text || c.from_tag.name;
               }
@@ -2118,7 +2196,7 @@ function app() {
             if (c.to_tag) {
               if (c.to_tag._category === 'group') {
                 let inner = (c.to_tag._groupChildren || []).map(gc => gc.prompt_text || gc.name).join(' ');
-                to = '(' + inner + ')';
+                to = inner;
               } else {
                 to = c.to_tag.prompt_text || c.to_tag.name;
               }
@@ -2177,6 +2255,15 @@ function app() {
       await this.loadTree();
       this.assignColors();
       this.loadAutoSave();
+      if (this.currentStructure?.id === 'midjourney') {
+        const defaults = { 7: '16:9', 8: '250', 9: '6', 10: 'raw' };
+        for (const [blockId, val] of Object.entries(defaults)) {
+          const bid = parseInt(blockId);
+          if (!this.positiveChips.some(c => c.block_id === bid)) {
+            this.positiveChips.push({ name: val, category: 'meta', subcategory: '', block_id: bid, _key: this._chipKey() });
+          }
+        }
+      }
       this.enrichChips();
       this.updateChipNames();
       this.loadAllTreeTags();

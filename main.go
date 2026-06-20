@@ -17,11 +17,11 @@ import (
 	"time"
 	"unsafe"
 
-	"danbooru-prompt-builder/config"
-	"danbooru-prompt-builder/database"
-	"danbooru-prompt-builder/handler"
-	"danbooru-prompt-builder/logger"
-	syncsvc "danbooru-prompt-builder/sync"
+	"design-prompt/config"
+	"design-prompt/database"
+	"design-prompt/handler"
+	"design-prompt/logger"
+	syncsvc "design-prompt/sync"
 
 	webview "github.com/webview/webview_go"
 )
@@ -101,8 +101,7 @@ func setWindowIcon(hwnd uintptr) {
 	procSendMessageW.Call(hwnd, WM_SETICON, ICON_BIG, hicon)
 }
 
-//go:embed version.txt
-var buildVersion string
+var Version string
 
 func main() {
 	exe, _ := os.Executable()
@@ -132,7 +131,7 @@ func main() {
 	mux := http.NewServeMux()
 	handler.RegisterRoutes(mux, db, cfg, syncSvc, cfgPath)
 
-	version := strings.TrimSpace(buildVersion)
+	version := strings.TrimSpace(Version)
 	mux.HandleFunc("/api/version", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"version": version})

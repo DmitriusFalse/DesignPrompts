@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"danbooru-prompt-builder/config"
-	"danbooru-prompt-builder/sync"
+	"design-prompt/config"
+	"design-prompt/sync"
 )
 
 func handleSync(syncSvc *sync.Service, cfg *config.Config) http.HandlerFunc {
