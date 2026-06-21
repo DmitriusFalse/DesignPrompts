@@ -36,37 +36,6 @@ document.addEventListener('alpine:init', () => {
     },
   }));
 
-  Alpine.data('tooltip', (text) => ({
-    show: false,
-    text: text || '',
-    enter() {
-      this.show = true;
-      this.$nextTick(() => this._position());
-    },
-    leave() { this.show = false; },
-    _position() {
-      const tip = this.$el.querySelector('.tooltip');
-      if (!tip) return;
-      const rect = tip.getBoundingClientRect();
-      const vw = window.innerWidth;
-      if (rect.top < 0) {
-        tip.style.bottom = 'auto';
-        tip.style.top = '100%';
-        tip.style.marginTop = '8px';
-        tip.style.marginBottom = '';
-      }
-      const r2 = tip.getBoundingClientRect();
-      if (r2.left < 4) {
-        tip.style.transform = 'none';
-        tip.style.left = '4px';
-        tip.style.right = 'auto';
-      } else if (r2.left + r2.width > vw - 4) {
-        tip.style.transform = 'none';
-        tip.style.right = '4px';
-        tip.style.left = 'auto';
-      }
-    },
-  }));
 });
 
 const BLOCK_IDS = { '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9 };

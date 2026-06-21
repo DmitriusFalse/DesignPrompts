@@ -11,6 +11,8 @@
   <link rel="apple-touch-icon" href="/static/icon-192.png">
   <link rel="stylesheet" href="/static/styles.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="/static/js/floating-ui.core.umd.min.js"></script>
+  <script src="/static/js/floating-ui.min.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -317,7 +319,8 @@
                     <template x-for="item in (cat._tags || [])" :key="item.id">
                       <span class="tag-pill-wrapper">
                         <span class="tag-pill" :class="selectedClass(item.tag_name)" @click="addTag(item)">
-                          <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" x-text="item.tag_name" class="max-w-60 truncate relative">
+                          <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="max-w-60 truncate relative inline-flex">
+                            <span x-text="item.tag_name" class="truncate"></span>
                             <div x-show="show && item.aliases" class="tooltip" x-text="t('tooltip.aliases') + item.aliases"></div>
                           </span>
                         </span>
@@ -369,7 +372,7 @@
         <div class="flex items-center gap-2 mb-1 flex-wrap">
           <!-- New Canvas -->
           <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-            <button @click="newCanvas()" class="text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer select-none whitespace-nowrap flex items-center gap-1">
+            <button @click="newCanvas()" class="toolbar-btn flex items-center gap-1">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
               <span x-text="t('canvas.new_title')"></span>
             </button>
@@ -377,7 +380,7 @@
           </div>
           <!-- Save -->
           <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-            <button @click="openSaveModal()" class="text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer select-none whitespace-nowrap flex items-center gap-1">
+            <button @click="openSaveModal()" class="toolbar-btn flex items-center gap-1">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
               <span x-text="t('canvas.save_title')"></span>
             </button>
@@ -385,49 +388,55 @@
           </div>
           <!-- Rename -->
           <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex" x-show="canvasName">
-            <button @click="openRenameModal()" class="text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer select-none">✎</button>
+            <button @click="openRenameModal()" class="toolbar-btn">✎</button>
             <div x-show="show" class="tooltip" x-text="t('tooltip.rename_canvas')"></div>
           </div>
           <!-- Structure label + dropdown -->
           <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap">Тип ИИ:</span>
-          <div class="relative" x-data="dropdown">
-            <button @click="toggle" @click.outside="close" class="flex items-center justify-between gap-1 px-2 py-1 text-xs rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors select-none">
-              <span class="truncate text-left" x-text="t(currentStructure.labelKey)"></span>
-              <svg x-show="!open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <svg x-show="open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-            <div x-show="open" x-transition:enter="transition ease-out" x-transition:enter-start="scale-y-0 opacity-0" x-transition:enter-end="scale-y-100 opacity-100" x-transition:leave="transition ease-in" x-transition:leave-start="scale-y-100 opacity-100" x-transition:leave-end="scale-y-0 opacity-0" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle" style="transition-duration:150ms">
-              <template x-for="s in PROMPT_STRUCTURES" :key="s.id">
-                <button @click="promptStructure = s.id; close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-xs cursor-pointer transition-colors flex items-center" :class="promptStructure === s.id ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
-                  <span x-text="t(s.labelKey)"></span>
-                </button>
-              </template>
+          <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+            <div class="relative" x-data="dropdown">
+              <button @click="toggle" @click.outside="close" class="toolbar-btn py-1 flex items-center gap-1">
+                <span class="truncate text-left" x-text="t(currentStructure.labelKey)"></span>
+                <svg x-show="!open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg x-show="open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div x-show="open" x-transition:enter="transition ease-out" x-transition:enter-start="scale-y-0 opacity-0" x-transition:enter-end="scale-y-100 opacity-100" x-transition:leave="transition ease-in" x-transition:leave-start="scale-y-100 opacity-100" x-transition:leave-end="scale-y-0 opacity-0" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle" style="transition-duration:150ms">
+                <template x-for="s in PROMPT_STRUCTURES" :key="s.id">
+                  <button @click="promptStructure = s.id; close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-xs cursor-pointer transition-colors flex items-center" :class="promptStructure === s.id ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
+                    <span x-text="t(s.labelKey)"></span>
+                  </button>
+                </template>
+              </div>
             </div>
-          </div>
+            <div x-show="show" class="tooltip" x-text="t('tooltip.structure')"></div>
+          </span>
           <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap">Пресеты:</span>
           <template x-for="(data, name) in presetData" :key="name">
-            <button @click="applyPreset(name)" class="px-2 py-0.5 text-xs rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-900 dark:text-dark-100 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 transition-colors cursor-pointer" x-text="name"></button>
+            <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+              <button @click="applyPreset(name)" class="toolbar-btn" x-text="name"></button>
+              <div x-show="show" class="tooltip" x-text="name"></div>
+            </span>
           </template>
         </div>
         <!-- Row 3: BREAK + GROUPING + Schedule -->
         <div class="flex items-center gap-2 mb-1">
           <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-            <span draggable="true" @dragstart="dragBreakSource($event)" @dragend="onDragEnd($event)" class="break-btn text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 cursor-grab select-none">BREAK</span>
-            <div x-show="show" class="tooltip tooltip-wide">
+            <span draggable="true" @dragstart="dragBreakSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none">BREAK</span>
+            <div x-show="show" class="tooltip tooltip-wide" >
               <div class="font-bold mb-1" x-text="t('tooltip.break_title')"></div>
               <p class="text-gray-200" x-text="t('tooltip.break_desc')"></p>
             </div>
           </div>
           <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-            <span draggable="true" @dragstart="dragGroupSource($event)" @dragend="onDragEnd($event)" class="break-btn text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 cursor-grab select-none">ГРУППИРОВКА</span>
-            <div x-show="show" class="tooltip tooltip-wide">
+            <span draggable="true" @dragstart="dragGroupSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none">ГРУППИРОВКА</span>
+            <div x-show="show" class="tooltip tooltip-wide" >
               <div class="font-bold mb-1" x-text="t('tooltip.grouping_title')"></div>
               <p class="text-gray-200" x-text="t('tooltip.grouping_desc')"></p>
             </div>
           </div>
           <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-            <span draggable="true" @dragstart="dragDynamicSource($event)" @dragend="onDragEnd($event)" class="break-btn text-xs px-2 py-0.5 rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-600 dark:text-dark-300 cursor-grab select-none" x-text="t('tooltip.dynamic_btn')">Dynamic Prompt</span>
-            <div x-show="show" class="tooltip tooltip-wide">
+            <span draggable="true" @dragstart="dragDynamicSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none" x-text="t('tooltip.dynamic_btn')">Dynamic Prompt</span>
+            <div x-show="show" class="tooltip tooltip-wide" >
               <div class="font-bold mb-1" x-text="t('tooltip.dynamic_title')"></div>
               <p class="text-gray-200" x-text="t('tooltip.dynamic_desc')"></p>
             </div>
@@ -1078,5 +1087,6 @@
   </div>
 
   <script src="/static/js/app.js"></script>
+  <script src="/static/js/tooltip.js"></script>
 </body>
 </html>

@@ -148,6 +148,7 @@
   "tooltip.aliases": "Aliases: ",
   "tooltip.restore": "Restore prompt from this image",
   "tooltip.log_level": "Log level: debug for verbose output",
+  "tooltip.structure": "Switch prompt structure",
 
   "canvas.save_title": "Save Canvas",
   "canvas.save_name": "Name",

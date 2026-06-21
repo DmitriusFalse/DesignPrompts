@@ -148,6 +148,7 @@
   "tooltip.aliases": "Алиасы: ",
   "tooltip.restore": "Восстановить промпт из этого изображения",
   "tooltip.log_level": "Уровень лога: debug для подробного вывода",
+  "tooltip.structure": "Выбор структуры промпта",
 
   "canvas.save_title": "Сохранить холст",
   "canvas.save_name": "Имя",
