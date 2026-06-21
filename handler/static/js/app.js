@@ -36,10 +36,36 @@ document.addEventListener('alpine:init', () => {
     },
   }));
 
-  Alpine.data('tooltip', () => ({
+  Alpine.data('tooltip', (text) => ({
     show: false,
-    enter() { this.show = true; },
+    text: text || '',
+    enter() {
+      this.show = true;
+      this.$nextTick(() => this._position());
+    },
     leave() { this.show = false; },
+    _position() {
+      const tip = this.$el.querySelector('.tooltip');
+      if (!tip) return;
+      const rect = tip.getBoundingClientRect();
+      const vw = window.innerWidth;
+      if (rect.top < 0) {
+        tip.style.bottom = 'auto';
+        tip.style.top = '100%';
+        tip.style.marginTop = '8px';
+        tip.style.marginBottom = '';
+      }
+      const r2 = tip.getBoundingClientRect();
+      if (r2.left < 4) {
+        tip.style.transform = 'none';
+        tip.style.left = '4px';
+        tip.style.right = 'auto';
+      } else if (r2.left + r2.width > vw - 4) {
+        tip.style.transform = 'none';
+        tip.style.right = '4px';
+        tip.style.left = 'auto';
+      }
+    },
   }));
 });
 
@@ -310,7 +336,10 @@ function app() {
       return categoryName;
     },
 
-    // Sidebar tab
+    // Sidebar
+    sideOpen: false,
+    activePanel: '',
+    activePackId: null,
     sidebarTab: 'const',
 
     // Tree
@@ -396,7 +425,6 @@ function app() {
     _editChipRef: null,
 
     // Custom input
-    customTag: '',
 
     // Presets
     presetData: {},
@@ -1030,15 +1058,25 @@ function app() {
       this.clearChips('negative');
     },
 
-    // ─── Custom tag ───
+    // ─── Sidebar panel toggle ───
 
-    addCustomTag(negative) {
-      const name = this.customTag.trim();
-      if (!name) return;
-      const ch = { name, category: 'custom', subcategory: '', block_id: negative ? this.currentStructure.negativeBlockId : this.resolveBlockIdByName(name) };
-      const target = negative ? this.negativeChips : this.positiveChips;
-      this._toggleChip(ch, target);
-      this.customTag = '';
+    togglePanel(panel, packId) {
+      if (this.activePanel === panel && this.activePackId === (packId ?? null)) {
+        this.sideOpen = !this.sideOpen;
+        return;
+      }
+      this.activePanel = panel;
+      this.activePackId = packId ?? null;
+      this.sideOpen = true;
+      if (panel === 'main') {
+        this.sidebarTab = 'main';
+      } else if (panel === 'pack') {
+        this.sidebarTab = 'tree';
+        this.selectedPackId = packId;
+        this.loadTree();
+      } else if (panel === 'const') {
+        this.sidebarTab = 'const';
+      }
     },
 
     selectedClass(tagName) {

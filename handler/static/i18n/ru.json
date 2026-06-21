@@ -20,9 +20,7 @@
   "settings.back": "На главную",
 
   "presets.label": "Пресеты",
-  "sidebar.const": "Статические теги",
-  "sidebar.tree": "Теги из набора",
-  "sidebar.main": "Основные",
+
 
   "tag.copy": "Копировать",
   "tag.neg": "Негатив",
@@ -30,10 +28,6 @@
   "workspace.canvas": "Холст",
   "workspace.positive_prompt": "Позитивный промпт",
   "workspace.prompts": "Промпты",
-
-  "custom.placeholder": "Кастомный тег",
-  "custom.to.pos": "В позитивный",
-  "custom.to.neg": "В негативный",
 
   "prompt.positive": "Позитивный",
   "prompt.negative": "Негативный",
@@ -138,18 +132,22 @@
   "tooltip.clear_pos": "Очистить все теги из позитивного промпта",
   "tooltip.clear_neg": "Очистить все теги из негативного промпта",
   "tooltip.prompts_toggle": "Развернуть/свернуть редактор промптов",
-  "tooltip.custom_pos": "Добавить тег в позитивный промпт",
-  "tooltip.custom_neg": "Добавить тег в негативный промпт",
   "tooltip.copy_pos": "Скопировать позитивный промпт",
   "tooltip.copy_neg": "Скопировать негативный промпт",
   "tooltip.sidebar_const": "Статические теги — общие для всех стилей",
   "tooltip.sidebar_tree": "Теги из выбранного набора",
-  "tooltip.sidebar_main": "Основные — кастомные теги с группировкой",
   "tooltip.generate": "Запустить генерацию",
   "tooltip.comfy_refresh": "Обновить данные генерации",
   "tooltip.main_add_tag": "Добавить кастомный тег в эту категорию",
   "tooltip.main_add_group": "Создать группу тегов в этой категории",
   "tooltip.install": "Установить приложение",
+  "tooltip.sidebar_main": "Основные — кастомные теги",
+  "tooltip.sidebar_const": "Статистические теги — общие для всех стилей",
+  "tooltip.edit_chip": "Редактировать тег",
+  "tooltip.weight": "Вес чипа",
+  "tooltip.aliases": "Алиасы: ",
+  "tooltip.restore": "Восстановить промпт из этого изображения",
+  "tooltip.log_level": "Уровень лога: debug для подробного вывода",
 
   "canvas.save_title": "Сохранить холст",
   "canvas.save_name": "Имя",

@@ -20,9 +20,7 @@
   "settings.back": "Back",
 
   "presets.label": "Presets",
-  "sidebar.const": "Static Tags",
-  "sidebar.tree": "Tags from Set",
-  "sidebar.main": "Main",
+
 
   "tag.copy": "Copy",
   "tag.neg": "Negative",
@@ -30,10 +28,6 @@
   "workspace.canvas": "Canvas",
   "workspace.positive_prompt": "Positive Prompt",
   "workspace.prompts": "Prompts",
-
-  "custom.placeholder": "Custom tag",
-  "custom.to.pos": "To positive",
-  "custom.to.neg": "To negative",
 
   "prompt.positive": "Positive",
   "prompt.negative": "Negative",
@@ -138,18 +132,22 @@
   "tooltip.clear_pos": "Clear all tags from positive prompt",
   "tooltip.clear_neg": "Clear all tags from negative prompt",
   "tooltip.prompts_toggle": "Expand/collapse prompt editor",
-  "tooltip.custom_pos": "Add tag to positive prompt",
-  "tooltip.custom_neg": "Add tag to negative prompt",
   "tooltip.copy_pos": "Copy positive prompt",
   "tooltip.copy_neg": "Copy negative prompt",
   "tooltip.sidebar_const": "Static tags — shared across all styles",
   "tooltip.sidebar_tree": "Tags from the selected pack",
-  "tooltip.sidebar_main": "Main — custom tags with grouping",
   "tooltip.generate": "Run generation",
   "tooltip.comfy_refresh": "Refresh generation data",
   "tooltip.main_add_tag": "Add a custom tag to this category",
   "tooltip.main_add_group": "Create a tag group in this category",
   "tooltip.install": "Install app",
+  "tooltip.sidebar_main": "Main — custom tags",
+  "tooltip.sidebar_const": "Static tags — shared across all styles",
+  "tooltip.edit_chip": "Edit tag",
+  "tooltip.weight": "Chip weight",
+  "tooltip.aliases": "Aliases: ",
+  "tooltip.restore": "Restore prompt from this image",
+  "tooltip.log_level": "Log level: debug for verbose output",
 
   "canvas.save_title": "Save Canvas",
   "canvas.save_name": "Name",

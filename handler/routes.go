@@ -32,6 +32,7 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, cfg *config.Config, syncSvc 
 
 	mux.HandleFunc("/api/config", api(handleConfig(cfg, configPath)))
 	mux.HandleFunc("/api/pack", api(handleGetPackByID(repo)))
+	mux.HandleFunc("/api/pack/icon", api(handlePackIcon(repo)))
 	mux.HandleFunc("/api/pack/info", api(handleReadPackInfoFromReader(repo)))
 	mux.HandleFunc("/api/packs", api(handlePacks(repo)))
 	mux.HandleFunc("/api/sync", api(handleSync(syncSvc, cfg)))

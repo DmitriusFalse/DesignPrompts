@@ -96,3 +96,26 @@ func handlePacks(repo *database.Repo) http.HandlerFunc {
 		}
 	}
 }
+
+func handlePackIcon(repo *database.Repo) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := r.URL.Query().Get("id")
+		id, _ := strconv.Atoi(idStr)
+		if id <= 0 {
+			http.Error(w, "id required", http.StatusBadRequest)
+			return
+		}
+		pack, err := repo.GetPackByID(id)
+		if err != nil || pack == nil {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		iconPath := filepath.Join(pack.Path, "icon.png")
+		if _, err := os.Stat(iconPath); os.IsNotExist(err) {
+			http.Error(w, "icon not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+		http.ServeFile(w, r, iconPath)
+	}
+}
