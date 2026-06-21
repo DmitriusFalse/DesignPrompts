@@ -1029,6 +1029,29 @@ input[type="number"] {
 .block-section {
   margin-bottom: 6px;
   min-height: 6px;
+  position: relative;
+}
+.block-section.block-drop-before::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #60cdff;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.block-section.block-drop-after::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #60cdff;
+  border-radius: 2px;
+  pointer-events: none;
 }
 .block-header {
   font-size: 10px;
@@ -1037,6 +1060,7 @@ input[type="number"] {
   letter-spacing: 0.05em;
   color: var(--c-text-400);
   padding: 2px 0;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1044,6 +1068,23 @@ input[type="number"] {
 .block-header .count {
   font-size: 9px;
   opacity: 0.6;
+}
+.block-grip {
+  cursor: grab;
+  user-select: none;
+  opacity: 0.6;
+  font-size: 14px;
+  letter-spacing: 1px;
+  padding: 4px 4px 2px;
+  line-height: 1;
+  flex-shrink: 0;
+  color: var(--c-text-400);
+}
+.block-grip:active {
+  cursor: grabbing;
+}
+.block-grip:hover {
+  opacity: 1;
 }
 .chip-dragging {
   opacity: 0.4;

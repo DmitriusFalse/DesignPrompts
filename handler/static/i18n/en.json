@@ -237,5 +237,10 @@
   "structure.anime.b5": "Pose & Emotion",
   "structure.anime.b6": "Location & Time",
   "structure.anime.b7": "Lighting & Effects",
-  "structure.anime.b8": "Face Details"
+  "structure.anime.b8": "Face Details",
+
+  "structure.confirm_title": "Canvas modified",
+  "structure.confirm_save": "Save changes before switching structure?",
+  "structure.discard": "Discard",
+  "structure.save_and_switch": "Save & switch"
 }

@@ -237,5 +237,10 @@
   "structure.anime.b5": "Поза и эмоция",
   "structure.anime.b6": "Локация и время",
   "structure.anime.b7": "Освещение и эффекты",
-  "structure.anime.b8": "Детали лица"
+  "structure.anime.b8": "Детали лица",
+
+  "structure.confirm_title": "Холст изменён",
+  "structure.confirm_save": "Сохранить изменения перед сменой структуры?",
+  "structure.discard": "Не сохранять",
+  "structure.save_and_switch": "Сохранить и переключить"
 }

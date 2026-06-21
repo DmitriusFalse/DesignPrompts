@@ -395,14 +395,14 @@
           <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap">Тип ИИ:</span>
           <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
             <div class="relative" x-data="dropdown">
-              <button @click="toggle" @click.outside="close" class="toolbar-btn py-1 flex items-center gap-1">
+              <button @click="toggle" @click.outside="close" class="toolbar-btn py-1 flex items-center gap-1" style="min-width:120px;max-width:150px">
                 <span class="truncate text-left" x-text="t(currentStructure.labelKey)"></span>
                 <svg x-show="!open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 <svg x-show="open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
               <div x-show="open" x-transition:enter="transition ease-out" x-transition:enter-start="scale-y-0 opacity-0" x-transition:enter-end="scale-y-100 opacity-100" x-transition:leave="transition ease-in" x-transition:leave-start="scale-y-100 opacity-100" x-transition:leave-end="scale-y-0 opacity-0" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle" style="transition-duration:150ms">
                 <template x-for="s in PROMPT_STRUCTURES" :key="s.id">
-                  <button @click="promptStructure = s.id; close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-xs cursor-pointer transition-colors flex items-center" :class="promptStructure === s.id ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
+                  <button @click="switchStructure(s.id); close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-xs cursor-pointer transition-colors flex items-center" :class="promptStructure === s.id ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
                     <span x-text="t(s.labelKey)"></span>
                   </button>
                 </template>
@@ -449,23 +449,33 @@
             <button @click="clearPositiveChips()" class="px-2 py-0.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" x-text="t('actions.clear_tags')">Очистить</button>
             <div x-show="show" class="tooltip" x-text="t('tooltip.clear_pos')"></div>
           </span>
+          <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex" x-show="blockOrder">
+            <button @click="blockOrder = null; if(_blockOrders) _blockOrders[promptStructure] = null" class="px-2 py-0.5 text-xs border border-gray-300 dark:border-dark-500 text-gray-600 dark:text-dark-300 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors">↻ Порядок</button>
+            <div x-show="show" class="tooltip" x-text="t('tooltip.reset_block_order') || 'Сбросить порядок групп'"></div>
+          </span>
         </div>
         <!-- Positive blocks (dynamic from structure) -->
-        <div>
+          <div>
           <template x-for="block in currentStructureBlocks" :key="'pb'+block.id">
             <div class="block-section"
                  :data-block-id="block.id"
-                 @dragover.prevent="onDragOver($event)"
-                 @dragenter="onDragEnter($event)"
-                 @dragleave="onDragLeave($event)"
-                 @drop.prevent="onDrop($event, 'positive')">
-               <div class="block-header">
+                 :class="{ 'block-drop-before': blockDropTarget?.before === block.id, 'block-drop-after': blockDropTarget?.after === block.id }"
+                 @dragover.prevent="onBlockDragOver($event, block)"
+                 @drop.prevent="onBlockDrop($event, block)">
+              <div class="block-header">
+                <span class="block-grip" draggable="true"
+                      @dragstart="onBlockDragStart($event, block)"
+                      @dragend="onBlockDragEnd($event)">:::</span>
                 <span x-text="structureBlockLabel(block)"></span>
                 <span class="count" x-text="'(' + positiveByBlock(block.id).length + ')'"></span>
               </div>
-                <div class="flex flex-wrap gap-1">
-                  <template x-for="ch in positiveByBlock(block.id)" :key="ch._key || ch.name">
-                    <span style="display:contents">
+              <div class="flex flex-wrap gap-1"
+                   @dragover.prevent="onDragOver($event)"
+                   @dragenter="onDragEnter($event)"
+                   @dragleave="onDragLeave($event)"
+                   @drop.prevent="onDrop($event, 'positive')">
+                <template x-for="ch in positiveByBlock(block.id)" :key="ch._key || ch.name">
+                  <span style="display:contents">
                       <!-- Regular chip -->
                       <template x-if="ch.category !== 'group' && ch.category !== 'dynamic'">
                         <span class="chip chip-positive" draggable="true"
@@ -1066,6 +1076,20 @@
       </div>
       <div class="flex justify-end mt-4">
         <button @click="closeManager()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer" x-text="t('canvas.close')"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Structure switch confirm modal -->
+  <div x-show="showStructureConfirm" class="fixed inset-0 z-[100] flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40" @click="showStructureConfirm = false; _pendingStructureId = null"></div>
+    <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl p-6 w-80 text-sm" @click.stop>
+      <div class="text-base font-semibold mb-4" x-text="t('structure.confirm_title')"></div>
+      <p class="text-sm text-gray-600 dark:text-dark-300 mb-4" x-text="t('structure.confirm_save')"></p>
+      <div class="flex justify-end gap-2">
+        <button @click="discardAndSwitch()" class="px-3 py-1.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer" x-text="t('structure.discard')"></button>
+        <button @click="showStructureConfirm = false; _pendingStructureId = null" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer" x-text="t('canvas.cancel')"></button>
+        <button @click="saveAndSwitch()" class="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors cursor-pointer" x-text="t('structure.save_and_switch')"></button>
       </div>
     </div>
   </div>

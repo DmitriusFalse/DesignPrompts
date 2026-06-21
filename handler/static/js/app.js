@@ -57,7 +57,7 @@ const PROMPT_STRUCTURES = [
       { id: 8, labelKey: 'block.8' },
     ],
     renderPositive(blocks, t) {
-      return blocks.filter(g => g.length > 0).map(g => g.join(', ')).join(', ');
+      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
     },
     renderNegative(chips, t) {
       return chips.map(ch => ch.prompt_text || ch.name).join(', ');
@@ -80,13 +80,22 @@ const PROMPT_STRUCTURES = [
       { id: 10, labelKey: 'structure.mj.b10' },
     ],
     renderPositive(blocks, t) {
-      const p = blocks.map(g => g.join(', '));
-      const parts = [p[0], p[1], p[2], p[3], p[4], p[5]].filter(Boolean);
-      let result = parts.join(', ');
-      if (p[6]) result += ' --ar ' + p[6];
-      if (p[8]) result += ' --v ' + p[8];
-      if (p[9]) result += ' --style ' + p[9];
-      if (p[7]) result += ' --s ' + p[7];
+      const content = [];
+      let ar = '', v = '', style = '', s = '';
+      for (const b of blocks) {
+        if (b.items.length === 0) continue;
+        const text = b.items.join(', ');
+        if (b.id <= 6) { content.push(text); }
+        else if (b.id === 7) { ar = text; }
+        else if (b.id === 8) { s = text; }
+        else if (b.id === 9) { v = text; }
+        else if (b.id === 10) { style = text; }
+      }
+      let result = content.join(', ');
+      if (ar) result += ' --ar ' + ar;
+      if (v) result += ' --v ' + v;
+      if (style) result += ' --style ' + style;
+      if (s) result += ' --s ' + s;
       return result;
     },
     renderNegative(chips, t) {
@@ -108,7 +117,7 @@ const PROMPT_STRUCTURES = [
       { id: 7, labelKey: 'structure.d3.b7' },
     ],
     renderPositive(blocks, t) {
-      const p = blocks.map(g => g.join(', ')).filter(Boolean);
+      const p = blocks.filter(b => b.items.length > 0).map(b => b.items.join(', '));
       return p.map(s => s.endsWith('.') ? s : s + '.').join(' ');
     },
     renderNegative(chips, t) {
@@ -130,7 +139,7 @@ const PROMPT_STRUCTURES = [
       { id: 8, labelKey: 'structure.sd.b8' },
     ],
     renderPositive(blocks, t) {
-      return blocks.filter(g => g.length > 0).map(g => g.join(', ')).join(' + ');
+      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(' + ');
     },
     renderNegative(chips, t) {
       return chips.map(ch => ch.prompt_text || ch.name).join(', ');
@@ -149,7 +158,7 @@ const PROMPT_STRUCTURES = [
       { id: 6, labelKey: 'structure.flux.b6' },
     ],
     renderPositive(blocks, t) {
-      return blocks.filter(g => g.length > 0).map(g => g.join(', ')).join(', ');
+      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
     },
     renderNegative(chips, t) {
       return chips.map(ch => ch.prompt_text || ch.name).join(', ');
@@ -171,7 +180,7 @@ const PROMPT_STRUCTURES = [
       { id: 9, labelKey: 'structure.novelai.b9' },
     ],
     renderPositive(blocks, t) {
-      return blocks.filter(g => g.length > 0).map(g => g.join(', ')).join(', ');
+      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
     },
     renderNegative(chips, t) {
       return chips.map(ch => ch.prompt_text || ch.name).join(', ');
@@ -192,7 +201,7 @@ const PROMPT_STRUCTURES = [
       { id: 8, labelKey: 'structure.anime.b8' },
     ],
     renderPositive(blocks, t) {
-      return blocks.filter(g => g.length > 0).map(g => g.join(', ')).join(', ');
+      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
     },
     renderNegative(chips, t) {
       return chips.map(ch => ch.prompt_text || ch.name).join(', ');
@@ -368,7 +377,11 @@ function app() {
 
     // Prompt structure
     promptStructure: 'standard',
-    _orphanChips: {},
+    blockOrder: null,
+    blockDragState: null,
+    blockDropTarget: null,
+    showStructureConfirm: false,
+    _pendingStructureId: null,
 
     // Chips as objects: { name, category, subcategory, block_id }
     positiveChips: [],
@@ -681,6 +694,7 @@ function app() {
     },
 
     onDragOver(ev) {
+      if (this.blockDragState) return;
       ev.preventDefault();
       ev.dataTransfer.dropEffect = 'move';
       const dragKey = this.dragState?.key;
@@ -740,6 +754,7 @@ function app() {
     },
 
     onDrop(ev, targetType) {
+      if (this.blockDragState) return;
       ev.preventDefault();
       this._clearDropVisuals();
       this._ignoreNextClick = true;
@@ -829,6 +844,7 @@ function app() {
     // ─── Group chip DnD ───
 
     onGroupDragOver(ev, group) {
+      if (this.blockDragState) return;
       ev.preventDefault();
       ev.dataTransfer.dropEffect = 'move';
       ev.currentTarget.classList.add('group-drag-over');
@@ -851,6 +867,7 @@ function app() {
     },
 
     onGroupDrop(ev, group) {
+      if (this.blockDragState) return;
       ev.preventDefault();
       ev.currentTarget.classList.remove('group-drag-over');
       this._clearDropVisuals();
@@ -927,6 +944,7 @@ function app() {
     // ─── Dynamic Prompt DnD ───
 
     onDynamicDrop(ev, dynChip, slot) {
+      if (this.blockDragState) return;
       ev.preventDefault();
       ev.stopPropagation();
       const ds = this.dragState;
@@ -1012,6 +1030,72 @@ function app() {
       ev.dataTransfer.effectAllowed = 'move';
       ev.dataTransfer.setData('text/plain', dynChip._key + ':' + slot);
       ev.currentTarget.classList.add('chip-dragging');
+    },
+
+    // ─── Block (section) drag & drop ───
+
+    onBlockDragStart(ev, block) {
+      this.blockDragState = { id: block.id };
+      ev.dataTransfer.effectAllowed = 'move';
+      ev.dataTransfer.setData('text/plain', 'block:' + block.id);
+    },
+
+    onBlockDragEnd() {
+      this.blockDragState = null;
+      this.blockDropTarget = null;
+    },
+
+    onBlockDragOver(ev, block) {
+      ev.preventDefault();
+      if (!this.blockDragState || this.blockDragState.id === block.id) {
+        if (this.blockDropTarget) this.blockDropTarget = null;
+        return;
+      }
+      const rect = ev.currentTarget.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+
+      if (ev.clientY < midY) {
+        this.blockDropTarget = { before: block.id, after: null };
+      } else {
+        const sections = [...ev.currentTarget.parentElement.querySelectorAll('.block-section')];
+        const idx = sections.indexOf(ev.currentTarget);
+        if (idx < sections.length - 1) {
+          const nextId = parseInt(sections[idx + 1].dataset.blockId);
+          this.blockDropTarget = { before: nextId, after: null };
+        } else {
+          this.blockDropTarget = { before: null, after: block.id };
+        }
+      }
+    },
+
+    onBlockDrop(ev, block) {
+      ev.preventDefault();
+      if (!this.blockDragState || this.blockDragState.id === block.id) {
+        this.blockDropTarget = null;
+        return;
+      }
+      const fromId = this.blockDragState.id;
+      const s = this.currentStructure;
+      const defaultOrder = s.blocks.map(b => b.id);
+      const currentOrder = this.blockOrder ? [...this.blockOrder] : [...defaultOrder];
+      const fromIdx = currentOrder.indexOf(fromId);
+      if (fromIdx === -1) { this.blockDropTarget = null; return; }
+
+      const [item] = currentOrder.splice(fromIdx, 1);
+
+      let insertIdx = currentOrder.length;
+      if (this.blockDropTarget?.before != null) {
+        const t = currentOrder.indexOf(this.blockDropTarget.before);
+        if (t >= 0) insertIdx = t;
+      } else if (this.blockDropTarget?.after != null) {
+        const t = currentOrder.indexOf(this.blockDropTarget.after);
+        if (t >= 0) insertIdx = t + 1;
+      }
+
+      currentOrder.splice(insertIdx, 0, item);
+      this.blockOrder = currentOrder;
+      this.blockDropTarget = null;
+      this.blockDragState = null;
     },
 
     removeDynamicTag(dynChip, slot) {
@@ -1542,7 +1626,8 @@ function app() {
       const chipsData = JSON.stringify({
         positiveChips: this.positiveChips,
         negativeChips: this.negativeChips,
-        promptStructure: this.promptStructure
+        promptStructure: this.promptStructure,
+        blockOrder: this.blockOrder
       });
       try {
         const body = {
@@ -1569,6 +1654,11 @@ function app() {
         this.showToast(this.t('canvas.save_success') || 'Saved');
         this.closeSaveModal();
         await this.loadSavedPrompts();
+        if (this._pendingStructureId) {
+          const id = this._pendingStructureId;
+          this._pendingStructureId = null;
+          this.promptStructure = id;
+        }
       } catch (e) {
         console.error('saveCanvas:', e);
         this.showToast('Save error: ' + e.message);
@@ -1581,7 +1671,7 @@ function app() {
       this.canvasName = '';
       this.canvasId = null;
       this.promptStructure = 'standard';
-      this._orphanChips = {};
+      this.blockOrder = null;
       this.updateChipNames();
       this.showToast(this.t('canvas.new_done') || 'New canvas');
     },
@@ -1646,6 +1736,7 @@ function app() {
         if (data.promptStructure && PROMPT_STRUCTURES.some(s => s.id === data.promptStructure)) {
           this.promptStructure = data.promptStructure;
         }
+        this.blockOrder = data.blockOrder || null;
         this.canvasName = item.name;
         this.canvasId = item.id;
         this.notifyChipChange();
@@ -1815,7 +1906,8 @@ function app() {
           localStorage.setItem('autosave_prompt', JSON.stringify(data));
           localStorage.setItem('autosave_chips', JSON.stringify({
             positiveChips: this.positiveChips,
-            negativeChips: this.negativeChips
+            negativeChips: this.negativeChips,
+            blockOrder: this.blockOrder
           }));
         } catch (_) {}
       }, 150);
@@ -1830,6 +1922,7 @@ function app() {
             this.positiveChips = data.positiveChips || [];
             this.negativeChips = data.negativeChips || [];
             this._ensureChipKeys();
+            this.blockOrder = data.blockOrder || null;
             return;
           }
         }
@@ -2093,7 +2186,15 @@ function app() {
     },
 
     get currentStructureBlocks() {
-      return this.currentStructure.blocks;
+      const s = this.currentStructure;
+      if (this.blockOrder) {
+        const validIds = new Set(s.blocks.map(b => b.id));
+        const ordered = this.blockOrder
+          .map(id => s.blocks.find(b => b.id === id))
+          .filter(Boolean);
+        if (ordered.length === s.blocks.length) return ordered;
+      }
+      return s.blocks;
     },
 
     get currentStructureAllBlocks() {
@@ -2108,39 +2209,33 @@ function app() {
       return this.t(block.labelKey) || block.labelKey;
     },
 
+    switchStructure(newId) {
+      if (this.promptStructure === newId) return;
+      const hasChanges = this.positiveChips.length > 0 || this.negativeChips.length > 0;
+      if (!hasChanges) {
+        this.promptStructure = newId;
+        return;
+      }
+      this._pendingStructureId = newId;
+      this.showStructureConfirm = true;
+    },
+
+    discardAndSwitch() {
+      this.showStructureConfirm = false;
+      const id = this._pendingStructureId;
+      this._pendingStructureId = null;
+      this.promptStructure = id;
+    },
+
+    saveAndSwitch() {
+      this.showStructureConfirm = false;
+      this.openSaveModal();
+    },
+
     onStructureChange(oldId, newId) {
-      const oldStruct = PROMPT_STRUCTURES.find(s => s.id === oldId);
-      const newStruct = PROMPT_STRUCTURES.find(s => s.id === newId);
-      if (!oldStruct || !newStruct) return;
-      const newIds = new Set(newStruct.blocks.map(b => b.id));
-      // Update negative chips block_id to new negative block
-      const negBlock = newStruct.negativeBlockId;
-      for (const ch of this.negativeChips) {
-        ch.block_id = negBlock;
-      }
-      // Capture orphan positive chips (block_id not in new structure)
-      const orphanPos = this.positiveChips.filter(c => !newIds.has(c.block_id));
-      if (orphanPos.length > 0) {
-        if (!this._orphanChips) this._orphanChips = {};
-        if (!this._orphanChips[oldId]) this._orphanChips[oldId] = { positive: [], negative: [] };
-        this._orphanChips[oldId].positive.push(...orphanPos);
-        this.positiveChips = this.positiveChips.filter(c => newIds.has(c.block_id));
-      }
-      // Restore orphans from old structure if switching back
-      if (this._orphanChips && this._orphanChips[newId]) {
-        const restore = this._orphanChips[newId];
-        this.positiveChips.push(...restore.positive.filter(c => !this.positiveChips.some(x => x.name === c.name)));
-        delete this._orphanChips[newId];
-      }
-      // Auto-populate default chips for Midjourney parameters
-      if (newId === 'midjourney') {
-        const defaults = { 7: '16:9', 8: '250', 9: '6', 10: 'raw' };
-        for (const [blockId, val] of Object.entries(defaults)) {
-          if (!this.positiveChips.some(c => c.block_id === parseInt(blockId) && c.name === val)) {
-            this.positiveChips.push({ name: val, category: 'meta', subcategory: '', block_id: parseInt(blockId), _key: this._chipKey() });
-          }
-        }
-      }
+      this.blockOrder = null;
+      this.positiveChips = [];
+      this.negativeChips = [];
       this.notifyChipChange();
     },
 
@@ -2148,8 +2243,10 @@ function app() {
 
     get positivePrompt() {
       const s = this.currentStructure;
-      const blocks = s.blocks.map(b =>
-        this.positiveByBlock(b.id).map(c => {
+      const effectBlocks = this.currentStructureBlocks;
+      const blocks = effectBlocks.map(b => ({
+        id: b.id,
+        items: this.positiveByBlock(b.id).map(c => {
           if (c.category === 'group') {
             const children = c._groupChildren || [];
             let parts = children.map(ch => {
@@ -2214,7 +2311,7 @@ function app() {
           if (c.weight != null && c.weight > 0) val = '(' + val + ':' + parseFloat(c.weight).toFixed(1) + ')';
           return val;
         })
-      );
+      }));
       return s.renderPositive(blocks, this.t);
     },
 
