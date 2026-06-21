@@ -30,6 +30,7 @@ func handlePrompts(repo *database.Repo) http.HandlerFunc {
 				PositiveText string `json:"positive_text"`
 				NegativeText string `json:"negative_text"`
 				ChipsData    string `json:"chips_data"`
+				GenData      string `json:"gen_data"`
 			}
 			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 				jsonError(w, "invalid body", http.StatusBadRequest)
@@ -41,7 +42,7 @@ func handlePrompts(repo *database.Repo) http.HandlerFunc {
 			}
 			name := strings.TrimSpace(body.Name)
 			if body.ID > 0 {
-				if err := repo.UpdatePrompt(body.ID, name, body.PositiveText, body.NegativeText, body.ChipsData); err != nil {
+				if err := repo.UpdatePrompt(body.ID, name, body.PositiveText, body.NegativeText, body.ChipsData, body.GenData); err != nil {
 					jsonError(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
@@ -55,7 +56,7 @@ func handlePrompts(repo *database.Repo) http.HandlerFunc {
 					body.PositiveText,
 					body.NegativeText,
 					true,
-					"",
+					body.GenData,
 					body.ChipsData,
 				)
 				if err != nil {

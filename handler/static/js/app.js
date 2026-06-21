@@ -64,107 +64,6 @@ const PROMPT_STRUCTURES = [
     }
   },
   {
-    id: 'midjourney',
-    labelKey: 'structure.midjourney',
-    negativeBlockId: 9,
-    blocks: [
-      { id: 1, labelKey: 'structure.mj.b1' },
-      { id: 2, labelKey: 'structure.mj.b2' },
-      { id: 3, labelKey: 'structure.mj.b3' },
-      { id: 4, labelKey: 'structure.mj.b4' },
-      { id: 5, labelKey: 'structure.mj.b5' },
-      { id: 6, labelKey: 'structure.mj.b6' },
-      { id: 7, labelKey: 'structure.mj.b7' },
-      { id: 8, labelKey: 'structure.mj.b8' },
-      { id: 9, labelKey: 'structure.mj.b9' },
-      { id: 10, labelKey: 'structure.mj.b10' },
-    ],
-    renderPositive(blocks, t) {
-      const content = [];
-      let ar = '', v = '', style = '', s = '';
-      for (const b of blocks) {
-        if (b.items.length === 0) continue;
-        const text = b.items.join(', ');
-        if (b.id <= 6) { content.push(text); }
-        else if (b.id === 7) { ar = text; }
-        else if (b.id === 8) { s = text; }
-        else if (b.id === 9) { v = text; }
-        else if (b.id === 10) { style = text; }
-      }
-      let result = content.join(', ');
-      if (ar) result += ' --ar ' + ar;
-      if (v) result += ' --v ' + v;
-      if (style) result += ' --style ' + style;
-      if (s) result += ' --s ' + s;
-      return result;
-    },
-    renderNegative(chips, t) {
-      if (!chips.length) return '';
-      return '--no ' + chips.map(ch => ch.prompt_text || ch.name).join(', ');
-    }
-  },
-  {
-    id: 'dalle3',
-    labelKey: 'structure.dalle3',
-    negativeBlockId: 9,
-    blocks: [
-      { id: 1, labelKey: 'structure.d3.b1' },
-      { id: 2, labelKey: 'structure.d3.b2' },
-      { id: 3, labelKey: 'structure.d3.b3' },
-      { id: 4, labelKey: 'structure.d3.b4' },
-      { id: 5, labelKey: 'structure.d3.b5' },
-      { id: 6, labelKey: 'structure.d3.b6' },
-      { id: 7, labelKey: 'structure.d3.b7' },
-    ],
-    renderPositive(blocks, t) {
-      const p = blocks.filter(b => b.items.length > 0).map(b => b.items.join(', '));
-      return p.map(s => s.endsWith('.') ? s : s + '.').join(' ');
-    },
-    renderNegative(chips, t) {
-      return '';
-    }
-  },
-  {
-    id: 'sd',
-    labelKey: 'structure.sd',
-    negativeBlockId: 9,
-    blocks: [
-      { id: 1, labelKey: 'structure.sd.b1' },
-      { id: 2, labelKey: 'structure.sd.b2' },
-      { id: 3, labelKey: 'structure.sd.b3' },
-      { id: 4, labelKey: 'structure.sd.b4' },
-      { id: 5, labelKey: 'structure.sd.b5' },
-      { id: 6, labelKey: 'structure.sd.b6' },
-      { id: 7, labelKey: 'structure.sd.b7' },
-      { id: 8, labelKey: 'structure.sd.b8' },
-    ],
-    renderPositive(blocks, t) {
-      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(' + ');
-    },
-    renderNegative(chips, t) {
-      return chips.map(ch => ch.prompt_text || ch.name).join(', ');
-    }
-  },
-  {
-    id: 'flux',
-    labelKey: 'structure.flux',
-    negativeBlockId: 9,
-    blocks: [
-      { id: 1, labelKey: 'structure.flux.b1' },
-      { id: 2, labelKey: 'structure.flux.b2' },
-      { id: 3, labelKey: 'structure.flux.b3' },
-      { id: 4, labelKey: 'structure.flux.b4' },
-      { id: 5, labelKey: 'structure.flux.b5' },
-      { id: 6, labelKey: 'structure.flux.b6' },
-    ],
-    renderPositive(blocks, t) {
-      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
-    },
-    renderNegative(chips, t) {
-      return chips.map(ch => ch.prompt_text || ch.name).join(', ');
-    }
-  },
-  {
     id: 'novelai',
     labelKey: 'structure.novelai',
     negativeBlockId: 10,
@@ -205,6 +104,107 @@ const PROMPT_STRUCTURES = [
     },
     renderNegative(chips, t) {
       return chips.map(ch => ch.prompt_text || ch.name).join(', ');
+    }
+  },
+  {
+    id: 'flux',
+    labelKey: 'structure.flux',
+    negativeBlockId: 9,
+    blocks: [
+      { id: 1, labelKey: 'structure.flux.b1' },
+      { id: 2, labelKey: 'structure.flux.b2' },
+      { id: 3, labelKey: 'structure.flux.b3' },
+      { id: 4, labelKey: 'structure.flux.b4' },
+      { id: 5, labelKey: 'structure.flux.b5' },
+      { id: 6, labelKey: 'structure.flux.b6' },
+    ],
+    renderPositive(blocks, t) {
+      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
+    },
+    renderNegative(chips, t) {
+      return chips.map(ch => ch.prompt_text || ch.name).join(', ');
+    }
+  },
+  {
+    id: 'sd',
+    labelKey: 'structure.sd',
+    negativeBlockId: 9,
+    blocks: [
+      { id: 1, labelKey: 'structure.sd.b1' },
+      { id: 2, labelKey: 'structure.sd.b2' },
+      { id: 3, labelKey: 'structure.sd.b3' },
+      { id: 4, labelKey: 'structure.sd.b4' },
+      { id: 5, labelKey: 'structure.sd.b5' },
+      { id: 6, labelKey: 'structure.sd.b6' },
+      { id: 7, labelKey: 'structure.sd.b7' },
+      { id: 8, labelKey: 'structure.sd.b8' },
+    ],
+    renderPositive(blocks, t) {
+      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(' + ');
+    },
+    renderNegative(chips, t) {
+      return chips.map(ch => ch.prompt_text || ch.name).join(', ');
+    }
+  },
+  {
+    id: 'dalle3',
+    labelKey: 'structure.dalle3',
+    negativeBlockId: 9,
+    blocks: [
+      { id: 1, labelKey: 'structure.d3.b1' },
+      { id: 2, labelKey: 'structure.d3.b2' },
+      { id: 3, labelKey: 'structure.d3.b3' },
+      { id: 4, labelKey: 'structure.d3.b4' },
+      { id: 5, labelKey: 'structure.d3.b5' },
+      { id: 6, labelKey: 'structure.d3.b6' },
+      { id: 7, labelKey: 'structure.d3.b7' },
+    ],
+    renderPositive(blocks, t) {
+      const p = blocks.filter(b => b.items.length > 0).map(b => b.items.join(', '));
+      return p.map(s => s.endsWith('.') ? s : s + '.').join(' ');
+    },
+    renderNegative(chips, t) {
+      return '';
+    }
+  },
+  {
+    id: 'midjourney',
+    labelKey: 'structure.midjourney',
+    negativeBlockId: 9,
+    blocks: [
+      { id: 1, labelKey: 'structure.mj.b1' },
+      { id: 2, labelKey: 'structure.mj.b2' },
+      { id: 3, labelKey: 'structure.mj.b3' },
+      { id: 4, labelKey: 'structure.mj.b4' },
+      { id: 5, labelKey: 'structure.mj.b5' },
+      { id: 6, labelKey: 'structure.mj.b6' },
+      { id: 7, labelKey: 'structure.mj.b7' },
+      { id: 8, labelKey: 'structure.mj.b8' },
+      { id: 9, labelKey: 'structure.mj.b9' },
+      { id: 10, labelKey: 'structure.mj.b10' },
+    ],
+    renderPositive(blocks, t) {
+      const content = [];
+      let ar = '', v = '', style = '', s = '';
+      for (const b of blocks) {
+        if (b.items.length === 0) continue;
+        const text = b.items.join(', ');
+        if (b.id <= 6) { content.push(text); }
+        else if (b.id === 7) { ar = text; }
+        else if (b.id === 8) { s = text; }
+        else if (b.id === 9) { v = text; }
+        else if (b.id === 10) { style = text; }
+      }
+      let result = content.join(', ');
+      if (ar) result += ' --ar ' + ar;
+      if (v) result += ' --v ' + v;
+      if (style) result += ' --style ' + style;
+      if (s) result += ' --s ' + s;
+      return result;
+    },
+    renderNegative(chips, t) {
+      if (!chips.length) return '';
+      return '--no ' + chips.map(ch => ch.prompt_text || ch.name).join(', ');
     }
   }
 ];
@@ -415,13 +415,17 @@ function app() {
     canvasName: '',
     canvasId: null,
     saveModal: false,
-    saveForm: { name: '', duplicate: false, showDuplicateCheckbox: false },
+    saveForm: { name: '', mode: 'save' },
     renameModal: false,
     renameForm: { name: '' },
 
     // Manager prompts
     managerModal: false,
     savedPrompts: [],
+    selectedPrompt: null,
+    selectedGenParams: null,
+    searchQuery: '',
+    canvasGenData: '',
 
     // Preview panel
     previewTab: 'images',
@@ -1611,9 +1615,23 @@ function app() {
 
     // ─── Save / Manager ───
 
-    openSaveModal() {
-      this.saveForm = { name: this.canvasName || '', duplicate: false, showDuplicateCheckbox: false };
+    openSaveModal(mode) {
+      this.saveForm = { name: this.canvasName || '', mode: mode || 'save' };
       this.saveModal = true;
+    },
+
+    openSaveAsModal() {
+      this.saveForm = { name: this.canvasName || '', mode: 'saveAs' };
+      this.saveModal = true;
+    },
+
+    handleSave() {
+      if (this.canvasId) {
+        this.saveForm = { name: this.canvasName, mode: 'save' };
+        this.saveCanvas();
+      } else {
+        this.openSaveModal('save');
+      }
     },
 
     closeSaveModal() {
@@ -1634,12 +1652,10 @@ function app() {
           name,
           positive_text: this.positivePrompt,
           negative_text: this.negativePrompt,
-          chips_data: chipsData
+          chips_data: chipsData,
+          gen_data: this.canvasGenData || ''
         };
-        const conflict = this.savedPrompts.find(p => p.name === name && p.id !== this.canvasId);
-        if (conflict && !this.saveForm.duplicate) {
-          body.id = conflict.id;
-        } else if (!conflict && this.canvasId) {
+        if (this.saveForm.mode !== 'saveAs' && this.canvasId) {
           body.id = this.canvasId;
         }
         const res = await fetch('/api/prompts', {
@@ -1705,7 +1721,98 @@ function app() {
     },
 
     openManager() {
+      this.selectedPrompt = null;
       this.managerModal = true;
+    },
+
+    selectPrompt(item) {
+      this.selectedPrompt = item;
+      this.selectedGenParams = null;
+      if (item.gen_data) this.loadGenParams(item);
+    },
+
+    async loadGenParams(item) {
+      if (!item.gen_data) return;
+      const parts = item.gen_data.split(/[\\/]/);
+      const filename = parts[parts.length - 1];
+      if (!filename) return;
+      try {
+        const r = await fetch('/api/comfy/prompt-info?filename=' + encodeURIComponent(filename));
+        if (!r.ok) return;
+        const data = await r.json();
+        this.selectedGenParams = this._extractGenParams(data.prompt);
+      } catch(e) {
+        console.error('loadGenParams:', e);
+      }
+    },
+
+    _extractGenParams(wf) {
+      const p = {};
+      for (const node of Object.values(wf)) {
+        if (node.class_type === 'KSampler') {
+          const inp = node.inputs || {};
+          if (inp.steps !== undefined) p.steps = inp.steps;
+          if (inp.cfg !== undefined) p.cfg = inp.cfg;
+          if (inp.seed !== undefined) p.seed = inp.seed;
+          if (inp.sampler_name) p.sampler = inp.sampler_name;
+          if (inp.scheduler) p.scheduler = inp.scheduler;
+        } else if (node.class_type === 'CheckpointLoaderSimple') {
+          if (node.inputs?.ckpt_name) p.model = node.inputs.ckpt_name;
+        } else if (node.class_type === 'EmptyLatentImage') {
+          if (node.inputs?.width && node.inputs?.height)
+            p.resolution = node.inputs.width + '×' + node.inputs.height;
+        }
+      }
+      return Object.keys(p).length ? p : null;
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr.replace(' ', 'T'));
+      if (isNaN(d.getTime())) return dateStr;
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      return dd + '.' + mm + '.' + yy + ' ' + hh + ':' + mi;
+    },
+
+    get selectedImageSrc() {
+      if (!this.selectedPrompt?.gen_data) return null;
+      const parts = this.selectedPrompt.gen_data.split(/[\\/]/);
+      const filename = parts[parts.length - 1];
+      if (!filename) return null;
+      return '/api/comfy/image?filename=' + encodeURIComponent(filename);
+    },
+
+    get filteredSavedPrompts() {
+      if (!this.searchQuery) return this.savedPrompts;
+      const q = this.searchQuery.toLowerCase();
+      return this.savedPrompts.filter(p => p.name.toLowerCase().includes(q));
+    },
+
+    deleteSelectedPrompt() {
+      if (!this.selectedPrompt) return;
+      this.deleteSavedPrompt(this.selectedPrompt);
+      this.selectedPrompt = null;
+      this.selectedGenParams = null;
+    },
+
+    async copyManagerPrompt() {
+      const text = this.selectedPrompt?.positive_text;
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        this.showToast(this.t('canvas.copied') || 'Промпт скопирован');
+      } catch (e) {
+        console.error('copy manager prompt:', e);
+      }
+    },
+
+    openSelectedPrompt() {
+      if (!this.selectedPrompt) return;
+      this.restoreFromSaved(this.selectedPrompt);
     },
 
     closeManager() {
@@ -2147,6 +2254,27 @@ function app() {
             });
             const url = '/api/comfy/image?' + params.toString();
             this.generationResult = url;
+            this.canvasGenData = url;
+            if (this.canvasId) {
+              const gdBody = {
+                id: this.canvasId,
+                name: this.canvasName,
+                positive_text: this.positivePrompt,
+                negative_text: this.negativePrompt,
+                chips_data: JSON.stringify({
+                  positiveChips: this.positiveChips,
+                  negativeChips: this.negativeChips,
+                  promptStructure: this.promptStructure,
+                  blockOrder: this.blockOrder
+                }),
+                gen_data: url
+              };
+              fetch('/api/prompts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(gdBody)
+              }).catch(() => {});
+            }
             this.generationHistory.unshift(url);
             if (this.generationHistory.length > 1000) this.generationHistory.length = 1000;
             this.saveGenerationHistory();
@@ -2156,6 +2284,29 @@ function app() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ filename: img.filename, subfolder: img.subfolder || '', type: img.type || 'output' })
+            }).then(r => r.json()).then(data => {
+              if (data.path) {
+                this.canvasGenData = data.path;
+                if (this.canvasId) {
+                  fetch('/api/prompts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      id: this.canvasId,
+                      name: this.canvasName,
+                      positive_text: this.positivePrompt,
+                      negative_text: this.negativePrompt,
+                      chips_data: JSON.stringify({
+                        positiveChips: this.positiveChips,
+                        negativeChips: this.negativeChips,
+                        promptStructure: this.promptStructure,
+                        blockOrder: this.blockOrder
+                      }),
+                      gen_data: data.path
+                    })
+                  }).catch(() => {});
+                }
+              }
             }).catch(() => {});
           } else if (msg.type === 'execution_error') {
             this.generationStatus = this.t('comfy.error') + ': ' + (msg.data?.exception_message || 'unknown');
@@ -2229,7 +2380,12 @@ function app() {
 
     saveAndSwitch() {
       this.showStructureConfirm = false;
-      this.openSaveModal();
+      if (this.canvasId) {
+        this.saveForm = { name: this.canvasName, mode: 'save' };
+        this.saveCanvas();
+      } else {
+        this.openSaveModal('save');
+      }
     },
 
     onStructureChange(oldId, newId) {

@@ -471,10 +471,10 @@ func (r *Repo) DeletePrompt(id int) error {
 	return err
 }
 
-func (r *Repo) UpdatePrompt(id int, name, positiveText, negativeText, chipsData string) error {
+func (r *Repo) UpdatePrompt(id int, name, positiveText, negativeText, chipsData, genData string) error {
 	_, err := r.db.Exec(`
-		UPDATE saved_prompts SET name=?, positive_text=?, negative_text=?, chips_data=? WHERE id=?
-	`, name, positiveText, negativeText, chipsData, id)
+		UPDATE saved_prompts SET name=?, positive_text=?, negative_text=?, chips_data=?, gen_data=? WHERE id=?
+	`, name, positiveText, negativeText, chipsData, genData, id)
 	return err
 }
 

@@ -149,10 +149,13 @@
   "tooltip.restore": "Восстановить промпт из этого изображения",
   "tooltip.log_level": "Уровень лога: debug для подробного вывода",
   "tooltip.structure": "Выбор структуры промпта",
+  "tooltip.save_as": "Сохранить холст как новый",
 
-  "canvas.save_title": "Сохранить холст",
+  "canvas.save_title": "Сохранить",
   "canvas.save_name": "Имя",
   "canvas.save": "Сохранить",
+  "canvas.copy": "Копировать",
+  "canvas.save_as": "Сохранить как",
   "canvas.cancel": "Отмена",
   "canvas.close": "Закрыть",
   "canvas.save_success": "Сохранено",
@@ -242,5 +245,8 @@
   "structure.confirm_title": "Холст изменён",
   "structure.confirm_save": "Сохранить изменения перед сменой структуры?",
   "structure.discard": "Не сохранять",
-  "structure.save_and_switch": "Сохранить и переключить"
+  "structure.save_and_switch": "Сохранить и переключить",
+
+  "canvas.copied": "Промпт скопирован",
+  "canvas.select_prompt": "Выберите холст из списка"
 }

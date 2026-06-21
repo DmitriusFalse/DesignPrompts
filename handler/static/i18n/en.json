@@ -149,10 +149,13 @@
   "tooltip.restore": "Restore prompt from this image",
   "tooltip.log_level": "Log level: debug for verbose output",
   "tooltip.structure": "Switch prompt structure",
+  "tooltip.save_as": "Save canvas as new",
 
-  "canvas.save_title": "Save Canvas",
+  "canvas.save_title": "Save",
   "canvas.save_name": "Name",
   "canvas.save": "Save",
+  "canvas.copy": "Copy",
+  "canvas.save_as": "Save As",
   "canvas.cancel": "Cancel",
   "canvas.close": "Close",
   "canvas.save_success": "Saved",
@@ -242,5 +245,8 @@
   "structure.confirm_title": "Canvas modified",
   "structure.confirm_save": "Save changes before switching structure?",
   "structure.discard": "Discard",
-  "structure.save_and_switch": "Save & switch"
+  "structure.save_and_switch": "Save & switch",
+
+  "canvas.copied": "Prompt copied",
+  "canvas.select_prompt": "Select a canvas from the list"
 }
