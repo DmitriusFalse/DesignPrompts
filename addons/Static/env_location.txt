@@ -1,0 +1,7 @@
+indoors
+outdoors
+urban
+rural
+suburban
+underwater
+space

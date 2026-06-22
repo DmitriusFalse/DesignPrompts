@@ -17,11 +17,11 @@ import (
 	"time"
 	"unsafe"
 
+	"design-prompt/addon"
 	"design-prompt/config"
 	"design-prompt/database"
 	"design-prompt/handler"
 	"design-prompt/logger"
-	syncsvc "design-prompt/sync"
 
 	webview "github.com/webview/webview_go"
 )
@@ -124,12 +124,18 @@ func main() {
 	}
 	defer db.Close()
 
-	syncSvc := syncsvc.NewService(db)
-	if err := syncSvc.Sync(cfg.TagsPath); err != nil {
-		logger.Error("Initial sync: %v", err)
+	if err := addon.MigrateFromTags(cfg.AddonsPath); err != nil {
+		logger.Error("Migrate addons: %v", err)
 	}
+
+	addons, err := addon.ScanAddons(cfg.AddonsPath)
+	if err != nil {
+		logger.Error("Load addons: %v", err)
+	}
+	logger.Debug("Loaded %d addons", len(addons))
+
 	mux := http.NewServeMux()
-	handler.RegisterRoutes(mux, db, cfg, syncSvc, cfgPath)
+	handler.RegisterRoutes(mux, db, cfg, cfgPath, addons)
 
 	version := strings.TrimSpace(Version)
 	mux.HandleFunc("/api/version", func(w http.ResponseWriter, r *http.Request) {

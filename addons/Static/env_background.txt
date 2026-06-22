@@ -1,0 +1,8 @@
+simple_background
+white_background
+black_background
+gradient_background
+detailed_background
+blurry_background
+scenery
+landscape

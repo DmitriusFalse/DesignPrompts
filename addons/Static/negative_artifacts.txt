@@ -1,0 +1,12 @@
+text
+error
+signature
+watermark
+username
+cropped
+border
+frame
+letterbox
+artifacts
+noise
+chromatic_aberration

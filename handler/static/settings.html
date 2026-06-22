@@ -113,33 +113,28 @@
 
     <!-- Pack Management -->
     <section>
-      <h2 class="text-lg font-semibold mb-3" x-text="t('settings.packs')">Управление наборами</h2>
+      <h2 class="text-lg font-semibold mb-3">Установленные аддоны</h2>
       <div class="border border-gray-200 dark:border-dark-600 rounded-lg overflow-hidden">
-        <template x-for="p in packs" :key="p.id">
+        <template x-for="a in addons" :key="a.info.name">
           <div class="flex items-start gap-3 p-3 border-b border-gray-100 dark:border-dark-700">
             <div class="shrink-0 w-8 h-8 flex items-center justify-center rounded bg-gray-100 dark:bg-dark-600 text-base">
-              <span x-text="p.icon || '📦'"></span>
+              <span x-text="a.info.icon || '📦'"></span>
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
-                <span class="font-medium text-sm" x-text="lang === 'ru' && p.name_ru ? p.name_ru : p.name"></span>
-                <span x-show="p.version" class="text-[10px] text-gray-400 dark:text-dark-400 bg-gray-100 dark:bg-dark-600 px-1.5 py-0.5 rounded" x-text="p.version"></span>
+                <span class="font-medium text-sm" x-text="a.info.name"></span>
+                <span x-show="a.info.version" class="text-[10px] text-gray-400 dark:text-dark-400 bg-gray-100 dark:bg-dark-600 px-1.5 py-0.5 rounded" x-text="a.info.version"></span>
               </div>
-              <div x-show="p.description" class="text-xs text-gray-400 dark:text-dark-400 mt-0.5" x-text="lang === 'ru' && p.description_ru ? p.description_ru : p.description"></div>
+              <div x-show="a.info.description" class="text-xs text-gray-400 dark:text-dark-400 mt-0.5" x-text="a.info.description"></div>
               <div class="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                <span x-show="p.author" x-text="t('packs.author') + ': ' + p.author"></span>
-                <span x-text="t('packs.categories') + ': ' + p.categories_list.length"></span>
-                <span class="font-mono" x-text="p.path"></span>
+                <span x-show="a.info.author" x-text="'Автор: ' + a.info.author"></span>
+                <span x-text="'Категорий: ' + (a.info.categories?.length || 0)"></span>
               </div>
-            </div>
-            <div class="shrink-0 flex gap-1">
-              <button @click="rescan(p)" class="px-2.5 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700" x-text="t('packs.rescan')">Пересканировать</button>
-              <button @click="deletePack(p)" class="px-2.5 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700" x-text="t('packs.delete')">Удалить</button>
             </div>
           </div>
         </template>
       </div>
-      <div x-show="packs.length === 0" class="text-center py-8 text-gray-400" x-text="t('packs.empty')">Нет паков</div>
+      <div x-show="addons.length === 0" class="text-center py-8 text-gray-400">Нет установленных аддонов</div>
     </section>
 
     <!-- ComfyUI Settings -->
@@ -236,7 +231,16 @@
         async init() {
           this.loadTranslations();
           await this.loadConfig();
-          await this.loadPacks();
+          await this.loadAddons();
+        },
+
+        async loadAddons() {
+          try {
+            const res = await fetch('/api/addons');
+            this.addons = await res.json();
+          } catch (e) {
+            console.error(e);
+          }
         },
 
         async loadConfig() {
@@ -246,35 +250,6 @@
           } catch (e) {
             console.error('loadConfig:', e);
           }
-        },
-
-        async loadPacks() {
-          try {
-            const res = await fetch('/api/packs');
-            const list = await res.json();
-            for (const p of list) {
-              try {
-                p.categories_list = JSON.parse(p.categories || '[]');
-              } catch(e) {
-                p.categories_list = [];
-              }
-            }
-            this.packs = list;
-          } catch (e) {
-            console.error(e);
-          }
-        },
-
-        async rescan() {
-          await fetch('/api/sync', { method: 'POST' });
-          await this.loadPacks();
-        },
-
-        async deletePack(pack) {
-          const name = this.lang === 'ru' && pack.name_ru ? pack.name_ru : pack.name;
-          if (!confirm(this.t('packs.confirm_delete').replace('{name}', name))) return;
-          await fetch(`/api/packs?id=${pack.id}`, { method: 'DELETE' });
-          await this.loadPacks();
         },
 
         async saveConfig() {

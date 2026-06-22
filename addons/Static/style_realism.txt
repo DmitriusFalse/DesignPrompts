@@ -1,0 +1,4 @@
+photorealistic
+realistic
+hyper_realistic
+ultra_realistic

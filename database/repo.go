@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -26,9 +25,6 @@ func jsonString(v interface{}) string {
 }
 
 const (
-	packColumns   = "id, name, path, description, description_ru, version, author, icon, name_ru, categories, created_at, updated_at"
-	fileColumns   = "id, pack_id, file_name, category_id, category_name, subcategory_name, file_hash, last_synced"
-	tagColumns    = "id, file_id, pack_id, tag_name, category_name, subcategory_name, aliases"
 	promptColumns = "id, name, positive_text, negative_text, is_favorite, created_at, gen_data, chips_data"
 	presetColumns = "id, name, positive_tags, negative_tags"
 	customColumns    = "id, tag_name, full_text, block_id, structures, created_at"
@@ -37,24 +33,6 @@ const (
 )
 
 type scanner interface{ Scan(dest ...interface{}) error }
-
-func scanPack(row scanner) (Pack, error) {
-	var p Pack
-	err := row.Scan(&p.ID, &p.Name, &p.Path, &p.Description, &p.DescriptionRu, &p.Version, &p.Author, &p.Icon, &p.NameRu, &p.Categories, &p.CreatedAt, &p.UpdatedAt)
-	return p, err
-}
-
-func scanFile(row scanner) (File, error) {
-	var f File
-	err := row.Scan(&f.ID, &f.PackID, &f.FileName, &f.CategoryID, &f.CategoryName, &f.SubcategoryName, &f.FileHash, &f.LastSynced)
-	return f, err
-}
-
-func scanTag(row scanner) (Tag, error) {
-	var t Tag
-	err := row.Scan(&t.ID, &t.FileID, &t.PackID, &t.TagName, &t.CategoryName, &t.SubcategoryName, &t.Aliases)
-	return t, err
-}
 
 func scanPrompt(row scanner, p *SavedPrompt) error {
 	var fav int
@@ -88,300 +66,6 @@ func scanMainTagGroup(row scanner) (MainTagGroup, error) {
 		g.Structures = []string{}
 	}
 	return g, err
-}
-
-// ─── Packs ───
-
-func (r *Repo) GetPacks() ([]Pack, error) {
-	rows, err := r.db.Query(`SELECT ` + packColumns + ` FROM packs ORDER BY name`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var packs []Pack
-	for rows.Next() {
-		p, err := scanPack(rows)
-		if err != nil {
-			return nil, err
-		}
-		packs = append(packs, p)
-	}
-	return packs, rows.Err()
-}
-
-func (r *Repo) GetPackByID(id int) (*Pack, error) {
-	p, err := scanPack(r.db.QueryRow(`SELECT ` + packColumns + ` FROM packs WHERE id = ?`, id))
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	return &p, err
-}
-
-func (r *Repo) GetPackByName(name string) (*Pack, error) {
-	p, err := scanPack(r.db.QueryRow(`SELECT ` + packColumns + ` FROM packs WHERE name = ?`, name))
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	return &p, err
-}
-
-func (r *Repo) CreatePack(name, path string) (*Pack, error) {
-	now := r.now()
-	res, err := r.db.Exec(`INSERT INTO packs (name, path, created_at, updated_at) VALUES (?, ?, ?, ?)`,
-		name, path, now, now)
-	if err != nil {
-		return nil, err
-	}
-	id, _ := res.LastInsertId()
-	return &Pack{ID: int(id), Name: name, Path: path, CreatedAt: now, UpdatedAt: now}, nil
-}
-
-func (r *Repo) UpdatePackMeta(id int, desc, descRu, version, author, icon, nameRu string, categories []byte) error {
-	now := r.now()
-	_, err := r.db.Exec(`
-		UPDATE packs SET description=?, description_ru=?, version=?, author=?, icon=?, name_ru=?, categories=?, updated_at=?
-		WHERE id=?
-	`, desc, descRu, version, author, icon, nameRu, string(categories), now, id)
-	return err
-}
-
-func (r *Repo) DeletePack(id int) error {
-	_, err := r.db.Exec(`DELETE FROM packs WHERE id = ?`, id)
-	return err
-}
-
-// ─── Files ───
-
-func (r *Repo) InsertFile(packID int, fileName string, categoryID int, categoryName, subcategoryName, hash string) (int, error) {
-	now := r.now()
-	res, err := r.db.Exec(`
-		INSERT INTO files (pack_id, file_name, category_id, category_name, subcategory_name, file_hash, last_synced)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-	`, packID, fileName, categoryID, categoryName, subcategoryName, hash, now)
-	if err != nil {
-		return 0, err
-	}
-	id, _ := res.LastInsertId()
-	return int(id), nil
-}
-
-func (r *Repo) UpdateFile(id, packID int, fileName string, categoryID int, categoryName, subcategoryName, hash string) error {
-	now := r.now()
-	_, err := r.db.Exec(`
-		UPDATE files SET pack_id=?, file_name=?, category_id=?, category_name=?, subcategory_name=?, file_hash=?, last_synced=?
-		WHERE id=?
-	`, packID, fileName, categoryID, categoryName, subcategoryName, hash, now, id)
-	return err
-}
-
-func (r *Repo) UpsertFile(packID int, fileName string, categoryID int, categoryName, subcategoryName, hash string) (int, error) {
-	now := r.now()
-	_, err := r.db.Exec(`
-		INSERT INTO files (pack_id, file_name, category_id, category_name, subcategory_name, file_hash, last_synced)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(pack_id, file_name) DO UPDATE SET
-			category_id = excluded.category_id,
-			category_name = excluded.category_name,
-			subcategory_name = excluded.subcategory_name,
-			file_hash = excluded.file_hash,
-			last_synced = excluded.last_synced
-	`, packID, fileName, categoryID, categoryName, subcategoryName, hash, now)
-	if err != nil {
-		return 0, err
-	}
-	var fid int
-	err = r.db.QueryRow(`SELECT id FROM files WHERE pack_id = ? AND file_name = ?`, packID, fileName).Scan(&fid)
-	return fid, err
-}
-
-func (r *Repo) DeleteFilesByPack(packID int) error {
-	_, err := r.db.Exec(`DELETE FROM files WHERE pack_id = ?`, packID)
-	return err
-}
-
-func (r *Repo) DeleteFile(id int) error {
-	_, err := r.db.Exec(`DELETE FROM files WHERE id = ?`, id)
-	return err
-}
-
-func (r *Repo) GetFilesByPack(packID int) ([]File, error) {
-	rows, err := r.db.Query(`SELECT `+fileColumns+` FROM files WHERE pack_id = ?`, packID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var files []File
-	for rows.Next() {
-		f, err := scanFile(rows)
-		if err != nil {
-			return nil, err
-		}
-		files = append(files, f)
-	}
-	return files, rows.Err()
-}
-
-func (r *Repo) GetFileByPackAndName(packID int, fileName string) (*File, error) {
-	f, err := scanFile(r.db.QueryRow(`SELECT ` + fileColumns + ` FROM files WHERE pack_id = ? AND file_name = ?`, packID, fileName))
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	return &f, err
-}
-
-// ─── Tags ───
-
-func (r *Repo) InsertTags(tags []Tag) error {
-	tx, err := r.db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	stmt, err := tx.Prepare(`
-		INSERT INTO tags (file_id, pack_id, tag_name, category_name, subcategory_name, aliases)
-		VALUES (?, ?, ?, ?, ?, ?)
-	`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	for _, t := range tags {
-		if _, err := stmt.Exec(t.FileID, t.PackID, t.TagName, t.CategoryName, t.SubcategoryName, t.Aliases); err != nil {
-			return fmt.Errorf("insert tag %s: %w", t.TagName, err)
-		}
-	}
-
-	return tx.Commit()
-}
-
-func (r *Repo) DeleteTagsByFile(fileID int) error {
-	_, err := r.db.Exec(`DELETE FROM tags WHERE file_id = ?`, fileID)
-	return err
-}
-
-func (r *Repo) GetTagsByFile(fileID int) ([]Tag, error) {
-	rows, err := r.db.Query(`SELECT `+tagColumns+` FROM tags WHERE file_id = ?`, fileID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var tags []Tag
-	for rows.Next() {
-		t, err := scanTag(rows)
-		if err != nil {
-			return nil, err
-		}
-		tags = append(tags, t)
-	}
-	return tags, rows.Err()
-}
-
-func (r *Repo) DeleteTag(fileID int, tagName string) error {
-	_, err := r.db.Exec(`DELETE FROM tags WHERE file_id = ? AND tag_name = ?`, fileID, tagName)
-	return err
-}
-
-// ─── Search / Tree ───
-
-func (r *Repo) SearchTags(packID int, query string, limit int) ([]Tag, error) {
-	if limit <= 0 {
-		limit = 50
-	}
-
-	q := strings.ReplaceAll(query, "%", "\\%")
-	q = strings.ReplaceAll(q, "_", "\\_")
-
-	rows, err := r.db.Query(`SELECT `+tagColumns+` FROM tags WHERE pack_id = ? AND (tag_name LIKE ? OR aliases LIKE ?) ORDER BY tag_name LIMIT ?`, packID, "%"+q+"%", "%"+q+"%", limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var tags []Tag
-	for rows.Next() {
-		t, err := scanTag(rows)
-		if err != nil {
-			return nil, err
-		}
-		tags = append(tags, t)
-	}
-	return tags, rows.Err()
-}
-
-func (r *Repo) GetCategoryTree(packID int) ([]string, error) {
-	rows, err := r.db.Query(`
-		SELECT DISTINCT category_name FROM tags WHERE pack_id = ? ORDER BY category_name
-	`, packID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var cats []string
-	for rows.Next() {
-		var c string
-		if err := rows.Scan(&c); err != nil {
-			return nil, err
-		}
-		cats = append(cats, c)
-	}
-	return cats, rows.Err()
-}
-
-func (r *Repo) GetCategoryCounts(packID int) (map[string]int, error) {
-	rows, err := r.db.Query(`
-		SELECT category_name, COUNT(*) FROM tags
-		WHERE pack_id = ?
-		GROUP BY category_name
-		ORDER BY category_name
-	`, packID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	counts := make(map[string]int)
-	for rows.Next() {
-		var cat string
-		var count int
-		if err := rows.Scan(&cat, &count); err != nil {
-			return nil, err
-		}
-		counts[cat] = count
-	}
-	return counts, rows.Err()
-}
-
-func (r *Repo) GetTagsByCategory(packID int, categoryName string, offset, limit int) (tags []Tag, total int, err error) {
-	err = r.db.QueryRow(`
-		SELECT COUNT(*) FROM tags
-		WHERE pack_id = ? AND category_name = ?
-	`, packID, categoryName).Scan(&total)
-	if err != nil {
-		return
-	}
-
-	rows, err := r.db.Query(`SELECT `+tagColumns+` FROM tags WHERE pack_id = ? AND category_name = ? ORDER BY tag_name LIMIT ? OFFSET ?`, packID, categoryName, limit, offset)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var t Tag
-		t, err = scanTag(rows)
-		if err != nil {
-			return nil, 0, err
-		}
-		tags = append(tags, t)
-	}
-	err = rows.Err()
-	return
 }
 
 // ─── Saved Prompts ───
@@ -688,6 +372,24 @@ func (r *Repo) DeleteAiType(id int) error {
 
 // ─── Seed ───
 
+type AiTemplateSeed struct {
+	Name       string
+	Categories string
+	Enabled    bool
+}
+
+func DefaultAiTypeSeeds() []AiTemplateSeed {
+	return []AiTemplateSeed{
+		{"Стандартный", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`, true},
+		{"NovelAI/Pony", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Theme","tags":"","order":4},{"name":"Environment","tags":"","order":5},{"name":"Clothing","tags":"","order":6},{"name":"Pose","tags":"","order":7},{"name":"Action Detail","tags":"","order":8}]`, true},
+		{"Аниме", `[{"name":"Персонаж","tags":"","order":0},{"name":"Действие","tags":"","order":1},{"name":"Стиль","tags":"","order":2},{"name":"Окружение","tags":"","order":3},{"name":"Освещение","tags":"","order":4},{"name":"Настроение","tags":"","order":5},{"name":"Композиция","tags":"","order":6},{"name":"Качество","tags":"","order":7}]`, false},
+		{"Flux", `[{"name":"Subject","tags":"","order":0},{"name":"Environment","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Composition","tags":"","order":4},{"name":"Details","tags":"","order":5}]`, false},
+		{"Stable Diffusion", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`, true},
+		{"DALL-E 3", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6}]`, false},
+		{"Midjourney", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Environment","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Mood","tags":"","order":4},{"name":"Composition","tags":"","order":5},{"name":"--ar","tags":"","order":6},{"name":"--s","tags":"","order":7},{"name":"--v","tags":"","order":8},{"name":"--style","tags":"","order":9}]`, false},
+	}
+}
+
 func (r *Repo) SeedDefaultPreset() error {
 	var count int
 	r.db.QueryRow(`SELECT COUNT(*) FROM tag_presets WHERE name = 'Quality Only'`).Scan(&count)
@@ -706,19 +408,7 @@ func (r *Repo) SeedDefaultAiTypes() error {
 	var count int
 	r.db.QueryRow(`SELECT COUNT(*) FROM ai_types`).Scan(&count)
 	if count == 0 {
-		defaults := []struct {
-			Name       string
-			Categories string
-			Enabled    bool
-		}{
-			{"Стандартный", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`, true},
-			{"NovelAI/Pony", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Theme","tags":"","order":4},{"name":"Environment","tags":"","order":5},{"name":"Clothing","tags":"","order":6},{"name":"Pose","tags":"","order":7},{"name":"Action Detail","tags":"","order":8}]`, true},
-			{"Аниме", `[{"name":"Персонаж","tags":"","order":0},{"name":"Действие","tags":"","order":1},{"name":"Стиль","tags":"","order":2},{"name":"Окружение","tags":"","order":3},{"name":"Освещение","tags":"","order":4},{"name":"Настроение","tags":"","order":5},{"name":"Композиция","tags":"","order":6},{"name":"Качество","tags":"","order":7}]`, false},
-			{"Flux", `[{"name":"Subject","tags":"","order":0},{"name":"Environment","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Composition","tags":"","order":4},{"name":"Details","tags":"","order":5}]`, false},
-			{"Stable Diffusion", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`, true},
-			{"DALL-E 3", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6}]`, false},
-			{"Midjourney", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Environment","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Mood","tags":"","order":4},{"name":"Composition","tags":"","order":5},{"name":"--ar","tags":"","order":6},{"name":"--s","tags":"","order":7},{"name":"--v","tags":"","order":8},{"name":"--style","tags":"","order":9}]`, false},
-		}
+		defaults := DefaultAiTypeSeeds()
 		for i, d := range defaults {
 			if _, err := r.CreateAiType(d.Name, d.Categories, d.Enabled, i, ", "); err != nil {
 				return fmt.Errorf("seed ai_type %s: %w", d.Name, err)

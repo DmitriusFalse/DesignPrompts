@@ -1,0 +1,16 @@
+long_hair
+short_hair
+medium_hair
+very_long_hair
+very_short_hair
+straight_hair
+curly_hair
+wavy_hair
+spiked_hair
+messy_hair
+bald
+ahoge
+twin_tails
+ponytail
+braid
+bun

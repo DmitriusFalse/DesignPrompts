@@ -25,8 +25,7 @@ func TestInit_CreatesTables(t *testing.T) {
 	defer cleanup()
 
 	expected := []string{
-		"packs", "files", "tags",
-		"saved_prompts", "tag_presets",
+		"saved_prompts", "tag_presets", "ai_types",
 	}
 
 	for _, name := range expected {

@@ -1,0 +1,14 @@
+blonde_hair
+brown_hair
+black_hair
+red_hair
+blue_hair
+pink_hair
+purple_hair
+green_hair
+white_hair
+grey_hair
+silver_hair
+orange_hair
+multicolored_hair
+auburn_hair

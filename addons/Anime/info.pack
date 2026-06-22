@@ -1,0 +1,19 @@
+name: Anime
+version: "1.0"
+categories:
+    - id: 1
+      category: Персонаж
+    - id: 2
+      category: Действие
+    - id: 3
+      category: Стиль
+    - id: 4
+      category: Окружение
+    - id: 5
+      category: Освещение
+    - id: 6
+      category: Настроение
+    - id: 7
+      category: Композиция
+    - id: 8
+      category: Качество

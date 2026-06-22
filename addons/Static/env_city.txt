@@ -1,0 +1,10 @@
+cityscape
+skyline
+downtown
+skyscraper
+neon_city
+market
+shopping_mall
+subway
+train_station
+parking_lot

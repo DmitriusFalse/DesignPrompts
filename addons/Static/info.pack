@@ -1,0 +1,67 @@
+name: Static
+description: "Общие теги для всех стилей"
+version: "1.0"
+categories:
+  - id: 1
+    category: "Appearance"
+    files:
+      - "appearance_characters.txt"
+      - "appearance_hair_color.txt"
+      - "appearance_hair_style.txt"
+      - "appearance_eye_color.txt"
+      - "appearance_body.txt"
+  - id: 2
+    category: "Pose"
+    files:
+      - "pose_standing.txt"
+      - "pose_sitting.txt"
+      - "pose_lying.txt"
+      - "pose_other.txt"
+      - "pose_actions.txt"
+      - "pose_head.txt"
+      - "pose_nsfw.txt"
+  - id: 3
+    category: "Environment"
+    files:
+      - "env_location.txt"
+      - "env_rooms.txt"
+      - "env_furniture.txt"
+      - "env_outdoor.txt"
+      - "env_city.txt"
+      - "env_fantasy.txt"
+      - "env_weather.txt"
+      - "env_background.txt"
+  - id: 4
+    category: "Lighting"
+    files:
+      - "lighting.txt"
+  - id: 5
+    category: "ArtStyle"
+    files:
+      - "style_type.txt"
+      - "style_source.txt"
+      - "style_detail.txt"
+      - "style_realism.txt"
+  - id: 6
+    category: "Camera"
+    files:
+      - "camera_framing.txt"
+      - "camera_composition.txt"
+  - id: 7
+    category: "Mood"
+    files:
+      - "mood_atmosphere.txt"
+      - "mood_colors.txt"
+      - "mood_rating.txt"
+  - id: 8
+    category: "Quality"
+    files:
+      - "quality_score.txt"
+      - "quality_render.txt"
+  - id: 9
+    category: "NegativePrompt"
+    files:
+      - "negative_quality.txt"
+      - "negative_anatomy.txt"
+      - "negative_artifacts.txt"
+      - "negative_style.txt"

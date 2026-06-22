@@ -1,0 +1,41 @@
+[14:58:09.782] DEBUG Loaded 7 addons
+[14:58:09.790] DEBUG Server starting on http://127.0.0.1:8080
+[14:58:41.865] DEBUG Loaded 7 addons
+[14:58:41.881] DEBUG Server starting on http://127.0.0.1:8080
+[15:00:30.513] DEBUG Loaded 8 addons
+[15:00:30.528] DEBUG Server starting on http://127.0.0.1:8080
+[15:01:42.503] DEBUG Loaded 8 addons
+[15:01:42.514] DEBUG Server starting on http://127.0.0.1:8080
+[15:02:42.611] DEBUG Loaded 8 addons
+[15:02:42.631] DEBUG Server starting on http://127.0.0.1:8080
+[18:14:04.658] DEBUG Loaded 8 addons
+[18:14:04.658] DEBUG Server starting on http://127.0.0.1:8080
+[18:14:04.661] ERROR Server error: listen tcp 127.0.0.1:8080: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+[18:18:53.478] DEBUG Shutting down server...
+[18:18:53.478] DEBUG Signal received, shutting down...
+[18:31:13.831] DEBUG Loaded 8 addons
+[18:31:13.831] DEBUG Server starting on http://127.0.0.1:8080
+[18:32:02.155] DEBUG Loaded 8 addons
+[18:32:02.156] DEBUG Server starting on http://127.0.0.1:8080
+[18:32:18.717] DEBUG Loaded 8 addons
+[18:32:18.717] DEBUG Server starting on http://127.0.0.1:8080
+[18:33:20.280] DEBUG Loaded 8 addons
+[18:33:20.281] DEBUG Server starting on http://127.0.0.1:8080
+[18:33:43.824] DEBUG Loaded 8 addons
+[18:33:43.824] DEBUG Server starting on http://127.0.0.1:8080
+[18:33:58.299] DEBUG Loaded 8 addons
+[18:33:58.300] DEBUG Server starting on http://127.0.0.1:8080
+[18:35:16.527] DEBUG Loaded 8 addons
+[18:35:16.528] DEBUG Server starting on http://127.0.0.1:8080
+[18:51:37.428] DEBUG Loaded 8 addons
+[18:51:37.437] DEBUG Server starting on http://127.0.0.1:8080
+[18:51:37.442] ERROR Server error: listen tcp 127.0.0.1:8080: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+[18:51:54.314] DEBUG Loaded 8 addons
+[18:51:54.315] DEBUG Server starting on http://127.0.0.1:8080
+[18:51:54.317] ERROR Server error: listen tcp 127.0.0.1:8080: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+[18:52:08.465] DEBUG Loaded 8 addons
+[18:52:08.466] DEBUG Server starting on http://127.0.0.1:8080
+[19:25:39.751] DEBUG Loaded 9 addons
+[19:25:39.752] DEBUG Server starting on http://127.0.0.1:8080
+[19:25:54.102] DEBUG Loaded 9 addons
+[19:25:54.103] DEBUG Server starting on http://127.0.0.1:8080

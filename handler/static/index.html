@@ -30,7 +30,7 @@
       <div x-show="show" class="tooltip" x-text="t('tooltip.manager')"></div>
     </span>
     <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-      <button @click="openAiTypeEditor()" class="px-2 py-0.5 text-xs rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer whitespace-nowrap">🧠 <span>Шаблоны</span></button>
+      <button @click="templateEditorOpen = true" class="px-2 py-0.5 text-xs rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer whitespace-nowrap">🧠 <span>Шаблоны</span></button>
       <div x-show="show" class="tooltip">Редактор шаблонов промптов</div>
     </span>
     <div class="flex-1"></div>
@@ -111,95 +111,20 @@
               x-data="tooltip" @mouseenter="enter" @mouseleave="leave">🏠
         <div x-show="show" class="tooltip" x-text="t('tooltip.sidebar_main')"></div>
       </button>
-      <template x-for="p in packs" :key="'ic'+p.id">
-        <button @click="togglePanel('pack', p.id)" class="icon-btn relative" :class="{ active: activePanel === 'pack' && activePackId === p.id }"
+      <template x-for="a in addons" :key="'ic'+a.info.name">
+        <button @click="togglePanel('addon', a.info.name)" class="icon-btn relative" :class="{ active: activePanel === 'addon' && activeAddonName === a.info.name }"
                 x-data="tooltip" @mouseenter="enter" @mouseleave="leave">
           <span class="icon-btn-inner">
-            <span x-text="p.icon || '📦'" class="icon-btn-fallback"></span>
-            <img :src="'/api/pack/icon?id=' + p.id" onerror="this.style.display='none'" onload="var fb=this.parentElement.querySelector('.icon-btn-fallback');if(fb)fb.style.display='none'" class="pack-icon-img" alt="" loading="lazy">
+            <span x-text="a.info.icon || '📦'" class="icon-btn-fallback"></span>
+            <img :src="'/api/addon/icon?name=' + encodeURIComponent(a.info.name)" onerror="this.style.display='none'" onload="var fb=this.parentElement.querySelector('.icon-btn-fallback');if(fb)fb.style.display='none'" class="pack-icon-img" alt="" loading="lazy">
           </span>
-          <div x-show="show" class="tooltip" x-text="p.name"></div>
+          <div x-show="show" class="tooltip" x-text="a.info.name"></div>
         </button>
       </template>
-      <button @click="togglePanel('const')" class="icon-btn relative" :class="{ active: activePanel === 'const' }"
-              x-data="tooltip" @mouseenter="enter" @mouseleave="leave">📊
-        <div x-show="show" class="tooltip" x-text="t('tooltip.sidebar_const')"></div>
-      </button>
     </div>
     <div :style="leftStyle" x-show="sideOpen" class="shrink-0 overflow-hidden flex flex-col" style="width:50%">
     <aside class="flex-1 min-w-0 border-r border-gray-200 dark:border-dark-600 flex flex-col bg-gray-50 dark:bg-dark-700 overflow-hidden">
       <div class="flex-1 overflow-y-auto">
-        <div x-show="sidebarTab === 'const'" class="border-b border-gray-200 dark:border-dark-600">
-          <template x-for="cat in constantTags" :key="cat.name">
-          <div>
-            <button @click="constOpen[cat.name] = !constOpen[cat.name]" class="cursor-pointer w-full flex items-center justify-between px-4 py-2 text-xs font-semibold uppercase tracking-wide bg-blue-50 dark:bg-dark-500 hover:bg-blue-100 dark:hover:bg-dark-600 text-gray-900 dark:text-dark-100">
-              <span class="flex items-center gap-1.5">
-                <span x-show="getCategoryColor(cat)" class="tag-color-dot shrink-0" :style="{ '--dot-color': getCategoryColor(cat) }"></span>
-                <span x-text="t(cat.tkey || cat.name)"></span>
-                <span class="ml-1 text-[10px]" :class="counterColorClass(selectedCountInCategory(cat))"><span x-show="selectedCountInCategory(cat) > 0" x-text="selectedCountInCategory(cat) + '/'"></span><span x-text="totalInCategory(cat)"></span></span>
-              </span>
-              <span x-text="constOpen[cat.name] ? '\u25BC' : '\u25B6'" class="text-xs shrink-0"></span>
-            </button>
-            <div x-show="constOpen[cat.name]" class="px-3 pb-1">
-              <template x-if="cat.tags">
-                <div class="flex flex-wrap gap-1">
-                  <template x-for="tag in cat.tags" :key="tag">
-                    <span class="tag-pill-wrapper">
-                      <span class="tag-pill text-xs" :class="selectedClass(tag)" @click="addTag({ tag_name: tag, category_name: 'const', subcategory_name: cat.subcat || cat.tkey?.split('.').pop() || cat.name })">
-                        <span x-text="tag" class="max-w-40 truncate"></span>
-                      </span>
-                      <span class="hover-actions">
-                        <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-                          <button @click.stop="copyTagName(tag)">📋</button>
-                          <div x-show="show" class="tooltip" x-text="t('tag.copy')"></div>
-                        </span>
-                        <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-                          <button class="neg" @click.stop="addNegativeTag({ tag_name: tag, category_name: 'const', subcategory_name: cat.subcat || cat.tkey?.split('.').pop() || cat.name })">−</button>
-                          <div x-show="show" class="tooltip" x-text="t('tag.neg')"></div>
-                        </span>
-                      </span>
-                    </span>
-                  </template>
-                </div>
-              </template>
-              <template x-if="cat.subcategories?.length">
-                <template x-for="sub in cat.subcategories" :key="sub.name">
-      <div class="flex">
-                    <button @click="constSubOpen[cat.name+'_'+sub.name] = !constSubOpen[cat.name+'_'+sub.name]" class="cursor-pointer w-full flex items-center justify-between px-2 py-0.5 text-xs font-medium hover:bg-gray-100 dark:hover:bg-dark-600 text-gray-500 dark:text-dark-400">
-                      <span class="flex items-center gap-1">
-                        <span x-show="getCategoryColor(cat)" class="tag-color-dot shrink-0" :style="{ '--dot-color': getCategoryColor(cat) }"></span>
-                        <span x-text="sub.name"></span>
-                        <span class="ml-1 text-[10px]" :class="counterColorClass(selectedCountInSub(sub))"><span x-show="selectedCountInSub(sub) > 0" x-text="selectedCountInSub(sub) + '/'"></span><span x-text="totalInSub(sub)"></span></span>
-                      </span>
-                      <span x-text="constSubOpen[cat.name+'_'+sub.name] ? '\u25BC' : '\u25B6'" class="text-xs shrink-0"></span>
-                    </button>
-                    <div x-show="constSubOpen[cat.name+'_'+sub.name]" class="flex flex-wrap gap-1 px-2 py-1">
-                      <template x-for="tag in sub.tags" :key="tag">
-                    <span class="tag-pill-wrapper">
-                          <span class="tag-pill text-xs" :class="selectedClass(tag)" @click="addTag({ tag_name: tag, category_name: 'const', subcategory_name: cat.tkey?.split('.').pop() || sub.name })">
-                            <span x-text="tag" class="max-w-40 truncate"></span>
-                          </span>
-                          <span class="hover-actions">
-                            <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-                              <button @click.stop="copyTagName(tag)">📋</button>
-                              <div x-show="show" class="tooltip" x-text="t('tag.copy')"></div>
-                            </span>
-                            <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-                              <button class="neg" @click.stop="addNegativeTag({ tag_name: tag, category_name: 'const', subcategory_name: cat.tkey?.split('.').pop() || sub.name })">−</button>
-                              <div x-show="show" class="tooltip" x-text="t('tag.neg')"></div>
-                            </span>
-                          </span>
-                        </span>
-                      </template>
-                    </div>
-                  </div>
-                </template>
-              </template>
-            </div>
-            </div>
-            </template>
-          </div>
-
         <div x-show="sidebarTab === 'main'">
           <template x-for="block in currentStructureAllBlocks" :key="'main'+block.id">
             <div>
@@ -301,49 +226,59 @@
           </template>
         </div>
 
-        <div x-show="sidebarTab === 'tree'">
-        <!-- Block-grouped categories -->
-        <template x-for="blockId in [1,2,3,4,5,6,7,8,9]" :key="'tb'+blockId">
-          <div x-show="treeByBlock(blockId).length > 0">
-            <div class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wide bg-gray-200 dark:bg-dark-600 text-gray-900 dark:text-dark-100 border-b border-gray-200 dark:border-dark-600">
-              <span x-show="BLOCK_COLORS[blockId]" class="tag-color-dot shrink-0" :style="{ '--dot-color': BLOCK_COLORS[blockId] }"></span>
-              <span x-text="t('block.' + blockId)"></span>
-            </div>
-            <template x-for="cat in treeByBlock(blockId)" :key="cat.name">
-              <div>
-                <button @click="toggleCategory(cat)" class="cursor-pointer w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-600 text-gray-900 dark:text-dark-100">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <span x-text="tCat(cat.name)"></span>
-                    <span class="text-[10px] text-gray-400" x-text="cat.count"></span>
-                  </div>
-                  <span x-text="treeOpen[cat.name] ? '\u25BC' : '\u25B6'" class="text-xs shrink-0"></span>
-                </button>
-                <div x-show="treeOpen[cat.name]">
-                  <div class="px-4 py-2 flex flex-wrap gap-1.5">
-                    <template x-for="item in (cat._tags || [])" :key="item.id">
-                      <span class="tag-pill-wrapper">
-                        <span class="tag-pill" :class="selectedClass(item.tag_name)" @click="addTag(item)">
-                          <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="max-w-60 truncate relative inline-flex">
-                            <span x-text="item.tag_name" class="truncate"></span>
-                            <div x-show="show && item.aliases" class="tooltip" x-text="t('tooltip.aliases') + item.aliases"></div>
+        <div x-show="sidebarTab === 'addon'">
+        <!-- Addon categories -->
+        <div class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wide bg-gray-200 dark:bg-dark-600 text-gray-900 dark:text-dark-100 border-b border-gray-200 dark:border-dark-600">
+          <span x-show="currentAddon?.info?.icon" x-text="currentAddon?.info?.icon" class="text-base"></span>
+          <span x-text="currentAddon?.info?.name"></span>
+        </div>
+        <template x-for="cat in currentAddon?.info?.categories || []" :key="cat.category">
+          <div>
+            <button @click="toggleAddonCategory(cat.category)" class="cursor-pointer w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-600 text-gray-900 dark:text-dark-100">
+              <div class="flex items-center gap-2 min-w-0">
+                <span x-text="tAddonCat(cat.category)"></span>
+              </div>
+              <span x-text="addonTreeOpen[cat.category] ? '\u25BC' : '\u25B6'" class="text-xs shrink-0"></span>
+            </button>
+            <div x-show="addonTreeOpen[cat.category]">
+              <!-- File subgroups -->
+              <template x-for="g in addonTagGroups(cat.category)" :key="g.file">
+                <div>
+                  <button @click="toggleFileGroup(cat.category, g.file)" class="cursor-pointer w-full flex items-center justify-between px-6 py-1.5 text-xs hover:bg-gray-50 dark:hover:bg-dark-600 text-gray-600 dark:text-dark-300">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                      <span class="truncate" x-text="g.file ? g.file.replace(/\.[^.]+$/, '') : ''"></span>
+                      <span class="text-[10px] text-gray-400 dark:text-dark-500" x-text="'(' + (g.tags?.length || 0) + ')'"></span>
+                    </div>
+                    <span x-text="fileGroupOpen[cat.category+'|'+g.file] ? '\u25BC' : '\u25B6'" class="text-xs shrink-0"></span>
+                  </button>
+                  <div x-show="fileGroupOpen[cat.category+'|'+g.file]">
+                    <div class="px-6 py-2 flex flex-wrap gap-1.5">
+                      <template x-for="tag in (g.tags || [])" :key="tag.name">
+                        <span class="tag-pill-wrapper">
+                          <span class="tag-pill" :class="selectedClass(tag.name)" @click="addTag({ tag_name: tag.name, category_name: cat.category, subcategory_name: g.file || '' })">
+                            <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="max-w-60 truncate relative inline-flex">
+                              <span x-text="tag.name" class="truncate"></span>
+                              <div x-show="show && tag.text && tag.text !== tag.name" class="tooltip" x-text="tag.text"></div>
+                            </span>
+                          </span>
+                          <span class="hover-actions">
+                            <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+                              <button @click.stop="copyTagName(tag.name)">📋</button>
+                              <div x-show="show" class="tooltip" x-text="t('tag.copy')"></div>
+                            </span>
+                            <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+                              <button class="neg" @click.stop="addNegativeTag({ tag_name: tag.name, category_name: cat.category, subcategory_name: g.file || '' })">−</button>
+                              <div x-show="show" class="tooltip" x-text="t('tag.neg')"></div>
+                            </span>
                           </span>
                         </span>
-                        <span class="hover-actions">
-                          <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-                            <button @click.stop="copyTagName(item.tag_name)">📋</button>
-                            <div x-show="show" class="tooltip" x-text="t('tag.copy')"></div>
-                          </span>
-                          <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-                            <button class="neg" @click.stop="addNegativeTag(item)">−</button>
-                            <div x-show="show" class="tooltip" x-text="t('tag.neg')"></div>
-                          </span>
-                        </span>
-                      </span>
-                    </template>
+                      </template>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </template>
+              </template>
+              <div x-show="addonTagGroups(cat.category).length === 0" class="px-6 py-2 text-xs text-gray-400 dark:text-dark-500 italic">Нет тегов</div>
+            </div>
           </div>
         </template>
         </div>
@@ -408,13 +343,13 @@
           <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
             <div class="relative" x-data="dropdown">
               <button @click="toggle" @click.outside="close" class="toolbar-btn py-1 flex items-center gap-1" style="min-width:120px;max-width:150px">
-                <span class="truncate text-left" x-text="aiTypes.find(t => t.id === currentAiTypeId)?.name || ''"></span>
+                <span class="truncate text-left" x-text="currentAddon?.info?.name || ''"></span>
                 <svg x-show="!open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 <svg x-show="open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
               <div x-show="open" x-transition:enter="transition ease-out" x-transition:enter-start="scale-y-0 opacity-0" x-transition:enter-end="scale-y-100 opacity-100" x-transition:leave="transition ease-in" x-transition:leave-start="scale-y-100 opacity-100" x-transition:leave-end="scale-y-0 opacity-0" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle" style="transition-duration:150ms">
-                <template x-for="t in enabledAiTypes" :key="t.id">
-                  <button @click="selectAiTypeFromDropdown(t); close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-xs cursor-pointer transition-colors flex items-center" :class="currentAiTypeId === t.id ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
+                <template x-for="t in allTemplates" :key="t.type + '-' + t.id">
+                  <button @click="selectAiTypeFromDropdown(t); close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-xs cursor-pointer transition-colors flex items-center" :class="isCurrentTemplate(t) ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
                     <span x-text="t.name"></span>
                   </button>
                 </template>
@@ -952,17 +887,6 @@
             </template>
           </select>
         </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('main.structures')"></label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="s in aiTypes" :key="s.id">
-              <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none">
-                <input type="checkbox" :value="String(s.id)" x-model="mainTagForm.structures" class="rounded border-gray-300 dark:border-dark-500">
-                <span x-text="s.name"></span>
-              </label>
-            </template>
-          </div>
-        </div>
       </div>
       <div class="flex justify-end gap-2 mt-4">
         <button @click="closeMainTagModal()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer" x-text="t('main.cancel')"></button>
@@ -980,17 +904,6 @@
         <div>
           <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('main.group_name')"></label>
           <input type="text" x-model="mainGroupForm.name" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500" @keydown.enter="saveMainGroup()">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('main.structures')"></label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="s in aiTypes" :key="s.id">
-              <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none">
-                <input type="checkbox" :value="String(s.id)" x-model="mainGroupForm.structures" class="rounded border-gray-300 dark:border-dark-500">
-                <span x-text="s.name"></span>
-              </label>
-            </template>
-          </div>
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-4">
@@ -1120,114 +1033,71 @@
     </div>
   </div>
 
-  <!-- Ai Type Editor Modal -->
-  <div x-show="aiTypeEditorOpen" class="fixed inset-0 z-50 flex items-center justify-center" @keydown.escape.window="closeAiTypeEditor()">
-    <div class="absolute inset-0 bg-black/40" @click="closeAiTypeEditor()"></div>
+  <!-- Template Editor Modal (addon read-only) -->
+  <div x-show="templateEditorOpen" class="fixed inset-0 z-50 flex items-center justify-center" @keydown.escape.window="templateEditorOpen = false">
+    <div class="absolute inset-0 bg-black/40" @click="templateEditorOpen = false"></div>
     <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl text-sm flex flex-col overflow-hidden" style="width:800px;min-height:500px;max-height:80vh" @click.stop>
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-600 shrink-0">
         <div class="text-base font-semibold">Редактор шаблонов промптов</div>
-        <button @click="closeAiTypeEditor()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg leading-none cursor-pointer">✕</button>
+        <button @click="templateEditorOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg leading-none cursor-pointer">✕</button>
       </div>
       <div class="flex flex-1 min-h-0">
-        <!-- Left panel -->
+        <!-- Left panel: addon list -->
         <div class="w-48 border-r border-gray-200 dark:border-dark-600 flex flex-col shrink-0">
-          <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 px-4 pt-3 pb-1">Шаблоны:</div>
           <div class="overflow-y-auto flex-1">
-            <template x-for="item in aiTypes.filter(t => t.enabled)" :key="item.id">
-              <div @click="selectAiType(item)" class="flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-dark-700 cursor-pointer transition-colors" :class="selectedAiTypeId === item.id ? 'border-l-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-l-0 hover:bg-gray-50 dark:hover:bg-dark-600'">
+            <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 px-4 pt-3 pb-1">Аддоны:</div>
+            <template x-for="a in addons" :key="'addon'+a.info.name">
+              <div @click="selectAddonEdit(a.info.name)" class="flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-dark-700 cursor-pointer transition-colors" :class="selectedAddonEditName === a.info.name ? 'border-l-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-l-0 hover:bg-gray-50 dark:hover:bg-dark-600'">
                 <div class="min-w-0 flex-1">
-                  <div class="text-sm truncate" x-text="item.name" :class="selectedAiTypeId === item.id ? 'font-semibold' : 'font-medium'"></div>
+                  <div class="text-sm truncate font-medium" x-text="a.info.name"></div>
                 </div>
               </div>
             </template>
-            <template x-if="aiTypes.some(t => !t.enabled)">
-              <div>
-                <div class="text-xs font-semibold text-gray-400 dark:text-dark-500 px-4 pt-3 pb-1">Отключенные</div>
-                <template x-for="item in aiTypes.filter(t => !t.enabled)" :key="'d'+item.id">
-                  <div @click="selectAiType(item)" class="flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-dark-700 cursor-pointer transition-colors opacity-60" :class="selectedAiTypeId === item.id ? 'border-l-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-l-0 hover:bg-gray-50 dark:hover:bg-dark-600'">
-                    <div class="min-w-0 flex-1">
-                      <div class="text-sm truncate" x-text="item.name" :class="selectedAiTypeId === item.id ? 'font-semibold' : 'font-medium'"></div>
-                    </div>
-                  </div>
-                </template>
-              </div>
-            </template>
-            <div x-show="aiTypes.length === 0" class="text-center text-gray-400 dark:text-dark-400 text-sm py-8">Нет шаблонов</div>
+            <div x-show="addons.length === 0" class="text-center text-gray-400 dark:text-dark-400 text-sm py-8">Нет аддонов</div>
           </div>
           <div class="p-4 border-t border-gray-200 dark:border-dark-600">
-            <button @click="addNewAiType()" class="w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer">＋ Новый шаблон</button>
+            <div class="text-xs text-gray-400 dark:text-dark-500 text-center">Создайте info.pack в папке addons/</div>
           </div>
         </div>
-        <!-- Right panel -->
-        <div class="flex-1 flex flex-col p-6 min-w-0 overflow-y-auto space-y-5" x-show="selectedAiTypeId !== null">
-          <!-- Enabled toggle (top) -->
-          <div class="flex items-center gap-3" x-data="tooltip" @mouseenter="enter" @mouseleave="leave">
-            <span class="text-xs font-medium text-gray-700 dark:text-dark-200">Активен</span>
-            <label class="toggle self-center" x-bind:class="{ 'toggle-active': editingAiType.enabled }">
-              <input type="checkbox" class="toggle-input" x-model="editingAiType.enabled" @change="saveAiType()">
-              <span class="toggle-track"><span class="toggle-knob"></span></span>
-            </label>
-            <div x-show="show" class="tooltip !whitespace-nowrap">Шаблон отображается в списке выбора</div>
-          </div>
-          <!-- Name -->
-          <div>
-            <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1.5">Название:</div>
-            <input x-model="editingAiType.name" class="w-full border rounded px-3 py-2.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 text-gray-700 dark:text-dark-200 outline-none focus:border-blue-400 dark:focus:border-blue-500" :class="{ 'border-red-400 dark:border-red-500': !editingAiType.name.trim() }">
-          </div>
-          <!-- Separator -->
-          <div>
-            <label class="relative flex items-center gap-2 mb-1.5" x-data="tooltip" @mouseenter="enter" @mouseleave="leave">
-              <span class="text-xs font-semibold text-gray-500 dark:text-dark-400">Разделитель:</span>
-              <span class="text-gray-400 dark:text-dark-500 cursor-help text-xs leading-none">ⓘ</span>
-              <div x-show="show" class="tooltip">Символ(ы) между категориями в итоговом промпте. По умолчанию: запятая с пробелом (, )</div>
-            </label>
-            <input x-model="editingAiType.separator" class="w-full max-w-64 border rounded px-3 py-2 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 text-gray-700 dark:text-dark-200 outline-none focus:border-blue-400 dark:focus:border-blue-500">
-          </div>
-          <!-- Categories -->
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <div class="text-xs font-semibold text-gray-500 dark:text-dark-400">Категории:</div>
-              <button @click="addCategory()" class="text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">+ Добавить</button>
+        <!-- Right panel: addon read-only view -->
+        <div class="flex-1 flex flex-col p-6 min-w-0 overflow-y-auto space-y-5" x-show="selectedAddonEditName !== null">
+          <div class="space-y-5">
+            <!-- Enabled toggle -->
+            <div class="flex items-center gap-3" x-data="tooltip" @mouseenter="enter" @mouseleave="leave">
+              <span class="text-xs font-medium text-gray-700 dark:text-dark-200">Активен</span>
+              <label class="toggle self-center" x-bind:class="{ 'toggle-active': !isAddonDisabled(selectedAddonEditName) }">
+                <input type="checkbox" class="toggle-input" :checked="!isAddonDisabled(selectedAddonEditName)" @change="toggleAddonDisabled(selectedAddonEditName)">
+                <span class="toggle-track"><span class="toggle-knob"></span></span>
+              </label>
+              <div x-show="show" class="tooltip !whitespace-nowrap">Аддон отображается в списке выбора</div>
             </div>
-            <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-              <template x-for="(cat, idx) in editingAiType.categoriesArray" :key="idx">
-                <div>
-                  <div class="flex items-center gap-1.5 px-3 py-2 rounded border border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-600" :class="{ 'border-red-300 dark:border-red-600': cat._dup }" draggable="true" @dragstart="onCategoryDragStart(idx, $event)" @dragover.prevent @drop="onCategoryDrop(idx, $event)" @dragend="onCategoryDragEnd()">
-                    <span class="text-gray-400 cursor-grab select-none text-sm" @mousedown.stop>☰</span>
-                    <span x-show="!cat._editing" class="flex-1 text-sm truncate" x-text="cat.name" @dblclick="toggleEditCategory(idx)"></span>
-                    <input x-show="cat._editing" x-model="cat.name" @blur="commitCategoryName(idx)" @keydown.enter="commitCategoryName(idx)" class="flex-1 text-sm bg-white dark:bg-dark-500 border border-blue-400 rounded px-1.5 py-0.5 outline-none min-w-0" @click.stop>
-                    <button @click="toggleEditCategory(idx)" class="text-gray-400 hover:text-blue-500 text-xs leading-none cursor-pointer px-0.5" :title="cat._editing ? 'Закрыть' : 'Редактировать теги'">✎</button>
-                    <button @click="removeCategory(idx)" class="text-gray-400 hover:text-red-500 text-xs leading-none cursor-pointer px-0.5">×</button>
-                  </div>
-                  <div x-show="cat._editing" class="pl-7 pr-2 pb-1 -mt-0.5">
-                    <input x-model="cat.tags" @click.stop placeholder="Теги по умолчанию: quality, masterpiece..." class="w-full text-[11px] bg-transparent border-b border-dashed border-gray-300 dark:border-dark-400 px-1 py-0.5 outline-none text-gray-500 dark:text-dark-300">
-                  </div>
-                </div>
-              </template>
-              <div x-show="!editingAiType.categoriesArray.length" class="text-xs text-gray-400 text-center py-4">Нет категорий. Нажмите «+ Добавить»</div>
+            <!-- Name (read-only) -->
+            <div>
+              <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1.5">Название:</div>
+              <div class="w-full border rounded px-3 py-2.5 text-sm bg-gray-100 dark:bg-dark-600 border-gray-200 dark:border-dark-500 text-gray-500 dark:text-dark-400" x-text="selectedAddonEditName"></div>
             </div>
-          </div>
-          <!-- Preview -->
-          <div x-show="editingAiType.categoriesArray.length > 0">
-            <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Предпросмотр:</div>
-            <div class="text-xs text-gray-600 dark:text-dark-300 bg-gray-100 dark:bg-dark-600 rounded px-3 py-2 break-all italic font-mono" x-text="previewText"></div>
-          </div>
-          <!-- Buttons -->
-          <div class="flex items-center gap-3 pt-4">
-            <button @click="saveAiType()" class="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" :disabled="!editingAiType.name.trim()">Сохранить</button>
-            <button @click="deleteAiType(aiTypes.find(t => t.id === selectedAiTypeId))" x-show="selectedAiTypeId > 0" class="px-3 py-1.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer">Удалить</button>
+            <!-- Categories (read-only) -->
+            <div>
+              <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1.5">Категории:</div>
+              <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                <template x-for="cat in (addons.find(a => a.info.name === selectedAddonEditName)?.info?.categories || [])" :key="cat.id">
+                  <div class="flex items-center gap-1.5 px-3 py-2 rounded border border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-600">
+                    <span class="flex-1 text-sm" x-text="cat.category"></span>
+                  </div>
+                </template>
+                <div x-show="!(addons.find(a => a.info.name === selectedAddonEditName)?.info?.categories?.length)" class="text-xs text-gray-400 text-center py-4">Нет категорий</div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="flex-1 flex flex-col items-center justify-center p-8 text-center" x-show="selectedAiTypeId === null">
+        <div class="flex-1 flex flex-col items-center justify-center p-8 text-center" x-show="selectedAddonEditName === null">
           <div class="text-sm font-semibold text-gray-500 dark:text-dark-400 mb-3">Редактор шаблонов промптов</div>
           <div class="text-xs text-gray-400 dark:text-dark-500 space-y-1 max-w-sm">
-            <p>Шаблоны промптов определяют структуру итогового промпта для разных ИИ-моделей.</p>
-            <p>Каждый шаблон содержит список категорий — блоков, из которых состоит промпт.</p>
-            <p class="pt-2">• Выберите шаблон слева для редактирования</p>
-            <p>• Нажмите «＋ Новый шаблон» чтобы создать новый</p>
-            <p>• Нажмите «+ Добавить» чтобы добавить категорию</p>
-            <p>• Используйте перетаскивание ☰ для изменения порядка категорий</p>
-            <p>• Нажмите ✎ чтобы указать теги по умолчанию для категории</p>
+            <p>Шаблоны промптов определяются аддонами.</p>
+            <p>Каждый аддон содержит список категорий — блоков, из которых состоит промпт.</p>
+            <p class="pt-2">• Выберите аддон слева для просмотра</p>
+            <p>• Включите/выключите аддон в списке выбора</p>
+            <p>• Чтобы добавить новый шаблон, создайте аддон в папке addons/</p>
           </div>
         </div>
       </div>

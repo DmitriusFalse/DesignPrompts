@@ -1,0 +1,13 @@
+sitting
+sitting_on_chair
+sitting_on_floor
+sitting_on_bed
+sitting_on_edge
+seiza
+indian_style
+crossed_legs
+legs_together
+one_knee_up
+hugging_knees
+straddling
+lap_sitting

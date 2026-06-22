@@ -1,0 +1,103 @@
+name: Danbooru
+description: Tags from Danbooru dataset
+version: "1.0"
+categories:
+    - id: 1
+      category: Subject
+      files:
+        - animalgirl.txt
+        - bangs.txt
+        - braid.txt
+        - breasts.txt
+        - ears.txt
+        - eyes.txt
+        - eyeshadow.txt
+        - glasses.txt
+        - hair.txt
+        - hair_ornament.txt
+        - hairband.txt
+        - headband.txt
+        - headphones.txt
+        - headwear.txt
+        - horns.txt
+        - lips.txt
+        - mask.txt
+        - ponytail.txt
+        - scrunchie.txt
+        - tail.txt
+        - wings.txt
+    - id: 2
+      category: Action
+      files:
+        - fingering.txt
+        - holding.txt
+        - kissing.txt
+        - looking.txt
+        - sex.txt
+    - id: 3
+      category: Style
+    - id: 4
+      category: Setting
+      files:
+        - background.txt
+        - tree.txt
+    - id: 5
+      category: Theme
+      files:
+        - blood_on.txt
+        - cum_on.txt
+        - costume.txt
+        - gun.txt
+        - rifle.txt
+        - rose.txt
+        - sword.txt
+    - id: 6
+      category: Environment
+    - id: 7
+      category: Clothing
+      files:
+        - armor.txt
+        - belt.txt
+        - bikini.txt
+        - bodysuit.txt
+        - boots.txt
+        - bow.txt
+        - bra.txt
+        - bracelet.txt
+        - cape.txt
+        - choker.txt
+        - cloak.txt
+        - clothes.txt
+        - coat.txt
+        - collar.txt
+        - corset.txt
+        - dress.txt
+        - earring.txt
+        - gloves.txt
+        - hoodie.txt
+        - jacket.txt
+        - kimono.txt
+        - legwear.txt
+        - male_swimwear.txt
+        - necklace.txt
+        - outfit.txt
+        - panties.txt
+        - pants.txt
+        - shirt.txt
+        - shoes.txt
+        - shorts.txt
+        - skirt.txt
+        - sleeves.txt
+        - socks.txt
+        - suit.txt
+        - swimsuit.txt
+        - thighhigh.txt
+        - thong.txt
+        - top.txt
+        - uniform.txt
+    - id: 8
+      category: Pose
+      files:
+        - position.txt
+    - id: 9
+      category: Action Detail

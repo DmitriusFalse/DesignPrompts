@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"design-prompt/addon"
 	"design-prompt/config"
 	"design-prompt/database"
-	"design-prompt/sync"
 )
 
-func RegisterRoutes(mux *http.ServeMux, db *sql.DB, cfg *config.Config, syncSvc *sync.Service, configPath string) {
+func RegisterRoutes(mux *http.ServeMux, db *sql.DB, cfg *config.Config, configPath string, addons []*addon.Addon) {
 	repo := database.NewRepo(db)
 	cfg.WorkflowsPath = filepath.Join(filepath.Dir(configPath), "Workflows")
 
@@ -31,15 +31,12 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, cfg *config.Config, syncSvc 
 	}
 
 	mux.HandleFunc("/api/config", api(handleConfig(cfg, configPath)))
-	mux.HandleFunc("/api/pack", api(handleGetPackByID(repo)))
-	mux.HandleFunc("/api/pack/icon", api(handlePackIcon(repo)))
-	mux.HandleFunc("/api/pack/info", api(handleReadPackInfoFromReader(repo)))
-	mux.HandleFunc("/api/packs", api(handlePacks(repo)))
-	mux.HandleFunc("/api/sync", api(handleSync(syncSvc, cfg)))
-	mux.HandleFunc("/api/tags/tree", api(handleTree(repo)))
 	mux.HandleFunc("/api/custom-main-tags", api(handleCustomMainTags(repo)))
 	mux.HandleFunc("/api/main-tag-groups", api(handleMainTagGroups(repo)))
 	mux.HandleFunc("/api/ai-types", api(handleAiTypes(repo)))
+	mux.HandleFunc("/api/addons", api(handleAddons(addons)))
+	mux.HandleFunc("/api/addon/icon", api(handleAddonIcon(addons)))
+	mux.HandleFunc("/api/addon/tags", api(handleAddonTagsList(addons)))
 	mux.HandleFunc("/api/presets", api(handlePresets(repo)))
 	mux.HandleFunc("/api/prompts", api(handlePrompts(repo)))
 	mux.HandleFunc("/api/comfy/workflows", api(handleComfyWorkflows(cfg)))

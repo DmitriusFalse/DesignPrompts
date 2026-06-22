@@ -1,0 +1,13 @@
+head_tilt
+head_turn
+looking_at_viewer
+looking_away
+looking_back
+looking_up
+looking_down
+looking_to_the_side
+over_shoulder
+profile
+three-quarter_view
+eye_contact
+averting_eyes

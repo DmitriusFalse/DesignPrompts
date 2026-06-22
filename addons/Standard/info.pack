@@ -1,0 +1,19 @@
+name: Standard
+version: "1.0"
+categories:
+    - id: 1
+      category: Subject
+    - id: 2
+      category: Action
+    - id: 3
+      category: Style
+    - id: 4
+      category: Setting
+    - id: 5
+      category: Lighting
+    - id: 6
+      category: Mood
+    - id: 7
+      category: Composition
+    - id: 8
+      category: Quality

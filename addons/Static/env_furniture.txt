@@ -1,0 +1,16 @@
+bed
+couch
+sofa
+chair
+desk
+table
+bathtub
+shower
+window
+doorway
+mirror
+curtains
+pillows
+blanket
+rug
+bookshelf

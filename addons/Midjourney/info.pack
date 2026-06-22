@@ -1,0 +1,23 @@
+name: Midjourney
+version: "1.0"
+categories:
+    - id: 1
+      category: Subject
+    - id: 2
+      category: Action
+    - id: 3
+      category: Environment
+    - id: 4
+      category: Lighting
+    - id: 5
+      category: Mood
+    - id: 6
+      category: Composition
+    - id: 7
+      category: --ar
+    - id: 8
+      category: --s
+    - id: 9
+      category: --v
+    - id: 10
+      category: --style

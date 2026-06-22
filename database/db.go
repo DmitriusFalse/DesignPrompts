@@ -10,40 +10,6 @@ import (
 )
 
 var migrations = []string{
-	`CREATE TABLE IF NOT EXISTS packs (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL UNIQUE,
-		path TEXT NOT NULL,
-		description TEXT NOT NULL DEFAULT '',
-		description_ru TEXT NOT NULL DEFAULT '',
-		version TEXT NOT NULL DEFAULT '',
-		author TEXT NOT NULL DEFAULT '',
-		icon TEXT NOT NULL DEFAULT '',
-		name_ru TEXT NOT NULL DEFAULT '',
-		categories TEXT NOT NULL DEFAULT '',
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	)`,
-	`CREATE TABLE IF NOT EXISTS files (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		pack_id INTEGER NOT NULL REFERENCES packs(id) ON DELETE CASCADE,
-		file_name TEXT NOT NULL,
-		category_id INTEGER NOT NULL,
-		category_name TEXT NOT NULL,
-		subcategory_name TEXT NOT NULL,
-		file_hash TEXT NOT NULL,
-		last_synced DATETIME DEFAULT CURRENT_TIMESTAMP,
-		UNIQUE(pack_id, file_name)
-	)`,
-	`CREATE TABLE IF NOT EXISTS tags (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		file_id INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
-		pack_id INTEGER NOT NULL REFERENCES packs(id) ON DELETE CASCADE,
-		tag_name TEXT NOT NULL,
-		category_name TEXT NOT NULL,
-		subcategory_name TEXT NOT NULL,
-		aliases TEXT NOT NULL DEFAULT ''
-	)`,
 	`CREATE TABLE IF NOT EXISTS saved_prompts (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL DEFAULT '',
@@ -58,11 +24,6 @@ var migrations = []string{
 		positive_tags TEXT NOT NULL DEFAULT '[]',
 		negative_tags TEXT NOT NULL DEFAULT '[]'
 	)`,
-	`CREATE INDEX IF NOT EXISTS idx_tags_pack ON tags(pack_id)`,
-	`CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(tag_name)`,
-	`CREATE INDEX IF NOT EXISTS idx_tags_category ON tags(category_name, subcategory_name)`,
-	`CREATE INDEX IF NOT EXISTS idx_tags_file ON tags(file_id)`,
-	`CREATE INDEX IF NOT EXISTS idx_tags_file_tag ON tags(file_id, tag_name)`,
 	`CREATE TABLE IF NOT EXISTS ai_types (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL,
@@ -223,6 +184,13 @@ func Init(dbPath string) (*sql.DB, error) {
 	}
 	if err := repo.SeedDefaultAiTypes(); err != nil {
 		return nil, fmt.Errorf("seed ai_types: %w", err)
+	}
+
+	// Drop old pack tables
+	for _, t := range []string{"tags", "files", "packs", "tree_cache"} {
+		if _, err := db.Exec("DROP TABLE IF EXISTS " + t); err != nil {
+			return nil, fmt.Errorf("drop old table %s: %w", t, err)
+		}
 	}
 
 	return db, nil

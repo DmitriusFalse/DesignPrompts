@@ -1,0 +1,16 @@
+fantasy
+sci-fi
+cyberpunk
+steampunk
+medieval
+futuristic
+post-apocalyptic
+castle
+palace
+throne_room
+dungeon
+cathedral
+temple
+ruins
+magical
+spaceship

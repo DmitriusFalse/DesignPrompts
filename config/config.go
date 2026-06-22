@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Port          int    `json:"port"`
 	TagsPath      string `json:"tags_path"`
+	AddonsPath    string `json:"addons_path"`
 	DBPath        string `json:"db_path"`
 	LogLevel      string `json:"log_level"`
 	LogsDir       string `json:"logs_dir"`
@@ -24,6 +25,7 @@ func defaultConfig() *Config {
 	return &Config{
 		Port:          8080,
 		TagsPath:      "./tags",
+		AddonsPath:    "./addons",
 		DBPath:        "./data.db",
 		LogsDir:       "./logs",
 		LogLevel:      "error",
@@ -46,6 +48,7 @@ func Load(path string) (*Config, error) {
 			cfg := defaultConfig()
 			cfgDir := filepath.Dir(absPath)
 			cfg.TagsPath = resolvePath(cfgDir, cfg.TagsPath)
+			cfg.AddonsPath = resolvePath(cfgDir, cfg.AddonsPath)
 			cfg.DBPath = resolvePath(cfgDir, cfg.DBPath)
 			cfg.LogsDir = resolvePath(cfgDir, cfg.LogsDir)
 			cfg.SavePath = resolvePath(cfgDir, cfg.SavePath)
@@ -70,6 +73,9 @@ func Load(path string) (*Config, error) {
 	if cfg.TagsPath == "" {
 		cfg.TagsPath = "./tags"
 	}
+	if cfg.AddonsPath == "" {
+		cfg.AddonsPath = "./addons"
+	}
 	if cfg.DBPath == "" {
 		cfg.DBPath = "./data.db"
 	}
@@ -81,6 +87,7 @@ func Load(path string) (*Config, error) {
 	}
 
 	cfg.TagsPath = resolvePath(cfgDir, cfg.TagsPath)
+	cfg.AddonsPath = resolvePath(cfgDir, cfg.AddonsPath)
 	cfg.DBPath = resolvePath(cfgDir, cfg.DBPath)
 	cfg.LogsDir = resolvePath(cfgDir, cfg.LogsDir)
 	if cfg.ComfyAddress == "" {

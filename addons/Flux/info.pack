@@ -1,0 +1,15 @@
+name: Flux
+version: "1.0"
+categories:
+    - id: 1
+      category: Subject
+    - id: 2
+      category: Environment
+    - id: 3
+      category: Style
+    - id: 4
+      category: Lighting
+    - id: 5
+      category: Composition
+    - id: 6
+      category: Details

@@ -1,0 +1,15 @@
+upper_body
+lower_body
+full_body
+close-up
+face_focus
+portrait
+headshot
+waist_up
+cowboy_shot
+dutch_angle
+straight-on
+from_side
+from_behind
+from_above
+from_below

@@ -1,0 +1,6 @@
+vibrant_colors
+rich_colors
+pastel_colors
+muted_colors
+monochrome
+sepia

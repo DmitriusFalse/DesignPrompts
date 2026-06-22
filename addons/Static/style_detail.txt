@@ -1,0 +1,13 @@
+detailed_skin
+skin_texture
+skin_pores
+smooth_skin
+glowing_skin
+subsurface_scattering
+detailed_hands
+detailed_fingers
+perfect_hands
+detailed_hair
+individual_hair_strands
+detailed_clothing
+fabric_texture

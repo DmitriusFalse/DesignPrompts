@@ -1,0 +1,16 @@
+solo
+1girl
+1boy
+1other
+2girls
+2boys
+3girls
+3boys
+4girls
+4boys
+5girls
+multiple_girls
+multiple_boys
+group
+no_humans
+crowd

@@ -1,0 +1,8 @@
+lying_down
+lying_on_back
+lying_on_side
+lying_on_stomach
+prone
+supine
+fetal_position
+sprawled

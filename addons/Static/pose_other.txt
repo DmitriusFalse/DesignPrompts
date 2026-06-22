@@ -1,0 +1,12 @@
+kneeling
+crouching
+squatting
+bending_over
+on_all_fours
+crawling
+stretching
+arching_back
+twisting
+turning_around
+spread_legs
+legs_apart

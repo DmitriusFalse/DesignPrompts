@@ -1,0 +1,13 @@
+ugly
+deformed
+blurry
+lowres
+worst_quality
+low_quality
+normal_quality
+jpeg_artifacts
+pixelated
+oversaturated
+underexposed
+overexposed
+washed_out

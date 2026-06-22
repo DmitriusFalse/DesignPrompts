@@ -38,7 +38,6 @@ document.addEventListener('alpine:init', () => {
 
 });
 
-const BLOCK_IDS = { '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9 };
 const BLOCK_COLORS = [null, '#60cdff', '#6ccb6c', '#e8b84a', '#4ecdc4', '#aa7be0', '#87b6ff', '#d48ebd', '#ff6b6b', '#f59a44', '#ff8c00'];
 
 function app() {
@@ -77,43 +76,6 @@ function app() {
       }
     },
 
-    async loadConstants() {
-      this.tagBlockMap = {};
-      this.tagInfoMap = {};
-      try {
-        const res = await fetch('/static/constants.json');
-        if (!res.ok) { console.error('loadConstants status:', res.status); return; }
-        this.constantTags = await res.json();
-        for (const group of this.constantTags) {
-          const tkey = group.tkey || '';
-          const parts = tkey.split('.');
-          const cat = parts.length >= 2 ? parts[1] : '';
-          const blockId = BLOCK_IDS[cat];
-          if (!blockId) continue;
-          const subcatKey = group.subcat || cat;
-          if (group.tags) {
-            for (const tag of group.tags) {
-              this.tagBlockMap[tag] = blockId;
-              this.tagInfoMap[tag] = { category: 'const', subcategory: subcatKey };
-            }
-          }
-          if (group.subcategories) {
-            for (const sub of group.subcategories) {
-              if (sub.tags) {
-                for (const tag of sub.tags) {
-                  this.tagBlockMap[tag] = blockId;
-                  this.tagInfoMap[tag] = { category: 'const', subcategory: subcatKey };
-                }
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Failed to load constants:', e);
-        this.constantTags = [];
-      }
-    },
-
     // Toast
     toastText: '',
     toastVisible: false,
@@ -124,49 +86,49 @@ function app() {
     negNames: {},
     _autoSaveTimer: null,
 
-    // Packs
-    packs: [],
-    selectedPackId: '',
-    syncing: false,
+    // Addons
+    addons: [],
+    selectedAddonName: '',
+    addonTreeOpen: {},
+    addonCatTags: {},
+    _addonLoading: null,
 
-    get currentPack() {
-      const p = this.packs.find(p => p.id === this.selectedPackId);
-      if (!p) return { name: '', icon: '📦' };
-      return {
-        ...p,
-        name: this.lang === 'ru' && p.name_ru ? p.name_ru : p.name
-      };
+    get currentAddon() {
+      return this.addons.find(a => a.info.name === this.selectedAddonName) || null;
     },
 
-    tCat(categoryName) {
-      const p = this.packs.find(p => p.id === this.selectedPackId);
-      if (!p || !p.categories_list) return categoryName;
-      const cat = p.categories_list.find(c => c.name === categoryName);
-      if (this.lang === 'ru' && cat && cat.name_ru) return cat.name_ru;
-      return categoryName;
+    disabledAddonNames: new Set(),
+
+    isAddonDisabled(name) {
+      return this.disabledAddonNames.has(name);
+    },
+
+    toggleAddonDisabled(name) {
+      if (this.disabledAddonNames.has(name)) {
+        this.disabledAddonNames.delete(name);
+      } else {
+        this.disabledAddonNames.add(name);
+      }
+      localStorage.setItem('addon_disabled', JSON.stringify([...this.disabledAddonNames]));
+    },
+
+    loadDisabledAddons() {
+      try {
+        const raw = localStorage.getItem('addon_disabled');
+        if (raw) {
+          const arr = JSON.parse(raw);
+          this.disabledAddonNames = new Set(arr);
+        }
+      } catch(e) {
+        this.disabledAddonNames = new Set();
+      }
     },
 
     // Sidebar
     sideOpen: false,
     activePanel: '',
-    activePackId: null,
-    sidebarTab: 'const',
-
-    // Tree
-    tree: [],
-    treeOpen: {},
-
-    treeModal: false,
-    treeModalProgress: 0,
-    _treeLoading: null,
-
-    // Constant tags
-    constOpen: {},
-    constSubOpen: {},
-    constantTags: [],
-    categoryColor: {},
-    tagBlockMap: {},
-    tagInfoMap: {},
+    activeAddonName: '',
+    sidebarTab: 'main',
     version: '',
 
     // ComfyUI
@@ -257,12 +219,9 @@ function app() {
     searchQuery: '',
     canvasGenData: '',
 
-    // Ai Type editor
+    // Template editor
     aiTypes: [],
-    aiTypeEditorOpen: false,
-    selectedAiTypeId: null,
-    currentAiTypeId: null,
-    editingAiType: { name: '', enabled: true, separator: ', ', categories: '', categoriesArray: [] },
+    templateEditorOpen: false,
 
     // Preview panel
     previewTab: 'images',
@@ -273,9 +232,8 @@ function app() {
     async init() {
       this.loadPresets();
       await this.loadTranslations();
-      await this.loadConstants();
-      this.assignColors();
-      await this.loadPacks();
+      this.loadDisabledAddons();
+      await this.loadAddons();
       document.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         this._pwaDeferredPrompt = e;
@@ -316,130 +274,69 @@ function app() {
       });
     },
 
-    // ─── Packs ───
+    // ─── Addons ───
 
-    async loadPacks() {
+    async loadAddons() {
       try {
-        const res = await fetch('/api/packs');
-        if (!res.ok) { console.error('loadPacks status:', res.status); return; }
-        const list = await res.json();
-        for (const p of list) {
-          try {
-            p.categories_list = JSON.parse(p.categories || '[]');
-          } catch(e) {
-            p.categories_list = [];
-          }
-        }
-        this.packs = list;
-        if (this.packs.length > 0 && !this.selectedPackId) {
-          this.selectedPackId = this.packs[0].id;
-          await this.refreshFreshCategories(this.selectedPackId);
+        const res = await fetch('/api/addons');
+        if (!res.ok) { console.error('loadAddons status:', res.status); return; }
+        this.addons = await res.json();
+        if (this.addons.length > 0 && !this.selectedAddonName) {
+          this.selectedAddonName = this.addons[0].info.name;
           this.loadAll();
         }
       } catch (e) {
-        console.error('loadPacks:', e);
+        console.error('loadAddons:', e);
       }
     },
 
-    async refreshFreshCategories(packId) {
-      try {
-        const res = await fetch(`/api/pack/info?id=${packId}`);
-        if (!res.ok) return;
-        const info = await res.json();
-        const pack = this.packs.find(p => p.id === packId);
-        if (pack && info.categories) {
-          pack.categories_list = info.categories;
-        }
-      } catch (e) {
-        console.error('refreshFreshCategories:', e);
-      }
+    // ─── Addon tree helpers ───
+
+    toggleAddonCategory(catName) {
+      this.addonTreeOpen[catName] = !this.addonTreeOpen[catName];
     },
 
-    async syncTags() {
-      if (this.syncing) return;
-      this.syncing = true;
-      try {
-        const res = await fetch('/api/sync', { method: 'POST' });
-        if (res.ok) {
-          await this.loadPacks();
-          this.loadAll();
-        } else {
-          const data = await res.json().catch(() => ({}));
-          this.showToast(data.error || 'Sync failed: ' + res.status, 5000);
-        }
-      } catch (e) {
-        console.error('sync:', e);
-        this.showToast('Sync error: ' + e.message, 5000);
-      } finally {
-        this.syncing = false;
-      }
+    addonCatsByBlock(blockId) {
+      const a = this.currentAddon;
+      if (!a?.info?.categories) return [];
+      return a.info.categories.filter(c => c.block_id === blockId);
     },
 
-    // ─── Tree ───
-
-    async loadTree() {
-      if (!this.selectedPackId) return;
-      try {
-        const res = await fetch(`/api/tags/tree?pack_id=${this.selectedPackId}`);
-        if (!res.ok) { console.error('loadTree status:', res.status); return; }
-        this.tree = await res.json();
-        this.treeOpen = {};
-        this.assignColors();
-      } catch (e) {
-        console.error('loadTree:', e);
-      }
+    addonTagsForCategory(catName) {
+      const a = this.currentAddon;
+      if (!a?.tagFiles) return [];
+      const groups = a.tagFiles[catName] || [];
+      return groups.flatMap(g => g.tags || []);
     },
 
-    async toggleCategory(cat) {
-      if (!cat) return;
-      const name = typeof cat === 'string' ? cat : cat.name;
-      this.treeOpen[name] = !this.treeOpen[name];
-      if (this.treeOpen[name]) {
-        const treeCat = this.tree.find(c => c.name === name);
-        if (treeCat && !treeCat._tags) {
-          if (this._treeLoading) return;
-          this._treeLoading = name;
-          this.treeModal = true;
-          this.treeModalProgress = 0;
-          try {
-            const res = await fetch(`/api/tags/tree?pack_id=${this.selectedPackId}&category=${encodeURIComponent(name)}&offset=0&limit=99999`);
-            const page = await res.json();
-            treeCat._tags = page.tags || [];
-            for (const t of treeCat._tags) {
-              this.tagToCategory[t.tag_name] = name;
-              this.tagInfoMap[t.tag_name] = { category: name, subcategory: '' };
-            }
-            this.treeModalProgress = 100;
-          } catch (e) {
-            console.error('toggleCategory:', e);
-            treeCat._tags = [];
-          } finally {
-            this._treeLoading = null;
-            this.treeModal = false;
-          }
-        }
-      }
+    addonTagGroups(catName) {
+      const a = this.currentAddon;
+      if (!a?.tagFiles) return [];
+      return (a.tagFiles[catName] || []).filter(g => g.tags?.length > 0);
     },
 
-    treeByBlock(blockId) {
-      if (!this.currentPack?.categories_list) return [];
-      return this.tree.filter(cat => {
-        const cfg = this.currentPack.categories_list.find(c => c.name === cat.name);
-        return cfg && cfg.block_id === blockId;
-      });
+    fileGroupOpen: {},
+
+    toggleFileGroup(catName, fileName) {
+      const key = catName + '|' + fileName;
+      this.fileGroupOpen[key] = !this.fileGroupOpen[key];
+    },
+
+    tAddonCat(catName) {
+      // for future translation of addon category names
+      return catName;
     },
 
     // ─── Chips ───
 
     resolveBlockId(category, subcategory) {
-      if (category === 'const') {
-        return BLOCK_IDS[subcategory] || 1;
-      }
-      return 1;
+      const s = this.currentStructure;
+      const block = s?.blocks?.find(b => b.customLabel === category);
+      return block?.id || 1;
     },
 
     resolveBlockIdByName(tagName) {
-      return this.tagBlockMap[tagName] || 1;
+      return 1;
     },
 
     _chipKey() {
@@ -448,12 +345,7 @@ function app() {
     makeChip(tag) {
       const category = tag.category_name || '';
       const subcategory = tag.subcategory_name || '';
-      let block_id = this.resolveBlockId(category, subcategory);
-      const pack = this.packs.find(p => p.id === this.selectedPackId);
-      if (pack && pack.categories_list) {
-        const catCfg = pack.categories_list.find(c => c.name === category);
-        if (catCfg && catCfg.block_id) block_id = catCfg.block_id;
-      }
+      const block_id = this.resolveBlockId(category, subcategory);
       return { name: tag.tag_name, category, subcategory, block_id, _groupChildren: [], _key: this._chipKey(), weight: null };
     },
     _chipFromTagData(tagData) {
@@ -521,8 +413,8 @@ function app() {
     },
 
     _clearDropVisuals() {
-      document.querySelectorAll('.drag-over, .drop-before, .drop-after')
-        .forEach(el => el.classList.remove('drag-over', 'drop-before', 'drop-after'));
+      document.querySelectorAll('.drag-over, .drop-before, .drop-after, .drop-above, .drop-below')
+        .forEach(el => el.classList.remove('drag-over', 'drop-before', 'drop-after', 'drop-above', 'drop-below'));
     },
 
     onDragEnd(ev) {
@@ -550,32 +442,48 @@ function app() {
         const d = dx * dx + dy * dy;
         if (d < closestDist) { closestDist = d; closestEl = el; }
       }
-      // Compute new drop target
-      let newInsertBeforeKey = null, newInsertAfterKey = null;
+      // Compute new drop target with 2D quadrant logic
+      let newInsertBeforeKey = null, newInsertAfterKey = null, newDir = '';
       if (closestEl) {
         const r = closestEl.getBoundingClientRect();
-        if (ev.clientX < r.left + r.width / 2) {
-          newInsertBeforeKey = closestEl.dataset.chipKey;
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const dx = ev.clientX - cx;
+        const dy = ev.clientY - cy;
+        if (Math.abs(dy) > Math.abs(dx)) {
+          // Vertical dominant — insert above/below
+          newDir = dy < 0 ? 'above' : 'below';
+          if (dy < 0) {
+            newInsertBeforeKey = closestEl.dataset.chipKey;
+          } else {
+            newInsertAfterKey = closestEl.dataset.chipKey;
+          }
         } else {
-          newInsertAfterKey = closestEl.dataset.chipKey;
+          // Horizontal dominant — insert left/right
+          newDir = dx < 0 ? 'left' : 'right';
+          if (dx < 0) {
+            newInsertBeforeKey = closestEl.dataset.chipKey;
+          } else {
+            newInsertAfterKey = closestEl.dataset.chipKey;
+          }
         }
       }
       // Update visual if changed
       const prev = this.dropTarget;
-      if (!prev || prev.before !== newInsertBeforeKey || prev.after !== newInsertAfterKey) {
+      if (!prev || prev.before !== newInsertBeforeKey || prev.after !== newInsertAfterKey || prev.dir !== newDir) {
         // Clear old visuals on all chips
-        blockEl.querySelectorAll('.drop-before, .drop-after')
-          .forEach(el => el.classList.remove('drop-before', 'drop-after'));
+        blockEl.querySelectorAll('.drop-before, .drop-after, .drop-above, .drop-below')
+          .forEach(el => el.classList.remove('drop-before', 'drop-after', 'drop-above', 'drop-below'));
         // Apply new visual
         if (newInsertBeforeKey) {
           const el = blockEl.querySelector(`[data-chip-key="${CSS.escape(newInsertBeforeKey)}"]`);
-          if (el) el.classList.add('drop-before');
+          if (el) el.classList.add(newDir === 'above' ? 'drop-above' : 'drop-before');
         }
         if (newInsertAfterKey) {
           const el = blockEl.querySelector(`[data-chip-key="${CSS.escape(newInsertAfterKey)}"]`);
-          if (el) el.classList.add('drop-after');
+          if (el) el.classList.add(newDir === 'below' ? 'drop-below' : 'drop-after');
         }
-        this.dropTarget = { before: newInsertBeforeKey, after: newInsertAfterKey };
+        this.dropTarget = { before: newInsertBeforeKey, after: newInsertAfterKey, dir: newDir };
       }
     },
 
@@ -952,22 +860,19 @@ function app() {
 
     // ─── Sidebar panel toggle ───
 
-    togglePanel(panel, packId) {
-      if (this.activePanel === panel && this.activePackId === (packId ?? null)) {
+    togglePanel(panel, addonName) {
+      if (this.activePanel === panel && this.activeAddonName === (addonName ?? '')) {
         this.sideOpen = !this.sideOpen;
         return;
       }
       this.activePanel = panel;
-      this.activePackId = packId ?? null;
+      this.activeAddonName = addonName ?? '';
       this.sideOpen = true;
       if (panel === 'main') {
         this.sidebarTab = 'main';
-      } else if (panel === 'pack') {
-        this.sidebarTab = 'tree';
-        this.selectedPackId = packId;
-        this.loadTree();
-      } else if (panel === 'const') {
-        this.sidebarTab = 'const';
+      } else if (panel === 'addon') {
+        this.sidebarTab = 'addon';
+        this.selectedAddonName = addonName;
       }
     },
 
@@ -975,35 +880,6 @@ function app() {
       if (this.posNames[tagName]) return 'selected-pos';
       if (this.negNames[tagName]) return 'selected-neg';
       return '';
-    },
-
-    selectedCountInCategory(cat) {
-      let count = 0;
-      if (cat.tags) {
-        for (const t of cat.tags) {
-          if (this.posNames[t] || this.negNames[t]) count++;
-        }
-      }
-      if (cat.subcategories) {
-        for (const sub of cat.subcategories) {
-          if (sub.tags) {
-            for (const t of sub.tags) {
-              if (this.posNames[t] || this.negNames[t]) count++;
-            }
-          }
-        }
-      }
-      return count;
-    },
-
-    selectedCountInSub(sub) {
-      let count = 0;
-      if (sub.tags) {
-        for (const t of sub.tags) {
-          if (this.posNames[t] || this.negNames[t]) count++;
-        }
-      }
-      return count;
     },
 
     selectedCountInTree(cat) {
@@ -1017,25 +893,6 @@ function app() {
         else if (cat._tags && cat._tags.some(t => t.tag_name === ch.name)) count++;
       }
       return count;
-    },
-
-    counterColorClass(count) {
-      if (count === 0) return 'text-gray-400 dark:text-dark-400';
-      return 'text-yellow-500 dark:text-yellow-500 font-semibold';
-    },
-
-    totalInCategory(cat) {
-      let total = cat.tags ? cat.tags.length : 0;
-      if (cat.subcategories) {
-        for (const sub of cat.subcategories) {
-          total += sub.tags ? sub.tags.length : 0;
-        }
-      }
-      return total;
-    },
-
-    totalInSub(sub) {
-      return sub.tags ? sub.tags.length : 0;
     },
 
     updateChipNames() {
@@ -1092,54 +949,13 @@ function app() {
       this.notifyChipChange();
     },
 
-    assignColors() {
-      const map = {};
-      let i = 1;
-      for (const cat of this.tree) {
-        const idx = i++ % 7 + 1;
-        map[cat.name] = BLOCK_COLORS[idx];
-      }
-      for (const cat of this.constantTags) {
-        const key = cat.tkey?.split('.').pop() || cat.name;
-        if (!map[key]) {
-          const idx = i++ % 7 + 1;
-          map[key] = BLOCK_COLORS[idx];
-        }
-      }
-      this.categoryColor = map;
-    },
-
     getColorForChip(chip) {
       return BLOCK_COLORS[chip.block_id] || null;
     },
 
-    getCategoryColor(cat) {
-      const key = cat.tkey?.split('.').pop() || cat.name;
-      if (this.categoryColor[key]) return this.categoryColor[key];
-      const blockId = BLOCK_IDS[key];
-      if (blockId) return BLOCK_COLORS[blockId];
-      return null;
-    },
-
     chipCategoryName(chip) {
-      let catName = '';
-      let isConst = false;
-      if (chip.category === 'const') {
-        catName = chip.subcategory;
-        isConst = true;
-      } else if (chip.category === 'meta' && this.tagInfoMap[chip.name]) {
-        const info = this.tagInfoMap[chip.name];
-        catName = info.subcategory;
-        isConst = info.category === 'const';
-      } else if (chip.category && chip.category !== 'meta') {
-        catName = chip.category;
-      }
-      if (!catName) return '';
-      if (isConst) {
-        const group = this.constantTags.find(g => (g.tkey?.split('.').pop() || g.name) === catName);
-        return group ? this.t(group.tkey || group.name) : catName;
-      }
-      return this.tCat(catName) || catName;
+      if (chip.category && chip.category !== 'meta') return chip.category;
+      return '';
     },
 
     childDisplayName(child) {
@@ -1174,25 +990,6 @@ function app() {
     },
 
     enrichChips() {
-      let dirty = false;
-      for (const ch of this.positiveChips) {
-        if (ch.category === 'meta' && this.tagInfoMap[ch.name]) {
-          ch.category = this.tagInfoMap[ch.name].category;
-          ch.subcategory = this.tagInfoMap[ch.name].subcategory;
-          dirty = true;
-        }
-      }
-      for (const ch of this.negativeChips) {
-        if (ch.category === 'meta' && this.tagInfoMap[ch.name]) {
-          ch.category = this.tagInfoMap[ch.name].category;
-          ch.subcategory = this.tagInfoMap[ch.name].subcategory;
-          dirty = true;
-        }
-      }
-      if (dirty) {
-        this.positiveChips = this.positiveChips.slice();
-        this.negativeChips = this.negativeChips.slice();
-      }
     },
 
     // ─── Custom Main Tags ───
@@ -1206,6 +1003,14 @@ function app() {
         console.error('loadCustomMainTags:', e);
         this.customMainTags = [];
       }
+    },
+
+    _tagVisibleForCurrent(structures) {
+      if (!structures || !structures.length) return true;
+      if (structures.includes(this.promptStructure)) return true;
+      // Backward compat: structures had aiType numeric IDs; promptStructure is now addon name
+      if (!/^\d+$/.test(this.promptStructure)) return true;
+      return false;
     },
 
     async loadMainTagGroups() {
@@ -1223,14 +1028,14 @@ function app() {
       return this.mainTagGroups.filter(g => {
         if (g.block_id !== blockId) return false;
         if (!g.structures || !g.structures.length) return true;
-        return g.structures.includes(this.promptStructure);
+        return this._tagVisibleForCurrent(g.structures);
       });
     },
 
     groupExists(blockId, name) {
       return this.mainTagGroups.some(g =>
         g.block_id === blockId && g.name === name &&
-        (!g.structures || !g.structures.length || g.structures.includes(this.promptStructure))
+        (!g.structures || !g.structures.length || this._tagVisibleForCurrent(g.structures))
       );
     },
 
@@ -1239,7 +1044,7 @@ function app() {
         if (t.block_id !== blockId) return false;
         if (!t.subcategory) return false;
         if (!t.structures || !t.structures.length) return true;
-        if (!t.structures.includes(this.promptStructure)) return false;
+        if (!this._tagVisibleForCurrent(t.structures)) return false;
         return !this.groupExists(blockId, t.subcategory);
       });
     },
@@ -1250,7 +1055,7 @@ function app() {
       this.mainGroupForm = {
         name: '',
         block_id: blockId,
-        structures: this.aiTypes.map(t => String(t.id))
+        structures: []
       };
       this.mainGroupModal = true;
     },
@@ -1303,7 +1108,7 @@ function app() {
         full_text: '',
         block_id: blockId,
         subcategory: subcategory || '',
-        structures: this.aiTypes.map(t => String(t.id))
+        structures: []
       };
       this.mainTagModal = true;
     },
@@ -1316,7 +1121,7 @@ function app() {
         full_text: item.full_text || '',
         block_id: item.block_id,
         subcategory: item.subcategory || '',
-        structures: item.structures && item.structures.length ? item.structures.slice() : this.aiTypes.map(t => String(t.id))
+        structures: item.structures?.slice() || []
       };
       this.mainTagModal = true;
     },
@@ -1346,7 +1151,7 @@ function app() {
         });
         if (!res.ok) { this.showToast('Save failed: ' + res.status); return; }
         const updatedStructs = this.mainTagForm.structures;
-        if (this._editingMainTagId && updatedStructs.length > 0 && !updatedStructs.includes(this.promptStructure)) {
+        if (this._editingMainTagId && updatedStructs.length > 0 && !this._tagVisibleForCurrent(updatedStructs)) {
           this.removeChipsByName(name);
         }
         await this.loadCustomMainTags();
@@ -1370,7 +1175,7 @@ function app() {
     },
 
     addCustomMainTag(item) {
-      if (item.structures && item.structures.length && !item.structures.includes(this.promptStructure)) return;
+      if (!this._tagVisibleForCurrent(item.structures)) return;
       const negBlock = this.currentStructure.negativeBlockId;
       const ch = {
         name: item.tag_name,
@@ -1383,7 +1188,7 @@ function app() {
     },
 
     addCustomMainTagNegative(item) {
-      if (item.structures && item.structures.length && !item.structures.includes(this.promptStructure)) return;
+      if (!this._tagVisibleForCurrent(item.structures)) return;
       const ch = {
         name: item.tag_name,
         prompt_text: item.full_text || item.tag_name,
@@ -1397,8 +1202,7 @@ function app() {
     mainTagsByBlock(blockId) {
       return this.customMainTags.filter(t => {
         if (t.block_id !== blockId) return false;
-        if (!t.structures || !t.structures.length) return true;
-        return t.structures.includes(this.promptStructure);
+        return this._tagVisibleForCurrent(t.structures);
       });
     },
 
@@ -1407,8 +1211,7 @@ function app() {
       return this.customMainTags.filter(t => {
         if (t.block_id !== blockId) return false;
         if ((t.subcategory || '') !== subcat) return false;
-        if (!t.structures || !t.structures.length) return true;
-        return t.structures.includes(this.promptStructure);
+        return this._tagVisibleForCurrent(t.structures);
       });
     },
 
@@ -1479,7 +1282,9 @@ function app() {
       const chipsData = JSON.stringify({
         positiveChips: this.positiveChips,
         negativeChips: this.negativeChips,
-        aiTypeId: this.currentAiTypeId,
+        aiTypeId: null,
+        templateName: this.currentAddon?.info?.name || '',
+        templateSnapshot: JSON.stringify(this.currentAddon?.info?.categories || []),
         blockOrder: this.blockOrder
       });
       try {
@@ -1628,8 +1433,14 @@ function app() {
       this.selectedGenParams = null;
     },
 
-    get enabledAiTypes() {
-      return this.aiTypes.filter(t => t.enabled);
+    get allTemplates() {
+      return this.addons
+        .filter(a => !this.isAddonDisabled(a.info.name))
+        .map(a => ({ type: 'addon', id: a.info.name, name: a.info.name }));
+    },
+
+    isCurrentTemplate(t) {
+      return this.currentAddon?.info.name === t.id;
     },
 
     async loadAiTypes() {
@@ -1637,177 +1448,30 @@ function app() {
         const r = await fetch('/api/ai-types');
         if (!r.ok) return;
         this.aiTypes = await r.json();
-        if (!this.aiTypes.find(t => t.id === this.currentAiTypeId && t.enabled)) {
-          const first = this.enabledAiTypes[0];
-          if (first) {
-            this.currentAiTypeId = first.id;
-            this.promptStructure = String(first.id);
-          }
-        }
       } catch(e) {
         console.error('loadAiTypes:', e);
       }
     },
 
-    openAiTypeEditor() {
-      this.selectedAiTypeId = null;
-      this.aiTypeEditorOpen = true;
-    },
-
     selectAiTypeFromDropdown(item) {
-      if (this.currentAiTypeId === item.id) return;
-      this.currentAiTypeId = item.id;
-      this.promptStructure = String(item.id);
+      if (this.currentAddon?.info.name === item.id) return;
+      this.selectedAddonName = item.id;
+      this.promptStructure = item.id;
       this.blockOrder = null;
       this.positiveChips = [];
       this.negativeChips = [];
       this.notifyChipChange();
     },
 
-    selectAiType(item) {
-      this.selectedAiTypeId = item.id;
-      const cats = this._parseCategoriesArray(item.categories || '[]');
-      this.editingAiType = { id: item.id, name: item.name, enabled: item.enabled, separator: item.separator || ', ', categories: item.categories || '', categoriesArray: cats };
+    // ─── Addon template editor (settings) ───
+
+    selectedAddonEditName: null,
+
+    selectAddonEdit(name) {
+      this.selectedAddonEditName = name;
     },
 
-    async saveAiType() {
-      this._syncCategoriesToJson();
-      const isNew = !this.editingAiType.id;
-      const body = {
-        id: this.editingAiType.id || 0,
-        name: this.editingAiType.name,
-        categories: this.editingAiType.categories || '[]',
-        enabled: this.editingAiType.enabled,
-        sort_order: this.editingAiType.sort_order || 0,
-        separator: this.editingAiType.separator || ', ',
-      };
-      try {
-        const r = await fetch('/api/ai-types', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        if (!r.ok) { const err = await r.text(); console.error('saveAiType:', r.status, err); return; }
-        await this.loadAiTypes();
-        this.showToast(isNew ? 'Шаблон создан' : 'Шаблон сохранён');
-        if (isNew && this.aiTypes.length > 0) {
-          this.selectedAiTypeId = this.aiTypes[this.aiTypes.length - 1].id;
-          const last = this.aiTypes[this.aiTypes.length - 1];
-          this.editingAiType = { id: last.id, name: last.name, enabled: last.enabled, separator: last.separator || ', ', categories: last.categories || '[]', categoriesArray: this._parseCategoriesArray(last.categories || '[]') };
-        }
-      } catch(e) {
-        console.error('saveAiType:', e);
-      }
-    },
-
-    async deleteAiType(item) {
-      if (!item.id) return;
-      try {
-        await fetch('/api/ai-types?id=' + item.id, { method: 'DELETE' });
-        if (this.currentAiTypeId === item.id) {
-          const first = this.enabledAiTypes[0];
-          if (first) { this.currentAiTypeId = first.id; this.promptStructure = String(first.id); }
-        }
-        this.selectedAiTypeId = null;
-        await this.loadAiTypes();
-      } catch(e) {
-        console.error('deleteAiType:', e);
-      }
-    },
-
-    closeAiTypeEditor() {
-      this.aiTypeEditorOpen = false;
-      this.selectedAiTypeId = null;
-    },
-
-    // ─── Ai Type editor helpers ───
-
-    _parseCategoriesArray(jsonStr) {
-      if (!jsonStr || typeof jsonStr !== 'string') return [];
-      if (!jsonStr.startsWith('[')) {
-        return jsonStr.split('\n').filter(Boolean).map((s, i) => ({ name: s.trim(), tags: '', order: i }));
-      }
-      try {
-        const arr = JSON.parse(jsonStr);
-        return arr.map(c => ({ name: c.name || '', tags: c.tags || '', order: c.order ?? 0 }));
-      } catch(e) {
-        console.error('parse categories:', e);
-        return [];
-      }
-    },
-
-    _syncCategoriesToJson() {
-      const arr = (this.editingAiType.categoriesArray || []).map((c, i) => ({ name: c.name, tags: c.tags || '', order: i }));
-      this.editingAiType.categories = JSON.stringify(arr);
-      this._markDuplicateCategories();
-    },
-
-    _markDuplicateCategories() {
-      const arr = this.editingAiType.categoriesArray || [];
-      const seen = {};
-      arr.forEach(c => {
-        c._dup = false;
-        const key = c.name.trim().toLowerCase();
-        if (key && seen[key]) { c._dup = true; seen[key]._dup = true; }
-        seen[key] = seen[key] || c;
-      });
-    },
-
-    addNewAiType() {
-      this.selectedAiTypeId = -1;
-      this.editingAiType = { name: '', enabled: true, separator: ', ', categories: '[]', categoriesArray: [] };
-    },
-
-    addCategory() {
-      const arr = this.editingAiType.categoriesArray || [];
-      const n = arr.length + 1;
-      arr.push({ name: 'Категория ' + n, tags: '', order: arr.length });
-      this.editingAiType.categoriesArray = arr;
-      this._markDuplicateCategories();
-    },
-
-    removeCategory(idx) {
-      const arr = this.editingAiType.categoriesArray || [];
-      arr.splice(idx, 1);
-      this.editingAiType.categoriesArray = arr;
-      this._markDuplicateCategories();
-    },
-
-    toggleEditCategory(idx) {
-      const arr = this.editingAiType.categoriesArray || [];
-      if (arr[idx]) arr[idx]._editing = !arr[idx]._editing;
-    },
-
-    commitCategoryName(idx) {
-      const arr = this.editingAiType.categoriesArray || [];
-      if (arr[idx]) arr[idx]._editing = false;
-      this._markDuplicateCategories();
-    },
-
-    onCategoryDragStart(idx, ev) {
-      ev.dataTransfer.setData('text/plain', String(idx));
-      ev.dataTransfer.effectAllowed = 'move';
-    },
-
-    onCategoryDrop(idx, ev) {
-      const from = parseInt(ev.dataTransfer.getData('text/plain'), 10);
-      if (isNaN(from) || from === idx) return;
-      const arr = this.editingAiType.categoriesArray || [];
-      const [moved] = arr.splice(from, 1);
-      arr.splice(idx, 0, moved);
-      this.editingAiType.categoriesArray = arr;
-      this._markDuplicateCategories();
-    },
-
-    onCategoryDragEnd() {
-      // noop — cleanup if needed
-    },
-
-    get previewText() {
-      const arr = this.editingAiType?.categoriesArray || [];
-      const sep = this.editingAiType?.separator || ', ';
-      return arr.map(c => '[' + (c.name || '?') + ']').join(sep);
-    },
+    // ─── Download / copy manager prompt ───
 
     async copyManagerPrompt() {
       const text = this.selectedPrompt?.positive_text;
@@ -1853,6 +1517,24 @@ function app() {
         this.blockOrder = data.blockOrder || null;
         this.canvasName = item.name;
         this.canvasId = item.id;
+        // Restore template - try addon first, then fallback to snapshot
+        if (data.templateName && this.addons.find(a => a.info.name === data.templateName)) {
+          this.selectedAddonName = data.templateName;
+          this.promptStructure = data.templateName;
+        } else if (data.templateName && data.templateSnapshot) {
+          // Template/addon no longer exists, use snapshot
+          this.selectedAddonName = data.templateName;
+          // Create a temporary addon-like object from snapshot
+          let snapCats;
+          try { snapCats = JSON.parse(data.templateSnapshot); } catch(e) { snapCats = []; }
+          if (!this.addons.find(a => a.info.name === data.templateName)) {
+            // Inject a virtual addon
+            this.addons.push({
+              info: { name: data.templateName, categories: snapCats, icon: '📦' },
+              tagFiles: {}
+            });
+          }
+        }
         this.notifyChipChange();
         this.closeManager();
         this.showToast(item.name + ' restored');
@@ -2343,18 +2025,13 @@ function app() {
 
     // ─── Prompt Structure ───
 
-    _buildStructureFromAiType(at) {
-      if (!at) return null;
-      let cats;
-      try {
-        cats = JSON.parse(at.categories || '[]');
-      } catch(e) {
-        cats = (at.categories || '').split('\n').filter(Boolean).map(s => ({ name: s.trim() }));
-      }
+    _buildStructureFromAddon(a) {
+      if (!a) return null;
+      const cats = a.info?.categories || [];
       return {
-        id: at.id,
+        id: a.info.name,
         negativeBlockId: cats.length + 1,
-        blocks: cats.map((c, i) => ({ id: i + 1, customLabel: c.name })),
+        blocks: cats.map((c, i) => ({ id: i + 1, customLabel: c.category })),
         renderPositive(blocks, t) {
           return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
         },
@@ -2365,10 +2042,9 @@ function app() {
     },
 
     get currentStructure() {
-      const at = this.aiTypes.find(t => t.id === this.currentAiTypeId);
-      if (at) return this._buildStructureFromAiType(at);
-      const fallback = this.aiTypes[0];
-      if (fallback) return this._buildStructureFromAiType(fallback);
+      const a = this.currentAddon;
+      if (a) return this._buildStructureFromAddon(a);
+      // Fallback if no addon is selected
       return { id: 0, negativeBlockId: 1, blocks: [{ id: 1, customLabel: 'Prompt' }], renderPositive(blocks) { return ''; }, renderNegative() { return ''; } };
     },
 
@@ -2491,27 +2167,7 @@ function app() {
       return window.matchMedia('(prefers-color-scheme: dark)').matches;
     },
 
-    async loadAllTreeTags() {
-      if (!this.selectedPackId || !this.tree.length) return;
-      await Promise.all(this.tree.map(cat =>
-          fetch(`/api/tags/tree?pack_id=${this.selectedPackId}&category=${encodeURIComponent(cat.name)}&offset=0&limit=99999`)
-            .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-            .then(page => {
-              cat._tags = page.tags || [];
-              for (const t of cat._tags) {
-                this.tagInfoMap[t.tag_name] = { category: cat.name, subcategory: '' };
-                this.tagToCategory[t.tag_name] = cat.name;
-              }
-            })
-            .catch(e => console.error('loadTreeTags:', cat.name, e))
-        ));
-      this.enrichChips();
-      this.notifyChipChange();
-    },
-
     async loadAll() {
-      await this.loadTree();
-      this.assignColors();
       this.loadAutoSave();
       if (this.currentStructure?.id === 'midjourney') {
         const defaults = { 7: '16:9', 8: '250', 9: '6', 10: 'raw' };
@@ -2524,7 +2180,6 @@ function app() {
       }
       this.enrichChips();
       this.updateChipNames();
-      this.loadAllTreeTags();
     },
 
     get leftStyle() {

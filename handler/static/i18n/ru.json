@@ -134,7 +134,6 @@
   "tooltip.prompts_toggle": "Развернуть/свернуть редактор промптов",
   "tooltip.copy_pos": "Скопировать позитивный промпт",
   "tooltip.copy_neg": "Скопировать негативный промпт",
-  "tooltip.sidebar_const": "Статические теги — общие для всех стилей",
   "tooltip.sidebar_tree": "Теги из выбранного набора",
   "tooltip.generate": "Запустить генерацию",
   "tooltip.comfy_refresh": "Обновить данные генерации",

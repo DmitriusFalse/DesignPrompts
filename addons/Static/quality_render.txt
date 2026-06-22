@@ -1,0 +1,10 @@
+detailed
+highly_detailed
+intricate_details
+sharp_focus
+8k
+4k
+hdr
+high_contrast
+low_contrast
+dark_theme
