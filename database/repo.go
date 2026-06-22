@@ -33,6 +33,7 @@ const (
 	presetColumns = "id, name, positive_tags, negative_tags"
 	customColumns    = "id, tag_name, full_text, block_id, structures, created_at"
 	groupColumns     = "id, block_id, name, structures, created_at"
+	aiTypeColumns    = "id, name, categories, enabled, sort_order, separator, created_at, updated_at"
 )
 
 type scanner interface{ Scan(dest ...interface{}) error }
@@ -632,6 +633,59 @@ func (r *Repo) DeleteMainTagGroup(id int) error {
 	return err
 }
 
+// ─── Ai Types ───
+
+func (r *Repo) GetAllAiTypes() ([]AiType, error) {
+	rows, err := r.db.Query(`SELECT ` + aiTypeColumns + ` FROM ai_types ORDER BY sort_order`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var types []AiType
+	for rows.Next() {
+		var t AiType
+		var enabled int
+		err := rows.Scan(&t.ID, &t.Name, &t.Categories, &enabled, &t.SortOrder, &t.Separator, &t.CreatedAt, &t.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		t.Enabled = enabled == 1
+		types = append(types, t)
+	}
+	return types, rows.Err()
+}
+
+func (r *Repo) CreateAiType(name, categories string, enabled bool, sortOrder int, separator string) (*AiType, error) {
+	en := 0
+	if enabled {
+		en = 1
+	}
+	now := r.now()
+	res, err := r.db.Exec(`INSERT INTO ai_types (name, categories, enabled, sort_order, separator, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		name, categories, en, sortOrder, separator, now, now)
+	if err != nil {
+		return nil, err
+	}
+	id, _ := res.LastInsertId()
+	return &AiType{ID: int(id), Name: name, Categories: categories, Enabled: enabled, SortOrder: sortOrder, Separator: separator, CreatedAt: now, UpdatedAt: now}, nil
+}
+
+func (r *Repo) UpdateAiType(id int, name, categories string, enabled bool, sortOrder int, separator string) error {
+	en := 0
+	if enabled {
+		en = 1
+	}
+	now := r.now()
+	_, err := r.db.Exec(`UPDATE ai_types SET name=?, categories=?, enabled=?, sort_order=?, separator=?, updated_at=? WHERE id=?`,
+		name, categories, en, sortOrder, separator, now, id)
+	return err
+}
+
+func (r *Repo) DeleteAiType(id int) error {
+	_, err := r.db.Exec(`DELETE FROM ai_types WHERE id = ?`, id)
+	return err
+}
+
 // ─── Seed ───
 
 func (r *Repo) SeedDefaultPreset() error {
@@ -646,4 +700,46 @@ func (r *Repo) SeedDefaultPreset() error {
 
 	_, err := r.SavePreset("Quality Only", positive, negative)
 	return err
+}
+
+func (r *Repo) SeedDefaultAiTypes() error {
+	var count int
+	r.db.QueryRow(`SELECT COUNT(*) FROM ai_types`).Scan(&count)
+	if count == 0 {
+		defaults := []struct {
+			Name       string
+			Categories string
+		}{
+			{"Стандартный", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`},
+			{"NovelAI", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Theme","tags":"","order":4},{"name":"Environment","tags":"","order":5},{"name":"Clothing","tags":"","order":6},{"name":"Pose","tags":"","order":7},{"name":"Action Detail","tags":"","order":8}]`},
+			{"Аниме", `[{"name":"Персонаж","tags":"","order":0},{"name":"Действие","tags":"","order":1},{"name":"Стиль","tags":"","order":2},{"name":"Окружение","tags":"","order":3},{"name":"Освещение","tags":"","order":4},{"name":"Настроение","tags":"","order":5},{"name":"Композиция","tags":"","order":6},{"name":"Качество","tags":"","order":7}]`},
+			{"Flux", `[{"name":"Subject","tags":"","order":0},{"name":"Environment","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Composition","tags":"","order":4},{"name":"Details","tags":"","order":5}]`},
+			{"Stable Diffusion", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`},
+			{"DALL-E 3", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6}]`},
+			{"Midjourney", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Environment","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Mood","tags":"","order":4},{"name":"Composition","tags":"","order":5},{"name":"--ar","tags":"","order":6},{"name":"--s","tags":"","order":7},{"name":"--v","tags":"","order":8},{"name":"--style","tags":"","order":9}]`},
+		}
+		for i, d := range defaults {
+			if _, err := r.CreateAiType(d.Name, d.Categories, true, i, ", "); err != nil {
+				return fmt.Errorf("seed ai_type %s: %w", d.Name, err)
+			}
+		}
+		return nil
+	}
+	r.db.QueryRow(`SELECT COUNT(*) FROM ai_types WHERE categories = ''`).Scan(&count)
+	if count == 0 {
+		return nil
+	}
+	fill := map[string]string{
+		"Стандартный":      `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`,
+		"NovelAI":          `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Theme","tags":"","order":4},{"name":"Environment","tags":"","order":5},{"name":"Clothing","tags":"","order":6},{"name":"Pose","tags":"","order":7},{"name":"Action Detail","tags":"","order":8}]`,
+		"Аниме":            `[{"name":"Персонаж","tags":"","order":0},{"name":"Действие","tags":"","order":1},{"name":"Стиль","tags":"","order":2},{"name":"Окружение","tags":"","order":3},{"name":"Освещение","tags":"","order":4},{"name":"Настроение","tags":"","order":5},{"name":"Композиция","tags":"","order":6},{"name":"Качество","tags":"","order":7}]`,
+		"Flux":             `[{"name":"Subject","tags":"","order":0},{"name":"Environment","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Composition","tags":"","order":4},{"name":"Details","tags":"","order":5}]`,
+		"Stable Diffusion": `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`,
+		"DALL-E 3":         `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6}]`,
+		"Midjourney":       `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Environment","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Mood","tags":"","order":4},{"name":"Composition","tags":"","order":5},{"name":"--ar","tags":"","order":6},{"name":"--s","tags":"","order":7},{"name":"--v","tags":"","order":8},{"name":"--style","tags":"","order":9}]`,
+	}
+	for name, cats := range fill {
+		r.db.Exec(`UPDATE ai_types SET categories = ? WHERE name = ? AND categories = ''`, cats, name)
+	}
+	return nil
 }

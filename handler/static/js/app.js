@@ -41,174 +41,6 @@ document.addEventListener('alpine:init', () => {
 const BLOCK_IDS = { '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9 };
 const BLOCK_COLORS = [null, '#60cdff', '#6ccb6c', '#e8b84a', '#4ecdc4', '#aa7be0', '#87b6ff', '#d48ebd', '#ff6b6b', '#f59a44', '#ff8c00'];
 
-const PROMPT_STRUCTURES = [
-  {
-    id: 'standard',
-    labelKey: 'structure.standard',
-    negativeBlockId: 9,
-    blocks: [
-      { id: 1, labelKey: 'block.1' },
-      { id: 2, labelKey: 'block.2' },
-      { id: 3, labelKey: 'block.3' },
-      { id: 4, labelKey: 'block.4' },
-      { id: 5, labelKey: 'block.5' },
-      { id: 6, labelKey: 'block.6' },
-      { id: 7, labelKey: 'block.7' },
-      { id: 8, labelKey: 'block.8' },
-    ],
-    renderPositive(blocks, t) {
-      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
-    },
-    renderNegative(chips, t) {
-      return chips.map(ch => ch.prompt_text || ch.name).join(', ');
-    }
-  },
-  {
-    id: 'novelai',
-    labelKey: 'structure.novelai',
-    negativeBlockId: 10,
-    blocks: [
-      { id: 1, labelKey: 'structure.novelai.b1' },
-      { id: 2, labelKey: 'structure.novelai.b2' },
-      { id: 3, labelKey: 'structure.novelai.b3' },
-      { id: 4, labelKey: 'structure.novelai.b4' },
-      { id: 5, labelKey: 'structure.novelai.b5' },
-      { id: 6, labelKey: 'structure.novelai.b6' },
-      { id: 7, labelKey: 'structure.novelai.b7' },
-      { id: 8, labelKey: 'structure.novelai.b8' },
-      { id: 9, labelKey: 'structure.novelai.b9' },
-    ],
-    renderPositive(blocks, t) {
-      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
-    },
-    renderNegative(chips, t) {
-      return chips.map(ch => ch.prompt_text || ch.name).join(', ');
-    }
-  },
-  {
-    id: 'anime',
-    labelKey: 'structure.anime',
-    negativeBlockId: 9,
-    blocks: [
-      { id: 1, labelKey: 'structure.anime.b1' },
-      { id: 2, labelKey: 'structure.anime.b2' },
-      { id: 3, labelKey: 'structure.anime.b3' },
-      { id: 4, labelKey: 'structure.anime.b4' },
-      { id: 5, labelKey: 'structure.anime.b5' },
-      { id: 6, labelKey: 'structure.anime.b6' },
-      { id: 7, labelKey: 'structure.anime.b7' },
-      { id: 8, labelKey: 'structure.anime.b8' },
-    ],
-    renderPositive(blocks, t) {
-      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
-    },
-    renderNegative(chips, t) {
-      return chips.map(ch => ch.prompt_text || ch.name).join(', ');
-    }
-  },
-  {
-    id: 'flux',
-    labelKey: 'structure.flux',
-    negativeBlockId: 9,
-    blocks: [
-      { id: 1, labelKey: 'structure.flux.b1' },
-      { id: 2, labelKey: 'structure.flux.b2' },
-      { id: 3, labelKey: 'structure.flux.b3' },
-      { id: 4, labelKey: 'structure.flux.b4' },
-      { id: 5, labelKey: 'structure.flux.b5' },
-      { id: 6, labelKey: 'structure.flux.b6' },
-    ],
-    renderPositive(blocks, t) {
-      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
-    },
-    renderNegative(chips, t) {
-      return chips.map(ch => ch.prompt_text || ch.name).join(', ');
-    }
-  },
-  {
-    id: 'sd',
-    labelKey: 'structure.sd',
-    negativeBlockId: 9,
-    blocks: [
-      { id: 1, labelKey: 'structure.sd.b1' },
-      { id: 2, labelKey: 'structure.sd.b2' },
-      { id: 3, labelKey: 'structure.sd.b3' },
-      { id: 4, labelKey: 'structure.sd.b4' },
-      { id: 5, labelKey: 'structure.sd.b5' },
-      { id: 6, labelKey: 'structure.sd.b6' },
-      { id: 7, labelKey: 'structure.sd.b7' },
-      { id: 8, labelKey: 'structure.sd.b8' },
-    ],
-    renderPositive(blocks, t) {
-      return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(' + ');
-    },
-    renderNegative(chips, t) {
-      return chips.map(ch => ch.prompt_text || ch.name).join(', ');
-    }
-  },
-  {
-    id: 'dalle3',
-    labelKey: 'structure.dalle3',
-    negativeBlockId: 9,
-    blocks: [
-      { id: 1, labelKey: 'structure.d3.b1' },
-      { id: 2, labelKey: 'structure.d3.b2' },
-      { id: 3, labelKey: 'structure.d3.b3' },
-      { id: 4, labelKey: 'structure.d3.b4' },
-      { id: 5, labelKey: 'structure.d3.b5' },
-      { id: 6, labelKey: 'structure.d3.b6' },
-      { id: 7, labelKey: 'structure.d3.b7' },
-    ],
-    renderPositive(blocks, t) {
-      const p = blocks.filter(b => b.items.length > 0).map(b => b.items.join(', '));
-      return p.map(s => s.endsWith('.') ? s : s + '.').join(' ');
-    },
-    renderNegative(chips, t) {
-      return '';
-    }
-  },
-  {
-    id: 'midjourney',
-    labelKey: 'structure.midjourney',
-    negativeBlockId: 9,
-    blocks: [
-      { id: 1, labelKey: 'structure.mj.b1' },
-      { id: 2, labelKey: 'structure.mj.b2' },
-      { id: 3, labelKey: 'structure.mj.b3' },
-      { id: 4, labelKey: 'structure.mj.b4' },
-      { id: 5, labelKey: 'structure.mj.b5' },
-      { id: 6, labelKey: 'structure.mj.b6' },
-      { id: 7, labelKey: 'structure.mj.b7' },
-      { id: 8, labelKey: 'structure.mj.b8' },
-      { id: 9, labelKey: 'structure.mj.b9' },
-      { id: 10, labelKey: 'structure.mj.b10' },
-    ],
-    renderPositive(blocks, t) {
-      const content = [];
-      let ar = '', v = '', style = '', s = '';
-      for (const b of blocks) {
-        if (b.items.length === 0) continue;
-        const text = b.items.join(', ');
-        if (b.id <= 6) { content.push(text); }
-        else if (b.id === 7) { ar = text; }
-        else if (b.id === 8) { s = text; }
-        else if (b.id === 9) { v = text; }
-        else if (b.id === 10) { style = text; }
-      }
-      let result = content.join(', ');
-      if (ar) result += ' --ar ' + ar;
-      if (v) result += ' --v ' + v;
-      if (style) result += ' --style ' + style;
-      if (s) result += ' --s ' + s;
-      return result;
-    },
-    renderNegative(chips, t) {
-      if (!chips.length) return '';
-      return '--no ' + chips.map(ch => ch.prompt_text || ch.name).join(', ');
-    }
-  }
-];
-
 function app() {
   return {
     pwaInstallable: false,
@@ -376,12 +208,10 @@ function app() {
     resizing: null,
 
     // Prompt structure
-    promptStructure: 'standard',
+    promptStructure: null,
     blockOrder: null,
     blockDragState: null,
     blockDropTarget: null,
-    showStructureConfirm: false,
-    _pendingStructureId: null,
 
     // Chips as objects: { name, category, subcategory, block_id }
     positiveChips: [],
@@ -427,6 +257,13 @@ function app() {
     searchQuery: '',
     canvasGenData: '',
 
+    // Ai Type editor
+    aiTypes: [],
+    aiTypeEditorOpen: false,
+    selectedAiTypeId: null,
+    currentAiTypeId: null,
+    editingAiType: { name: '', enabled: true, separator: ', ', categories: '', categoriesArray: [] },
+
     // Preview panel
     previewTab: 'images',
     restoreWarnings: [],
@@ -451,6 +288,7 @@ function app() {
       await this.loadCustomMainTags();
       await this.loadMainTagGroups();
       await this.loadSavedPrompts();
+      await this.loadAiTypes();
       this.$watch('saveForm.name', () => {
         const n = this.saveForm.name.trim();
         if (n && this.savedPrompts.some(p => p.name === n && p.id !== this.canvasId)) {
@@ -459,9 +297,6 @@ function app() {
           this.saveForm.showDuplicateCheckbox = false;
           this.saveForm.duplicate = false;
         }
-      });
-      this.$watch('promptStructure', (newVal, oldVal) => {
-        if (oldVal && newVal !== oldVal) this.onStructureChange(oldVal, newVal);
       });
       await this.loadComfyConfig();
       this.loadGenerationHistory();
@@ -1415,7 +1250,7 @@ function app() {
       this.mainGroupForm = {
         name: '',
         block_id: blockId,
-        structures: PROMPT_STRUCTURES.map(s => s.id)
+        structures: this.aiTypes.map(t => String(t.id))
       };
       this.mainGroupModal = true;
     },
@@ -1468,7 +1303,7 @@ function app() {
         full_text: '',
         block_id: blockId,
         subcategory: subcategory || '',
-        structures: PROMPT_STRUCTURES.map(s => s.id)
+        structures: this.aiTypes.map(t => String(t.id))
       };
       this.mainTagModal = true;
     },
@@ -1481,7 +1316,7 @@ function app() {
         full_text: item.full_text || '',
         block_id: item.block_id,
         subcategory: item.subcategory || '',
-        structures: item.structures && item.structures.length ? item.structures.slice() : PROMPT_STRUCTURES.map(s => s.id)
+        structures: item.structures && item.structures.length ? item.structures.slice() : this.aiTypes.map(t => String(t.id))
       };
       this.mainTagModal = true;
     },
@@ -1644,7 +1479,7 @@ function app() {
       const chipsData = JSON.stringify({
         positiveChips: this.positiveChips,
         negativeChips: this.negativeChips,
-        promptStructure: this.promptStructure,
+        aiTypeId: this.currentAiTypeId,
         blockOrder: this.blockOrder
       });
       try {
@@ -1670,11 +1505,6 @@ function app() {
         this.showToast(this.t('canvas.save_success') || 'Saved');
         this.closeSaveModal();
         await this.loadSavedPrompts();
-        if (this._pendingStructureId) {
-          const id = this._pendingStructureId;
-          this._pendingStructureId = null;
-          this.promptStructure = id;
-        }
       } catch (e) {
         console.error('saveCanvas:', e);
         this.showToast('Save error: ' + e.message);
@@ -1686,7 +1516,6 @@ function app() {
       this.negativeChips = [];
       this.canvasName = '';
       this.canvasId = null;
-      this.promptStructure = 'standard';
       this.blockOrder = null;
       this.updateChipNames();
       this.showToast(this.t('canvas.new_done') || 'New canvas');
@@ -1799,6 +1628,186 @@ function app() {
       this.selectedGenParams = null;
     },
 
+    get enabledAiTypes() {
+      return this.aiTypes.filter(t => t.enabled);
+    },
+
+    async loadAiTypes() {
+      try {
+        const r = await fetch('/api/ai-types');
+        if (!r.ok) return;
+        this.aiTypes = await r.json();
+        if (!this.aiTypes.find(t => t.id === this.currentAiTypeId && t.enabled)) {
+          const first = this.enabledAiTypes[0];
+          if (first) {
+            this.currentAiTypeId = first.id;
+            this.promptStructure = String(first.id);
+          }
+        }
+      } catch(e) {
+        console.error('loadAiTypes:', e);
+      }
+    },
+
+    openAiTypeEditor() {
+      this.addNewAiType();
+      this.aiTypeEditorOpen = true;
+    },
+
+    selectAiTypeFromDropdown(item) {
+      if (this.currentAiTypeId === item.id) return;
+      this.currentAiTypeId = item.id;
+      this.promptStructure = String(item.id);
+      this.blockOrder = null;
+      this.positiveChips = [];
+      this.negativeChips = [];
+      this.notifyChipChange();
+    },
+
+    selectAiType(item) {
+      this.selectedAiTypeId = item.id;
+      const cats = this._parseCategoriesArray(item.categories || '[]');
+      this.editingAiType = { id: item.id, name: item.name, enabled: item.enabled, separator: item.separator || ', ', categories: item.categories || '', categoriesArray: cats };
+    },
+
+    async saveAiType() {
+      this._syncCategoriesToJson();
+      const isNew = !this.editingAiType.id;
+      const body = {
+        id: this.editingAiType.id || 0,
+        name: this.editingAiType.name,
+        categories: this.editingAiType.categories || '[]',
+        enabled: this.editingAiType.enabled,
+        sort_order: this.editingAiType.sort_order || 0,
+        separator: this.editingAiType.separator || ', ',
+      };
+      try {
+        const r = await fetch('/api/ai-types', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!r.ok) { const err = await r.text(); console.error('saveAiType:', r.status, err); return; }
+        await this.loadAiTypes();
+        if (isNew && this.aiTypes.length > 0) {
+          this.selectedAiTypeId = this.aiTypes[this.aiTypes.length - 1].id;
+          const last = this.aiTypes[this.aiTypes.length - 1];
+          this.editingAiType = { id: last.id, name: last.name, enabled: last.enabled, separator: last.separator || ', ', categories: last.categories || '[]', categoriesArray: this._parseCategoriesArray(last.categories || '[]') };
+        }
+      } catch(e) {
+        console.error('saveAiType:', e);
+      }
+    },
+
+    async deleteAiType(item) {
+      if (!item.id) return;
+      try {
+        await fetch('/api/ai-types?id=' + item.id, { method: 'DELETE' });
+        if (this.currentAiTypeId === item.id) {
+          const first = this.enabledAiTypes[0];
+          if (first) { this.currentAiTypeId = first.id; this.promptStructure = String(first.id); }
+        }
+        this.selectedAiTypeId = null;
+        await this.loadAiTypes();
+      } catch(e) {
+        console.error('deleteAiType:', e);
+      }
+    },
+
+    closeAiTypeEditor() {
+      this.aiTypeEditorOpen = false;
+      this.selectedAiTypeId = null;
+    },
+
+    // ─── Ai Type editor helpers ───
+
+    _parseCategoriesArray(jsonStr) {
+      if (!jsonStr || typeof jsonStr !== 'string') return [];
+      if (!jsonStr.startsWith('[')) {
+        return jsonStr.split('\n').filter(Boolean).map((s, i) => ({ name: s.trim(), tags: '', order: i }));
+      }
+      try {
+        const arr = JSON.parse(jsonStr);
+        return arr.map(c => ({ name: c.name || '', tags: c.tags || '', order: c.order ?? 0 }));
+      } catch(e) {
+        console.error('parse categories:', e);
+        return [];
+      }
+    },
+
+    _syncCategoriesToJson() {
+      const arr = (this.editingAiType.categoriesArray || []).map((c, i) => ({ name: c.name, tags: c.tags || '', order: i }));
+      this.editingAiType.categories = JSON.stringify(arr);
+      this._markDuplicateCategories();
+    },
+
+    _markDuplicateCategories() {
+      const arr = this.editingAiType.categoriesArray || [];
+      const seen = {};
+      arr.forEach(c => {
+        c._dup = false;
+        const key = c.name.trim().toLowerCase();
+        if (key && seen[key]) { c._dup = true; seen[key]._dup = true; }
+        seen[key] = seen[key] || c;
+      });
+    },
+
+    addNewAiType() {
+      this.selectedAiTypeId = -1;
+      this.editingAiType = { name: '', enabled: true, separator: ', ', categories: '[]', categoriesArray: [] };
+    },
+
+    addCategory() {
+      const arr = this.editingAiType.categoriesArray || [];
+      const n = arr.length + 1;
+      arr.push({ name: 'Категория ' + n, tags: '', order: arr.length });
+      this.editingAiType.categoriesArray = arr;
+      this._markDuplicateCategories();
+    },
+
+    removeCategory(idx) {
+      const arr = this.editingAiType.categoriesArray || [];
+      arr.splice(idx, 1);
+      this.editingAiType.categoriesArray = arr;
+      this._markDuplicateCategories();
+    },
+
+    toggleEditCategory(idx) {
+      const arr = this.editingAiType.categoriesArray || [];
+      if (arr[idx]) arr[idx]._editing = !arr[idx]._editing;
+    },
+
+    commitCategoryName(idx) {
+      const arr = this.editingAiType.categoriesArray || [];
+      if (arr[idx]) arr[idx]._editing = false;
+      this._markDuplicateCategories();
+    },
+
+    onCategoryDragStart(idx, ev) {
+      ev.dataTransfer.setData('text/plain', String(idx));
+      ev.dataTransfer.effectAllowed = 'move';
+    },
+
+    onCategoryDrop(idx, ev) {
+      const from = parseInt(ev.dataTransfer.getData('text/plain'), 10);
+      if (isNaN(from) || from === idx) return;
+      const arr = this.editingAiType.categoriesArray || [];
+      const [moved] = arr.splice(from, 1);
+      arr.splice(idx, 0, moved);
+      this.editingAiType.categoriesArray = arr;
+      this._markDuplicateCategories();
+    },
+
+    onCategoryDragEnd() {
+      // noop — cleanup if needed
+    },
+
+    get previewText() {
+      const arr = this.editingAiType?.categoriesArray || [];
+      const sep = this.editingAiType?.separator || ', ';
+      return arr.map(c => '[' + (c.name || '?') + ']').join(sep);
+    },
+
     async copyManagerPrompt() {
       const text = this.selectedPrompt?.positive_text;
       if (!text) return;
@@ -1840,9 +1849,6 @@ function app() {
         if (data.positiveChips) this.positiveChips = data.positiveChips;
         if (data.negativeChips) this.negativeChips = data.negativeChips;
         this._ensureChipKeys();
-        if (data.promptStructure && PROMPT_STRUCTURES.some(s => s.id === data.promptStructure)) {
-          this.promptStructure = data.promptStructure;
-        }
         this.blockOrder = data.blockOrder || null;
         this.canvasName = item.name;
         this.canvasId = item.id;
@@ -2264,7 +2270,7 @@ function app() {
                 chips_data: JSON.stringify({
                   positiveChips: this.positiveChips,
                   negativeChips: this.negativeChips,
-                  promptStructure: this.promptStructure,
+                  aiTypeId: this.currentAiTypeId,
                   blockOrder: this.blockOrder
                 }),
                 gen_data: url
@@ -2299,7 +2305,7 @@ function app() {
                       chips_data: JSON.stringify({
                         positiveChips: this.positiveChips,
                         negativeChips: this.negativeChips,
-                        promptStructure: this.promptStructure,
+                        aiTypeId: this.currentAiTypeId,
                         blockOrder: this.blockOrder
                       }),
                       gen_data: data.path
@@ -2332,8 +2338,33 @@ function app() {
 
     // ─── Prompt Structure ───
 
+    _buildStructureFromAiType(at) {
+      if (!at) return null;
+      let cats;
+      try {
+        cats = JSON.parse(at.categories || '[]');
+      } catch(e) {
+        cats = (at.categories || '').split('\n').filter(Boolean).map(s => ({ name: s.trim() }));
+      }
+      return {
+        id: at.id,
+        negativeBlockId: cats.length + 1,
+        blocks: cats.map((c, i) => ({ id: i + 1, customLabel: c.name })),
+        renderPositive(blocks, t) {
+          return blocks.filter(b => b.items.length > 0).map(b => b.items.join(', ')).join(', ');
+        },
+        renderNegative(chips, t) {
+          return chips.map(ch => ch.prompt_text || ch.name).join(', ');
+        }
+      };
+    },
+
     get currentStructure() {
-      return PROMPT_STRUCTURES.find(s => s.id === this.promptStructure) || PROMPT_STRUCTURES[0];
+      const at = this.aiTypes.find(t => t.id === this.currentAiTypeId);
+      if (at) return this._buildStructureFromAiType(at);
+      const fallback = this.aiTypes[0];
+      if (fallback) return this._buildStructureFromAiType(fallback);
+      return { id: 0, negativeBlockId: 1, blocks: [{ id: 1, customLabel: 'Prompt' }], renderPositive(blocks) { return ''; }, renderNegative() { return ''; } };
     },
 
     get currentStructureBlocks() {
@@ -2350,49 +2381,11 @@ function app() {
 
     get currentStructureAllBlocks() {
       const s = this.currentStructure;
-      return [...s.blocks, { id: s.negativeBlockId, labelKey: 'block.' + s.negativeBlockId, isNegative: true }];
+      return [...s.blocks, { id: s.negativeBlockId, customLabel: 'Negative', isNegative: true }];
     },
 
     structureBlockLabel(block) {
-      if (this.currentStructure.labelKey === 'structure.standard') {
-        return this.t(block.labelKey);
-      }
-      return this.t(block.labelKey) || block.labelKey;
-    },
-
-    switchStructure(newId) {
-      if (this.promptStructure === newId) return;
-      const hasChanges = this.positiveChips.length > 0 || this.negativeChips.length > 0;
-      if (!hasChanges) {
-        this.promptStructure = newId;
-        return;
-      }
-      this._pendingStructureId = newId;
-      this.showStructureConfirm = true;
-    },
-
-    discardAndSwitch() {
-      this.showStructureConfirm = false;
-      const id = this._pendingStructureId;
-      this._pendingStructureId = null;
-      this.promptStructure = id;
-    },
-
-    saveAndSwitch() {
-      this.showStructureConfirm = false;
-      if (this.canvasId) {
-        this.saveForm = { name: this.canvasName, mode: 'save' };
-        this.saveCanvas();
-      } else {
-        this.openSaveModal('save');
-      }
-    },
-
-    onStructureChange(oldId, newId) {
-      this.blockOrder = null;
-      this.positiveChips = [];
-      this.negativeChips = [];
-      this.notifyChipChange();
+      return block.customLabel || '';
     },
 
     // ─── Computed ───
