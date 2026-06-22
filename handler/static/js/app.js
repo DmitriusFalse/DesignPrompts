@@ -1650,7 +1650,7 @@ function app() {
     },
 
     openAiTypeEditor() {
-      this.addNewAiType();
+      this.selectedAiTypeId = null;
       this.aiTypeEditorOpen = true;
     },
 
@@ -1689,6 +1689,7 @@ function app() {
         });
         if (!r.ok) { const err = await r.text(); console.error('saveAiType:', r.status, err); return; }
         await this.loadAiTypes();
+        this.showToast(isNew ? 'Шаблон создан' : 'Шаблон сохранён');
         if (isNew && this.aiTypes.length > 0) {
           this.selectedAiTypeId = this.aiTypes[this.aiTypes.length - 1].id;
           const last = this.aiTypes[this.aiTypes.length - 1];

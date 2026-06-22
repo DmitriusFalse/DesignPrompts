@@ -1035,7 +1035,7 @@
     <div class="absolute inset-0 bg-black/40" @click="closeSaveModal()"></div>
     <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl p-6 w-80 text-sm" @click.stop>
       <div class="text-base font-semibold mb-4" x-text="t('canvas.save_title')"></div>
-      <div>
+      <div class="mb-4">
         <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('canvas.save_name')"></label>
         <input type="text" x-model="saveForm.name" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500" @keydown.enter="saveCanvas()">
       </div>
@@ -1051,7 +1051,7 @@
     <div class="absolute inset-0 bg-black/40" @click="closeRenameModal()"></div>
     <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl p-6 w-80 text-sm" @click.stop>
       <div class="text-base font-semibold mb-4" x-text="t('canvas.rename_title')"></div>
-      <div>
+      <div class="mb-4">
         <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1" x-text="t('canvas.save_name')"></label>
         <input type="text" x-model="renameForm.name" class="w-full border rounded px-2 py-1.5 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500" @keydown.enter="renameCanvas()">
       </div>
@@ -1123,7 +1123,7 @@
   <!-- Ai Type Editor Modal -->
   <div x-show="aiTypeEditorOpen" class="fixed inset-0 z-50 flex items-center justify-center" @keydown.escape.window="closeAiTypeEditor()">
     <div class="absolute inset-0 bg-black/40" @click="closeAiTypeEditor()"></div>
-    <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl text-sm flex flex-col overflow-hidden" style="width:800px;max-height:80vh" @click.stop>
+    <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl text-sm flex flex-col overflow-hidden" style="width:800px;min-height:500px;max-height:80vh" @click.stop>
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-600 shrink-0">
         <div class="text-base font-semibold">Редактор шаблонов промптов</div>
         <button @click="closeAiTypeEditor()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg leading-none cursor-pointer">✕</button>
@@ -1133,12 +1133,23 @@
         <div class="w-48 border-r border-gray-200 dark:border-dark-600 flex flex-col shrink-0">
           <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 px-4 pt-3 pb-1">Шаблоны:</div>
           <div class="overflow-y-auto flex-1">
-            <template x-for="item in aiTypes" :key="item.id">
-              <div @click="selectAiType(item)" class="flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-dark-700 cursor-pointer transition-colors" :class="selectedAiTypeId === item.id ? 'border-l-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-l-0 hover:bg-gray-50 dark:hover:bg-dark-650'">
+            <template x-for="item in aiTypes.filter(t => t.enabled)" :key="item.id">
+              <div @click="selectAiType(item)" class="flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-dark-700 cursor-pointer transition-colors" :class="selectedAiTypeId === item.id ? 'border-l-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-l-0 hover:bg-gray-50 dark:hover:bg-dark-600'">
                 <div class="min-w-0 flex-1">
                   <div class="text-sm truncate" x-text="item.name" :class="selectedAiTypeId === item.id ? 'font-semibold' : 'font-medium'"></div>
-                  <div class="text-[10px] text-gray-400" x-show="!item.enabled">Отключён</div>
                 </div>
+              </div>
+            </template>
+            <template x-if="aiTypes.some(t => !t.enabled)">
+              <div>
+                <div class="text-xs font-semibold text-gray-400 dark:text-dark-500 px-4 pt-3 pb-1">Отключенные</div>
+                <template x-for="item in aiTypes.filter(t => !t.enabled)" :key="'d'+item.id">
+                  <div @click="selectAiType(item)" class="flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-dark-700 cursor-pointer transition-colors opacity-60" :class="selectedAiTypeId === item.id ? 'border-l-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-l-0 hover:bg-gray-50 dark:hover:bg-dark-600'">
+                    <div class="min-w-0 flex-1">
+                      <div class="text-sm truncate" x-text="item.name" :class="selectedAiTypeId === item.id ? 'font-semibold' : 'font-medium'"></div>
+                    </div>
+                  </div>
+                </template>
               </div>
             </template>
             <div x-show="aiTypes.length === 0" class="text-center text-gray-400 dark:text-dark-400 text-sm py-8">Нет шаблонов</div>
@@ -1149,6 +1160,15 @@
         </div>
         <!-- Right panel -->
         <div class="flex-1 flex flex-col p-6 min-w-0 overflow-y-auto space-y-5" x-show="selectedAiTypeId !== null">
+          <!-- Enabled toggle (top) -->
+          <div class="flex items-center gap-3" x-data="tooltip" @mouseenter="enter" @mouseleave="leave">
+            <span class="text-xs font-medium text-gray-700 dark:text-dark-200">Активен</span>
+            <label class="toggle self-center" x-bind:class="{ 'toggle-active': editingAiType.enabled }">
+              <input type="checkbox" class="toggle-input" x-model="editingAiType.enabled" @change="saveAiType()">
+              <span class="toggle-track"><span class="toggle-knob"></span></span>
+            </label>
+            <div x-show="show" class="tooltip !whitespace-nowrap">Шаблон отображается в списке выбора</div>
+          </div>
           <!-- Name -->
           <div>
             <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1.5">Название:</div>
@@ -1187,25 +1207,28 @@
               <div x-show="!editingAiType.categoriesArray.length" class="text-xs text-gray-400 text-center py-4">Нет категорий. Нажмите «+ Добавить»</div>
             </div>
           </div>
-          <!-- Enabled -->
-          <label class="relative flex items-center gap-2.5 cursor-pointer" x-data="tooltip" @mouseenter="enter" @mouseleave="leave">
-            <input type="checkbox" x-model="editingAiType.enabled" class="rounded border-gray-300 dark:border-dark-500 text-blue-600 focus:ring-blue-500 cursor-pointer">
-            <span class="text-sm text-gray-700 dark:text-dark-200">Активен</span>
-            <div x-show="show" class="tooltip !whitespace-nowrap">Шаблон отображается в списке выбора</div>
-          </label>
           <!-- Preview -->
           <div x-show="editingAiType.categoriesArray.length > 0">
             <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Предпросмотр:</div>
             <div class="text-xs text-gray-600 dark:text-dark-300 bg-gray-100 dark:bg-dark-600 rounded px-3 py-2 break-all italic font-mono" x-text="previewText"></div>
           </div>
           <!-- Buttons -->
-          <div class="flex items-center gap-4 pt-4">
-            <button @click="saveAiType()" class="px-6 py-2 text-sm font-medium bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" :disabled="!editingAiType.name.trim()">💾 Сохранить</button>
-            <button @click="deleteAiType(aiTypes.find(t => t.id === selectedAiTypeId))" x-show="selectedAiTypeId > 0" class="px-6 py-2 text-sm font-medium bg-red-600 text-white rounded hover:bg-red-700 transition-colors cursor-pointer">🗑 Удалить</button>
+          <div class="flex items-center gap-3 pt-4">
+            <button @click="saveAiType()" class="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" :disabled="!editingAiType.name.trim()">Сохранить</button>
+            <button @click="deleteAiType(aiTypes.find(t => t.id === selectedAiTypeId))" x-show="selectedAiTypeId > 0" class="px-3 py-1.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer">Удалить</button>
           </div>
         </div>
-        <div class="flex-1 flex items-center justify-center p-5" x-show="selectedAiTypeId === null">
-          <span class="text-gray-400 dark:text-dark-400 text-sm">Выберите шаблон из списка или создайте новый</span>
+        <div class="flex-1 flex flex-col items-center justify-center p-8 text-center" x-show="selectedAiTypeId === null">
+          <div class="text-sm font-semibold text-gray-500 dark:text-dark-400 mb-3">Редактор шаблонов промптов</div>
+          <div class="text-xs text-gray-400 dark:text-dark-500 space-y-1 max-w-sm">
+            <p>Шаблоны промптов определяют структуру итогового промпта для разных ИИ-моделей.</p>
+            <p>Каждый шаблон содержит список категорий — блоков, из которых состоит промпт.</p>
+            <p class="pt-2">• Выберите шаблон слева для редактирования</p>
+            <p>• Нажмите «＋ Новый шаблон» чтобы создать новый</p>
+            <p>• Нажмите «+ Добавить» чтобы добавить категорию</p>
+            <p>• Используйте перетаскивание ☰ для изменения порядка категорий</p>
+            <p>• Нажмите ✎ чтобы указать теги по умолчанию для категории</p>
+          </div>
         </div>
       </div>
     </div>
