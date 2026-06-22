@@ -1997,6 +1997,10 @@ function app() {
       this.toastTimer = setTimeout(() => { this.toastVisible = false; }, duration);
     },
 
+    openExternal(url) {
+      fetch('/api/open-url?url=' + encodeURIComponent(url));
+    },
+
     async copyPrompt(type) {
       if (type !== 'positive' && type !== 'negative') return;
       const text = type === 'positive' ? this.positivePrompt : this.negativePrompt;

@@ -36,13 +36,13 @@
     <div class="flex-1"></div>
     <div class="flex items-center gap-1.5">
       <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-        <a href="https://boosty.to/sir.geronis/donate" target="_blank" rel="noopener" class="donate-link inline-flex items-center gap-1 px-0.5 rounded self-center">
+        <button @click="openExternal('https://boosty.to/sir.geronis/donate')" class="donate-link inline-flex items-center gap-1 px-0.5 rounded self-center cursor-pointer">
         <span class="flex flex-col text-[10px] leading-tight" style="margin-top:5px">
           <span x-text="t('donate.short1')">Подкинуть копейку</span>
           <span x-text="t('donate.short2')">на Boosty</span>
         </span>
         <svg class="donate-heart" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      </a>
+      </button>
         <div x-show="show" class="tooltip" x-text="t('donate.title')"></div>
       </span>
       <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>

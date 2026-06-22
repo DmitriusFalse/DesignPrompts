@@ -50,4 +50,5 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, cfg *config.Config, syncSvc 
 	mux.HandleFunc("/api/comfy/prompt-info", api(handleComfyPromptInfo(cfg)))
 	mux.HandleFunc("/api/comfy/scan-history", api(handleComfyScanHistory(cfg)))
 	mux.HandleFunc("/api/comfy/ws", api(handleComfyWS(cfg)))
+	mux.HandleFunc("/api/open-url", api(handleOpenURL()))
 }
