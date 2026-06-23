@@ -16,12 +16,6 @@ var migrations = []string{
 		is_favorite INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	)`,
-	`CREATE TABLE IF NOT EXISTS tag_presets (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL UNIQUE,
-		positive_tags TEXT NOT NULL DEFAULT '[]',
-		negative_tags TEXT NOT NULL DEFAULT '[]'
-	)`,
 	`CREATE TABLE IF NOT EXISTS custom_main_tags (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		tag_name TEXT NOT NULL,
@@ -115,10 +109,6 @@ func Init(dbPath string) (*sql.DB, error) {
 	}
 	if err := addColumnIfNotExists(db, "main_tag_groups", "structures", "structures TEXT NOT NULL DEFAULT '[]'"); err != nil {
 		return nil, fmt.Errorf("migration: %w", err)
-	}
-	repo := NewRepo(db)
-	if err := repo.SeedDefaultPreset(); err != nil {
-		return nil, fmt.Errorf("seed presets: %w", err)
 	}
 	// Drop old pack tables
 	for _, t := range []string{"tags", "files", "packs", "tree_cache"} {

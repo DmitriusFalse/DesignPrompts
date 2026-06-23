@@ -233,17 +233,17 @@
         </div>
         <template x-for="cat in (sidebarAddon?.info?.categories || []).filter(c => addonTagGroups(c.category).length > 0)" :key="cat.category">
           <div>
-            <button @click="toggleAddonCategory(cat.category)" class="cursor-pointer w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-600 text-gray-900 dark:text-dark-100">
-              <div class="flex items-center gap-2 min-w-0">
-                <span x-text="tAddonCat(cat.category)"></span>
-              </div>
-              <span x-text="addonTreeOpen[cat.category] ? '\u25BC' : '\u25B6'" class="text-xs shrink-0"></span>
-            </button>
+          <button @click="toggleAddonCategory(cat.category)" class="cursor-pointer w-full flex items-center justify-between px-4 py-2 text-sm font-semibold uppercase tracking-wide bg-blue-50 dark:bg-dark-500 border-b border-gray-200 dark:border-dark-600 text-gray-900 dark:text-dark-100">
+            <div class="flex items-center gap-2 min-w-0">
+              <span x-text="tAddonCat(cat.category)"></span>
+            </div>
+            <span x-text="addonTreeOpen[cat.category] ? '\u25BC' : '\u25B6'" class="text-xs shrink-0"></span>
+          </button>
             <div x-show="addonTreeOpen[cat.category]">
               <!-- File subgroups -->
               <template x-for="g in addonTagGroups(cat.category)" :key="g.file">
                 <div>
-                  <button @click="toggleFileGroup(cat.category, g.file)" class="cursor-pointer w-full flex items-center justify-between px-6 py-1.5 text-xs hover:bg-gray-50 dark:hover:bg-dark-600 text-gray-600 dark:text-dark-300">
+                  <button @click="toggleFileGroup(cat.category, g.file)" class="cursor-pointer w-full flex items-center justify-between px-6 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400 bg-gray-50 dark:bg-dark-500/50 border-b border-gray-100 dark:border-dark-600">
                     <div class="flex items-center gap-1.5 min-w-0">
                       <span class="truncate" x-text="g.file ? g.file.replace(/\.[^.]+$/, '') : ''"></span>
                       <span class="text-[10px] text-gray-400 dark:text-dark-500" x-text="'(' + (g.tags?.length || 0) + ')'"></span>
@@ -341,7 +341,7 @@
           <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap">Шаблон:</span>
           <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
             <div class="relative" x-data="dropdown">
-              <button @click="toggle" @click.outside="close" class="toolbar-btn py-1 flex items-center gap-1" style="min-width:120px;max-width:150px">
+              <button @click="toggle" @click.outside="close" class="toolbar-btn py-1 flex items-center justify-between" style="min-width:120px;max-width:150px">
                 <span class="truncate text-left" x-text="currentAddon?.info?.name || ''"></span>
                 <svg x-show="!open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 <svg x-show="open" width="10" height="6" viewBox="0 0 10 6" class="shrink-0 opacity-40"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -356,38 +356,31 @@
             </div>
             <div x-show="show" class="tooltip" x-text="t('tooltip.structure')"></div>
           </span>
-          <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap">Пресеты:</span>
-          <template x-for="(data, name) in presetData" :key="name">
-            <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-              <button @click="applyPreset(name)" class="toolbar-btn" x-text="name"></button>
-              <div x-show="show" class="tooltip" x-text="name"></div>
-            </span>
-          </template>
         </div>
-        <!-- Row 3: BREAK + GROUPING + Schedule -->
         <div class="flex items-center gap-2 mb-1">
-          <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-            <span draggable="true" @dragstart="dragBreakSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none">BREAK</span>
-            <div x-show="show" class="tooltip tooltip-wide" >
-              <div class="font-bold mb-1" x-text="t('tooltip.break_title')"></div>
-              <p class="text-gray-200" x-text="t('tooltip.break_desc')"></p>
+          <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap" x-text="t('tools.special')">Инструменты:</span>
+            <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+              <span draggable="true" @dragstart="dragBreakSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none" x-text="t('tooltip.break_btn')">Break</span>
+              <div x-show="show" class="tooltip tooltip-wide" >
+                <div class="font-bold mb-1" x-text="t('tooltip.break_title')"></div>
+                <p class="text-gray-200" x-text="t('tooltip.break_desc')"></p>
+              </div>
+            </div>
+            <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+              <span draggable="true" @dragstart="dragGroupSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none" x-text="t('tooltip.grouping_btn')">Группировка</span>
+              <div x-show="show" class="tooltip tooltip-wide" >
+                <div class="font-bold mb-1" x-text="t('tooltip.grouping_title')"></div>
+                <p class="text-gray-200" x-text="t('tooltip.grouping_desc')"></p>
+              </div>
+            </div>
+            <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+              <span draggable="true" @dragstart="dragDynamicSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none" x-text="t('tooltip.dynamic_btn')">Dynamic Prompt</span>
+              <div x-show="show" class="tooltip tooltip-wide" >
+                <div class="font-bold mb-1" x-text="t('tooltip.dynamic_title')"></div>
+                <p class="text-gray-200" x-text="t('tooltip.dynamic_desc')"></p>
+              </div>
             </div>
           </div>
-          <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-            <span draggable="true" @dragstart="dragGroupSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none">ГРУППИРОВКА</span>
-            <div x-show="show" class="tooltip tooltip-wide" >
-              <div class="font-bold mb-1" x-text="t('tooltip.grouping_title')"></div>
-              <p class="text-gray-200" x-text="t('tooltip.grouping_desc')"></p>
-            </div>
-          </div>
-          <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-            <span draggable="true" @dragstart="dragDynamicSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none" x-text="t('tooltip.dynamic_btn')">Dynamic Prompt</span>
-            <div x-show="show" class="tooltip tooltip-wide" >
-              <div class="font-bold mb-1" x-text="t('tooltip.dynamic_title')"></div>
-              <p class="text-gray-200" x-text="t('tooltip.dynamic_desc')"></p>
-            </div>
-          </div>
-        </div>
         <!-- Positive Prompt label -->
         <div class="flex items-center gap-2">
           <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wide" x-text="t('workspace.positive_prompt')">Позитивный промпт</div>

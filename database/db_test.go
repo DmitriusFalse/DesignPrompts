@@ -25,7 +25,7 @@ func TestInit_CreatesTables(t *testing.T) {
 	defer cleanup()
 
 	expected := []string{
-		"saved_prompts", "tag_presets",
+		"saved_prompts",
 	}
 
 	for _, name := range expected {
@@ -37,39 +37,6 @@ func TestInit_CreatesTables(t *testing.T) {
 		if count == 0 {
 			t.Errorf("table %s not found", name)
 		}
-	}
-}
-
-func TestInit_SeedsDefaultPreset(t *testing.T) {
-	db, cleanup := testDB(t)
-	defer cleanup()
-
-	var count int
-	err := db.QueryRow(`SELECT COUNT(*) FROM tag_presets WHERE name='Quality Only'`).Scan(&count)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if count == 0 {
-		t.Error("Quality Only preset not seeded")
-	}
-}
-
-func TestInit_SeedIsIdempotent(t *testing.T) {
-	db, cleanup := testDB(t)
-	defer cleanup()
-
-	var count1 int
-	db.QueryRow(`SELECT COUNT(*) FROM tag_presets`).Scan(&count1)
-
-	repo := NewRepo(db)
-	repo.SeedDefaultPreset()
-	repo.SeedDefaultPreset()
-
-	var count2 int
-	db.QueryRow(`SELECT COUNT(*) FROM tag_presets`).Scan(&count2)
-
-	if count1 != count2 {
-		t.Errorf("seed not idempotent: %d -> %d", count1, count2)
 	}
 }
 

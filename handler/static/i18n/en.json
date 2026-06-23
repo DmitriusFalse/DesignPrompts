@@ -1,5 +1,8 @@
 {
   "app.title": "Design Prompts",
+  "tools.special": "Tools:",
+  "tooltip.break_btn": "Break",
+  "tooltip.grouping_btn": "Group",
   "theme.auto": "Auto",
   "theme.dark": "Dark",
   "theme.light": "Light",

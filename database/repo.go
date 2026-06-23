@@ -25,7 +25,7 @@ func jsonString(v interface{}) string {
 
 const (
 	promptColumns = "id, name, positive_text, negative_text, is_favorite, created_at, gen_data, chips_data"
-	presetColumns = "id, name, positive_tags, negative_tags"
+
 	customColumns    = "id, tag_name, full_text, block_id, structures, created_at"
 	groupColumns     = "id, block_id, name, structures, created_at"
 
@@ -124,47 +124,6 @@ func (r *Repo) UpdatePrompt(id int, name, positiveText, negativeText, chipsData,
 		UPDATE saved_prompts SET name=?, positive_text=?, negative_text=?, chips_data=?, gen_data=? WHERE id=?
 	`, name, positiveText, negativeText, chipsData, genData, id)
 	return err
-}
-
-
-// ─── Tag Presets ───
-
-func (r *Repo) GetPresets() ([]TagPreset, error) {
-	rows, err := r.db.Query(`SELECT ` + presetColumns + ` FROM tag_presets ORDER BY name`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var presets []TagPreset
-	for rows.Next() {
-		var p TagPreset
-		if err := rows.Scan(&p.ID, &p.Name, &p.PositiveTags, &p.NegativeTags); err != nil {
-			return nil, err
-		}
-		presets = append(presets, p)
-	}
-	return presets, rows.Err()
-}
-
-func (r *Repo) SavePreset(name string, positiveTags, negativeTags []string) (*TagPreset, error) {
-	res, err := r.db.Exec(`
-		INSERT INTO tag_presets (name, positive_tags, negative_tags)
-		VALUES (?, ?, ?)
-		ON CONFLICT(name) DO UPDATE SET
-			positive_tags = excluded.positive_tags,
-			negative_tags = excluded.negative_tags
-	`, name, jsonString(positiveTags), jsonString(negativeTags))
-	if err != nil {
-		return nil, err
-	}
-	id, _ := res.LastInsertId()
-	return &TagPreset{
-		ID:           int(id),
-		Name:         name,
-		PositiveTags: jsonString(positiveTags),
-		NegativeTags: jsonString(negativeTags),
-	}, nil
 }
 
 
@@ -272,18 +231,4 @@ func (r *Repo) DeleteMainTagGroup(id int) error {
 	return err
 }
 
-// ─── Seed ───
 
-func (r *Repo) SeedDefaultPreset() error {
-	var count int
-	r.db.QueryRow(`SELECT COUNT(*) FROM tag_presets WHERE name = 'Quality Only'`).Scan(&count)
-	if count > 0 {
-		return nil
-	}
-
-	positive := []string{"score_9", "score_8_up", "score_7_up", "score_6_up", "score_5_up", "BREAK", "best_quality", "high_quality", "high_res", "masterpiece", "detailed"}
-	negative := []string{"low_quality", "worst_quality", "bad_art"}
-
-	_, err := r.SavePreset("Quality Only", positive, negative)
-	return err
-}

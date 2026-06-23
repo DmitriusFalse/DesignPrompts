@@ -11,13 +11,6 @@ type SavedPrompt struct {
 	ChipsData    string `json:"chips_data"`
 }
 
-type TagPreset struct {
-	ID           int    `json:"id"`
-	Name         string `json:"name"`
-	PositiveTags string `json:"positive_tags"`
-	NegativeTags string `json:"negative_tags"`
-}
-
 type MainTagGroup struct {
 	ID         int      `json:"id"`
 	BlockID    int      `json:"block_id"`

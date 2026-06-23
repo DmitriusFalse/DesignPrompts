@@ -36,7 +36,6 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, cfg *config.Config, configPa
 	mux.HandleFunc("/api/addons", api(handleAddons(addons)))
 	mux.HandleFunc("/api/addon/icon", api(handleAddonIcon(addons)))
 	mux.HandleFunc("/api/addon/tags", api(handleAddonTagsList(addons)))
-	mux.HandleFunc("/api/presets", api(handlePresets(repo)))
 	mux.HandleFunc("/api/prompts", api(handlePrompts(repo)))
 	mux.HandleFunc("/api/comfy/workflows", api(handleComfyWorkflows(cfg)))
 	mux.HandleFunc("/api/comfy/generate", api(handleComfyGenerate(cfg)))

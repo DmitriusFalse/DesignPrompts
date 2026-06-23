@@ -69,15 +69,6 @@ function app() {
       }
     },
 
-    async loadPresets() {
-      try {
-        const res = await fetch('/static/presets.json');
-        this.presetData = await res.json();
-      } catch (e) {
-        console.error('Failed to load presets:', e);
-        this.presetData = {};
-      }
-    },
 
     // Toast
     toastText: '',
@@ -230,9 +221,6 @@ function app() {
 
     // Custom input
 
-    // Presets
-    presetData: {},
-
     // Save canvas
     canvasName: '',
     canvasId: null,
@@ -259,7 +247,6 @@ function app() {
     // ─── Init ───
 
     async init() {
-      this.loadPresets();
       await this.loadTranslations();
       this.loadDisabledAddons();
       await this.loadAddons();
@@ -1673,60 +1660,6 @@ function app() {
       }
     },
 
-    // ─── Presets ───
-
-    applyPreset(name) {
-      const data = this.presetData[name];
-      if (!data) return;
-      this.positiveChips.splice(0);
-      this.negativeChips.splice(0);
-
-      const structId = this.currentStructure?.id;
-      const posParts = this.splitAtBreak(data.positive);
-      const posSubs = ['artist', 'general'];
-      for (let i = 0; i < posParts.length; i++) {
-        const sub = posSubs[i] || 'general';
-        for (const n of posParts[i]) {
-          if (!this._presetTagFilter(n, structId)) continue;
-          let blockId = this.resolveBlockIdByName(n);
-          blockId = this._overridePresetBlockId(n, blockId, structId);
-          const ch = { name: n, category: 'meta', subcategory: sub, block_id: blockId, _key: this._chipKey() };
-          if (!this.positiveChips.some(c => c.name === ch.name)) {
-            this.positiveChips.push(ch);
-          }
-        }
-      }
-
-      for (const n of data.negative) {
-        const ch = { name: n, category: 'meta', subcategory: 'general', block_id: 9, _key: this._chipKey() };
-        if (!this.negativeChips.some(c => c.name === ch.name)) {
-          this.negativeChips.push(ch);
-        }
-      }
-      this.notifyChipChange();
-    },
-
-    _presetTagFilter(tagName, structId) {
-      const ponyTags = new Set(['score_9', 'score_8_up', 'score_7_up', 'score_6_up', 'score_5_up']);
-      if (ponyTags.has(tagName)) {
-        return structId === 'novelai' || structId === 'anime';
-      }
-      return true;
-    },
-
-    _overridePresetBlockId(tagName, blockId, structId) {
-      const ponyTags = new Set(['score_9', 'score_8_up', 'score_7_up', 'score_6_up', 'score_5_up']);
-      if (ponyTags.has(tagName) && (structId === 'novelai' || structId === 'anime')) {
-        return 1;
-      }
-      if (structId === 'midjourney' && blockId >= 7) {
-        return 1;
-      }
-      if (structId === 'flux' && blockId > 6) return 1;
-      if (structId === 'dalle3' && blockId > 7) return 1;
-      return blockId;
-    },
-
     splitAtBreak(arr) {
       const parts = [[]];
       for (const item of arr) {
@@ -1861,30 +1794,6 @@ function app() {
           }
         }
       } catch (_) {}
-      if (!localStorage.getItem('first_launch_done')) {
-        localStorage.setItem('first_launch_done', '1');
-        const data = this.presetData?.['Quality Only'];
-        if (data) {
-          const structId = this.currentStructure?.id;
-          for (const n of data.positive) {
-            if (n === 'BREAK') continue;
-            if (!this._presetTagFilter(n, structId)) continue;
-            let blockId = this.resolveBlockIdByName(n);
-            blockId = this._overridePresetBlockId(n, blockId, structId);
-            const ch = { name: n, category: 'meta', subcategory: 'quality', block_id: blockId, _key: this._chipKey() };
-            if (!this.positiveChips.some(c => c.name === n)) {
-              this.positiveChips.push(ch);
-            }
-          }
-          for (const n of data.negative) {
-            const ch = { name: n, category: 'meta', subcategory: 'quality', block_id: 9, _key: this._chipKey() };
-            if (!this.negativeChips.some(c => c.name === n)) {
-              this.negativeChips.push(ch);
-            }
-          }
-          this.notifyChipChange();
-        }
-      }
     },
 
     // ─── ComfyUI ───
