@@ -142,7 +142,7 @@
               <div x-show="mainTagsByBlockAndSubcat(block.id, '').length > 0 || tagsWithInactiveGroup(block.id).length > 0" class="px-3 py-1 flex flex-wrap gap-1">
                 <template x-for="item in mainTagsByBlockAndSubcat(block.id, '')" :key="item.id">
                   <span class="tag-pill-wrapper">
-                    <span class="tag-pill text-xs" :class="selectedClass(item.tag_name)" @click="addCustomMainTag(item)">
+                    <span class="tag-pill text-xs" :class="selectedClass(item.tag_name)" draggable="true" @dragstart="onTagDragStart($event, item)" @click="addCustomMainTag(item)">
                       <span x-text="item.tag_name" class="max-w-40 truncate"></span>
                     </span>
                     <span class="hover-actions">
