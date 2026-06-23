@@ -33,7 +33,6 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, cfg *config.Config, configPa
 	mux.HandleFunc("/api/config", api(handleConfig(cfg, configPath)))
 	mux.HandleFunc("/api/custom-main-tags", api(handleCustomMainTags(repo)))
 	mux.HandleFunc("/api/main-tag-groups", api(handleMainTagGroups(repo)))
-	mux.HandleFunc("/api/ai-types", api(handleAiTypes(repo)))
 	mux.HandleFunc("/api/addons", api(handleAddons(addons)))
 	mux.HandleFunc("/api/addon/icon", api(handleAddonIcon(addons)))
 	mux.HandleFunc("/api/addon/tags", api(handleAddonTagsList(addons)))

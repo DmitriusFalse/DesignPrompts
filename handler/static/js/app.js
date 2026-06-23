@@ -93,16 +93,13 @@ function app() {
     addons: [],
     selectedAddonName: '',
     addonTreeOpen: {},
-    addonCatTags: {},
     _addonLoading: null,
     _virtualAddons: {},
 
-    // User-created templates (ai_types)
     userTemplates: [],
 
     // Template editor form
     templateEditForm: { id: 0, name: '', separator: ', ', enabled: true, categories: [] },
-    templateEditIsUser: false,
     templateEditCategoryEditIdx: -1,
     treeModal: false,
     treeModalProgress: 0,
@@ -253,7 +250,6 @@ function app() {
     canvasGenData: '',
 
     // Template editor
-    aiTypes: [],
     templateEditorOpen: false,
 
     // Preview panel
@@ -279,7 +275,6 @@ function app() {
       await this.loadCustomMainTags();
       await this.loadMainTagGroups();
       await this.loadSavedPrompts();
-      await this.loadAiTypes();
       this.$watch('saveForm.name', () => {
         const n = this.saveForm.name.trim();
         if (n && this.savedPrompts.some(p => p.name === n && p.id !== this.canvasId)) {
@@ -946,19 +941,6 @@ function app() {
       return '';
     },
 
-    selectedCountInTree(cat) {
-      let count = 0;
-      for (const ch of this.positiveChips) {
-        if (ch.category === cat.name || this.tagToCategory[ch.name] === cat.name) count++;
-        else if (cat._tags && cat._tags.some(t => t.tag_name === ch.name)) count++;
-      }
-      for (const ch of this.negativeChips) {
-        if (ch.category === cat.name || this.tagToCategory[ch.name] === cat.name) count++;
-        else if (cat._tags && cat._tags.some(t => t.tag_name === ch.name)) count++;
-      }
-      return count;
-    },
-
     updateChipNames() {
       const p = {}, n = {};
       for (const c of this.positiveChips) {
@@ -1020,11 +1002,6 @@ function app() {
       return CHIP_COLORS[idx % CHIP_COLORS.length];
     },
 
-    chipCategoryName(chip) {
-      if (chip.category && chip.category !== 'meta') return chip.category;
-      return '';
-    },
-
     childDisplayName(child) {
       if (!child) return '';
       if (child._category === 'dynamic') {
@@ -1056,9 +1033,6 @@ function app() {
       return (group._groupChildren || []).map(c => this.childDisplayName(c)).join(' ');
     },
 
-    enrichChips() {
-    },
-
     // ─── Custom Main Tags ───
 
     async loadCustomMainTags() {
@@ -1075,7 +1049,6 @@ function app() {
     _tagVisibleForCurrent(structures) {
       if (!structures || !structures.length) return true;
       if (structures.includes(this.promptStructure)) return true;
-      // Backward compat: structures had aiType numeric IDs; promptStructure is now addon name
       if (!/^\d+$/.test(this.promptStructure)) return true;
       return false;
     },
@@ -1264,13 +1237,6 @@ function app() {
         block_id: this.currentStructure.negativeBlockId
       };
       this._toggleChip(ch, this.negativeChips);
-    },
-
-    mainTagsByBlock(blockId) {
-      return this.customMainTags.filter(t => {
-        if (t.block_id !== blockId) return false;
-        return this._tagVisibleForCurrent(t.structures);
-      });
     },
 
     mainTagsByBlockAndSubcat(blockId, subcat) {
@@ -1516,40 +1482,11 @@ function app() {
       return this.currentAddon?.info.name === t.id;
     },
 
-    async loadAiTypes() {
-      try {
-        const r = await fetch('/api/ai-types');
-        if (!r.ok) return;
-        const data = await r.json();
-        this.aiTypes = data;
-        this.userTemplates = data;
-      } catch(e) {
-        console.error('loadAiTypes:', e);
-      }
-    },
-
-    selectAiTypeFromDropdown(item) {
+    selectTemplate(item) {
       if (this.currentAddon?.info.name === item.id) return;
-      if (item.type === 'user') {
-        const tpl = (this.userTemplates || []).find(t => t.id.toString() === item.id || t.name === item.id);
-        if (tpl) {
-          let cats;
-          try { cats = JSON.parse(tpl.categories || '[]'); } catch(e) { cats = []; }
-          const normalized = cats.map((c, i) => ({ category: c.name || c.category || '', id: i + 1 }));
-          this._virtualAddons[tpl.name] = {
-            info: { name: tpl.name, icon: '📋', categories: normalized },
-            tagFiles: {}
-          };
-          // Clean up old virtual addons not matching this name
-          Object.keys(this._virtualAddons).forEach(k => { if (k !== tpl.name) delete this._virtualAddons[k]; });
-          this.selectedAddonName = tpl.name;
-          this.promptStructure = tpl.name;
-        }
-      } else {
-        this._virtualAddons = {};
-        this.selectedAddonName = item.id;
-        this.promptStructure = item.id;
-      }
+      this._virtualAddons = {};
+      this.selectedAddonName = item.id;
+      this.promptStructure = item.id;
       this.blockOrder = null;
       this.positiveChips = [];
       this.negativeChips = [];
@@ -1566,20 +1503,8 @@ function app() {
       this.selectedEditName = null;
       this.selectedEditIsUser = false;
       this.templateEditCategoryEditIdx = -1;
-      await this.loadUserTemplates();
+      this.userTemplates = [];
       this.templateEditorOpen = true;
-    },
-
-    async loadUserTemplates() {
-      try {
-        const r = await fetch('/api/ai-types');
-        if (!r.ok) return;
-        const data = await r.json();
-        this.aiTypes = data;
-        this.userTemplates = data;
-      } catch(e) {
-        console.error('loadUserTemplates:', e);
-      }
     },
 
     selectEditTemplate(name, isUser) {
@@ -1657,58 +1582,6 @@ function app() {
       if (!cats.length) return '';
       const sep = this.templateEditForm.separator || ', ';
       return cats.map(c => c.tags || '[' + c.name + ']').join(sep);
-    },
-
-    async saveUserTemplate() {
-      const f = this.templateEditForm;
-      if (!f.name.trim()) { this.showToast('Введите название шаблона'); return; }
-      const catsJson = JSON.stringify(f.categories.map((c, i) => ({
-        name: c.name,
-        tags: c.tags || '',
-        order: c.order ?? i
-      })));
-      const body = {
-        id: f.id || 0,
-        name: f.name.trim(),
-        categories: catsJson,
-        enabled: f.enabled,
-        sort_order: 0,
-        separator: f.separator || ', '
-      };
-      try {
-        const res = await fetch('/api/ai-types', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          this.showToast('Ошибка сохранения: ' + (err.error || res.status));
-          return;
-        }
-        const saved = await res.json();
-        this.showToast('Шаблон сохранён');
-        this.templateEditForm.id = saved.id || saved.name;
-        await this.loadUserTemplates();
-        this.selectedEditName = f.name.trim();
-      } catch(e) {
-        this.showToast('Ошибка: ' + e.message);
-      }
-    },
-
-    async deleteUserTemplate() {
-      const id = this.templateEditForm.id;
-      if (!id) { this.showToast('Сначала сохраните шаблон'); return; }
-      if (!confirm('Удалить шаблон "' + this.templateEditForm.name + '"?')) return;
-      try {
-        const res = await fetch('/api/ai-types?id=' + id, { method: 'DELETE' });
-        if (!res.ok) { this.showToast('Ошибка удаления'); return; }
-        this.showToast('Шаблон удалён');
-        await this.loadUserTemplates();
-        this.newUserTemplate();
-      } catch(e) {
-        this.showToast('Ошибка: ' + e.message);
-      }
     },
 
     // ─── Download / copy manager prompt ───
@@ -1830,7 +1703,6 @@ function app() {
           this.negativeChips.push(ch);
         }
       }
-      this.enrichChips();
       this.notifyChipChange();
     },
 
@@ -2010,7 +1882,6 @@ function app() {
               this.negativeChips.push(ch);
             }
           }
-          this.enrichChips();
           this.notifyChipChange();
         }
       }
@@ -2197,7 +2068,7 @@ function app() {
                 chips_data: JSON.stringify({
                   positiveChips: this.positiveChips,
                   negativeChips: this.negativeChips,
-                  aiTypeId: this.currentAiTypeId,
+                  aiTypeId: this.currentAddon?.info?.name ?? '',
                   blockOrder: this.blockOrder
                 }),
                 gen_data: url
@@ -2232,7 +2103,7 @@ function app() {
                       chips_data: JSON.stringify({
                         positiveChips: this.positiveChips,
                         negativeChips: this.negativeChips,
-                        aiTypeId: this.currentAiTypeId,
+                        aiTypeId: this.currentAddon?.info?.name ?? '',
                         blockOrder: this.blockOrder
                       }),
                       gen_data: data.path
@@ -2418,7 +2289,6 @@ function app() {
           }
         }
       }
-      this.enrichChips();
       this.updateChipNames();
     },
 
@@ -2575,7 +2445,6 @@ function app() {
           }
         }
       }
-      this.enrichChips();
       this.notifyChipChange();
     },
   };

@@ -2,9 +2,7 @@ package database
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -23,15 +21,6 @@ var migrations = []string{
 		name TEXT NOT NULL UNIQUE,
 		positive_tags TEXT NOT NULL DEFAULT '[]',
 		negative_tags TEXT NOT NULL DEFAULT '[]'
-	)`,
-	`CREATE TABLE IF NOT EXISTS ai_types (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
-		categories TEXT NOT NULL DEFAULT '',
-		enabled INTEGER NOT NULL DEFAULT 1,
-		sort_order INTEGER NOT NULL DEFAULT 0,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	)`,
 	`CREATE TABLE IF NOT EXISTS custom_main_tags (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,44 +77,6 @@ func dropColumnIfExists(db *sql.DB, table, column string) error {
 	return err
 }
 
-type oldCategoryItem struct {
-	Name  string `json:"name"`
-	Tags  string `json:"tags"`
-	Order int    `json:"order"`
-}
-
-func convertOldCategories(db *sql.DB) error {
-	rows, err := db.Query(`SELECT id, categories FROM ai_types WHERE categories != '' AND categories NOT LIKE '[%'`)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var id int
-		var cats string
-		if err := rows.Scan(&id, &cats); err != nil {
-			return err
-		}
-		lines := strings.Split(cats, "\n")
-		var items []oldCategoryItem
-		for i, line := range lines {
-			line = strings.TrimSpace(line)
-			if line == "" {
-				continue
-			}
-			items = append(items, oldCategoryItem{Name: line, Tags: "", Order: i})
-		}
-		if items == nil {
-			items = []oldCategoryItem{}
-		}
-		b, _ := json.Marshal(items)
-		if _, err := db.Exec(`UPDATE ai_types SET categories = ? WHERE id = ?`, string(b), id); err != nil {
-			return err
-		}
-	}
-	return rows.Err()
-}
-
 func Init(dbPath string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", dbPath+"?_journal_mode=WAL&_foreign_keys=on")
 	if err != nil {
@@ -165,19 +116,6 @@ func Init(dbPath string) (*sql.DB, error) {
 	if err := addColumnIfNotExists(db, "main_tag_groups", "structures", "structures TEXT NOT NULL DEFAULT '[]'"); err != nil {
 		return nil, fmt.Errorf("migration: %w", err)
 	}
-	if err := addColumnIfNotExists(db, "ai_types", "categories", "categories TEXT NOT NULL DEFAULT ''"); err != nil {
-		return nil, fmt.Errorf("migration: %w", err)
-	}
-	if err := dropColumnIfExists(db, "ai_types", "structure_id"); err != nil {
-		return nil, fmt.Errorf("drop structure_id: %w", err)
-	}
-	if err := addColumnIfNotExists(db, "ai_types", "separator", "separator TEXT NOT NULL DEFAULT ', '"); err != nil {
-		return nil, fmt.Errorf("add separator: %w", err)
-	}
-	if err := convertOldCategories(db); err != nil {
-		return nil, fmt.Errorf("convert categories: %w", err)
-	}
-
 	repo := NewRepo(db)
 	if err := repo.SeedDefaultPreset(); err != nil {
 		return nil, fmt.Errorf("seed presets: %w", err)

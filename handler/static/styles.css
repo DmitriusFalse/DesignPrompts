@@ -137,8 +137,6 @@ body { margin: 0; font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -appl
 .max-w-60 { max-width: 240px; }
 .max-w-48 { max-width: 192px; }
 .max-w-40 { max-width: 160px; }
-.max-h-60 { max-height: 240px; }
-.max-h-48 { max-height: 192px; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Overflow */
@@ -193,7 +191,6 @@ body { margin: 0; font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -appl
 .bg-blue-50 { background: var(--c-blue-50); }
 .bg-blue-600 { background: var(--c-blue-600); }
 .hover\:bg-blue-100:hover { background: var(--c-blue-100); }
-.bg-green-500 { background: var(--c-green-500); }
 .bg-green-600 { background: var(--c-green-600); }
 .bg-red-50 { background: var(--c-red-50); }
 .bg-red-500 { background: var(--c-red-500); }
@@ -221,8 +218,6 @@ body { margin: 0; font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -appl
 .hover\:bg-gray-50:hover { background: var(--c-bg-50); }
 .dark .dark\:hover\:bg-dark-500:hover { background: var(--c-bg-300); }
 .dark .dark\:hover\:bg-dark-600:hover { background: var(--c-bg-200); }
-
-.bg-gray-800 { background: #1e293b; }
 
 /* Tooltip */
 .tooltip {
@@ -262,7 +257,6 @@ body { margin: 0; font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -appl
 .text-green-600 { color: var(--c-green-600); }
 .text-yellow-500 { color: var(--c-yellow-500); }
 .text-red-600 { color: var(--c-red-600); }
-.text-orange-600 { color: var(--c-orange-600); }
 .dark .dark\:text-orange-200 { color: var(--c-orange-200); }
 .dark .dark\:text-dark-100 { color: var(--c-text); }
 .dark .dark\:text-dark-200 { color: var(--c-text-800); }
@@ -296,8 +290,6 @@ body { margin: 0; font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -appl
 .rounded { border-radius: 4px; }
 .rounded-full { border-radius: 9999px; }
 .rounded-lg { border-radius: 4px; }
-.rounded-b-lg { border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
-.rounded-b-none { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 .dark .dark\:border-dark-500 { border-color: var(--c-border-300); }
 .dark .dark\:border-dark-600 { border-color: var(--c-border); }
 .dark .dark\:border-dark-700 { border-color: var(--c-bg-50); }
@@ -312,7 +304,6 @@ body { margin: 0; font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -appl
 .duration-150 { transition-duration: 150ms; }
 .cursor-pointer { cursor: pointer; }
 .resize-none { resize: none; }
-.border-x { border-left: 1px solid var(--c-border); border-right: 1px solid var(--c-border); }
 .gap-4 { gap: 16px; }
 .space-y-3 > * + * { margin-top: 12px; }
 
@@ -322,7 +313,6 @@ body { margin: 0; font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -appl
 .transition { transition: all 0.15s ease; }
 .ease-out { transition-timing-function: ease-out; }
 .ease-in { transition-timing-function: ease-in; }
-.pointer-events-none { pointer-events: none; }
 .hover\:text-red-600:hover { color: var(--c-red-600); }
 .hover\:bg-red-50:hover { background: var(--c-red-50); }
 .hover\:bg-black\/60:hover { background: rgba(0,0,0,0.6); }
@@ -957,13 +947,6 @@ input[type="number"] {
 .dark .dyn-group-full {
   background: rgba(59, 130, 246, 0.08);
   border-color: var(--c-blue-600);
-}
-.dyn-group-full-paren {
-  color: var(--c-blue-500);
-  font-weight: 600;
-}
-.dark .dyn-group-full-paren {
-  color: var(--c-blue-400);
 }
 .dyn-group-full-child {
   display: inline-flex;

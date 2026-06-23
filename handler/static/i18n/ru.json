@@ -1,14 +1,8 @@
 {
   "app.title": "Design Prompts",
-  "app.sync": "⟳ Пересканировать",
-  "app.syncing": "⟳ Сканирование...",
-
   "theme.auto": "Авто",
   "theme.dark": "Тёмная",
   "theme.light": "Светлая",
-
-  "packs.label": "Наборы",
-
   "settings.title": "Настройки",
   "settings.app_settings": "Настройки приложения",
   "settings.port": "Порт",
@@ -16,38 +10,20 @@
   "settings.db_path": "Путь к БД",
   "settings.log_level": "Уровень лога",
   "settings.logs_dir": "Папка логов",
-  "settings.packs": "Управление наборами",
   "settings.back": "На главную",
-
-  "presets.label": "Пресеты",
-
-
   "tag.copy": "Копировать",
   "tag.neg": "Негатив",
-
   "workspace.canvas": "Холст",
   "workspace.positive_prompt": "Позитивный промпт",
   "workspace.prompts": "Промпты",
-
   "prompt.positive": "Позитивный",
   "prompt.negative": "Негативный",
   "prompt.copy": "📋",
-
   "actions.clear_tags": "Очистить",
-
   "modal.loading.title": "Загрузка тегов...",
-
   "toast.copied": "Скопировано",
-
-  "packs.rescan": "Пересканировать",
-  "packs.delete": "Удалить",
-  "packs.empty": "Нет паков",
-  "packs.confirm_delete": "Удалить пак \"{name}\" из БД?",
-  "packs.author": "Автор",
-  "packs.categories": "Категории",
   "settings.save": "Сохранить",
   "settings.saved": "Настройки сохранены (требуется перезапуск для некоторых изменений)",
-
   "block.1": "Главный объект / Субъект",
   "block.2": "Действие, поза и выражение",
   "block.3": "Окружение и фон",
@@ -58,7 +34,6 @@
   "block.8": "Технические параметры и качество",
   "block.9": "Негативный промпт",
   "block.10": "Негативный промпт",
-
   "comfy.enable": "Включить генерацию через ComfyUI",
   "comfy.address": "Адрес ComfyUI",
   "comfy.save_path": "Путь сохранения",
@@ -73,7 +48,6 @@
   "comfy.resolution": "Разрешение",
   "comfy.generate": "Сгенерировать",
   "comfy.generating": "Генерация...",
-  "comfy.refresh": "Обновить",
   "comfy.error": "Ошибка",
   "comfy.no_workflow": "Нет воркфлоу",
   "comfy.result": "Результат",
@@ -87,12 +61,9 @@
   "comfy.restoring": "Сканирование...",
   "comfy.restore_history_done": "Добавлено {n} изображений",
   "comfy.restore_history_empty": "PNG с метаданными не найдены",
-
   "preview.title": "Прошлые генерации",
   "preview.placeholder": "Нажмите Сгенерировать",
   "preview.viewer.close": "Закрыть",
-
-  "main.add": "+",
   "main.add_tag": "+Тег",
   "main.modal_title": "Добавить тег",
   "main.edit_title": "Редактировать тег",
@@ -104,14 +75,11 @@
   "main.add_group": "+Группа",
   "main.add_group_title": "Добавить группу",
   "main.group_name": "Название группы",
-  "main.enter_group_name": "Название группы",
   "main.confirm_delete_group": "Удалить группу \"{name}\"? Теги останутся без группы.",
-  "main.structures": "Добавлять в стилях",
   "main.save": "Сохранить",
   "main.cancel": "Отмена",
   "main.delete": "Удалить",
   "main.edit": "Редактировать",
-
   "tooltip.new_canvas": "Создать новый пустой холст",
   "tooltip.save_canvas": "Сохранить текущий холст",
   "tooltip.rename_canvas": "Переименовать холст",
@@ -123,7 +91,6 @@
   "tooltip.dynamic_title": "Динамический промпт (Dynamic Prompt)",
   "tooltip.dynamic_desc": "Перетащите на холст. Бросайте теги в слоты from/to. [from:to:when] — смена тега на шаге when (0.0-1.0).",
   "dynamic.from": "from",
-  "dynamic.to": "to",
   "tooltip.manager": "Управление сохранёнными холстами",
   "tooltip.theme": "Сменить тему оформления",
   "tooltip.lang": "Переключить язык",
@@ -134,7 +101,6 @@
   "tooltip.prompts_toggle": "Развернуть/свернуть редактор промптов",
   "tooltip.copy_pos": "Скопировать позитивный промпт",
   "tooltip.copy_neg": "Скопировать негативный промпт",
-  "tooltip.sidebar_tree": "Теги из выбранного набора",
   "tooltip.generate": "Запустить генерацию",
   "tooltip.comfy_refresh": "Обновить данные генерации",
   "tooltip.main_add_tag": "Добавить кастомный тег в эту категорию",
@@ -144,41 +110,32 @@
   "tooltip.sidebar_const": "Статистические теги — общие для всех стилей",
   "tooltip.edit_chip": "Редактировать тег",
   "tooltip.weight": "Вес чипа",
-  "tooltip.aliases": "Алиасы: ",
   "tooltip.restore": "Восстановить промпт из этого изображения",
   "tooltip.log_level": "Уровень лога: debug для подробного вывода",
   "tooltip.structure": "Выбор структуры промпта",
   "tooltip.save_as": "Сохранить холст как новый",
-
   "canvas.save_title": "Сохранить",
   "canvas.save_name": "Имя",
   "canvas.save": "Сохранить",
-  "canvas.copy": "Копировать",
   "canvas.save_as": "Сохранить как",
   "canvas.cancel": "Отмена",
-  "canvas.close": "Закрыть",
   "canvas.save_success": "Сохранено",
   "canvas.manager": "Холсты",
   "canvas.manager_title": "Холсты",
-  "canvas.open": "Открыть",
   "canvas.empty": "Нет сохранённых холстов",
   "canvas.rename_title": "Переименовать холст",
   "canvas.rename": "Переименовать",
   "canvas.new_title": "Новый холст",
   "canvas.new_done": "Новый холст",
-  "canvas.duplicate": "Создать копию",
-
   "chip.edit_title": "Редактировать тег",
   "chip.tag_name": "Название тега",
   "chip.full_text": "Полный текст",
   "chip.category": "Группа",
   "chip.save": "Сохранить",
   "chip.cancel": "Отмена",
-
   "donate.title": "Это простое приложение создано в удовольствие. Хотите поддержать автора? Подкинуть копейку на Boosty",
   "donate.short1": "Подкинуть копейку",
   "donate.short2": "на Boosty",
-
   "structure.standard": "Стандартная",
   "structure.midjourney": "Midjourney",
   "structure.dalle3": "DALL-E 3",
@@ -186,7 +143,6 @@
   "structure.flux": "Flux",
   "structure.novelai": "NovelAI/Pony",
   "structure.anime": "Anime",
-
   "structure.mj.b1": "Тип изображения и объект",
   "structure.mj.b2": "Действие / Поза / Эмоция",
   "structure.mj.b3": "Окружение и время суток",
@@ -197,7 +153,6 @@
   "structure.mj.b8": "Stylize (--s)",
   "structure.mj.b9": "MJ Version (--v)",
   "structure.mj.b10": "Style (--style)",
-
   "structure.d3.b1": "Тип изображения и объект",
   "structure.d3.b2": "Действие / Поза",
   "structure.d3.b3": "Окружение",
@@ -205,7 +160,6 @@
   "structure.d3.b5": "Освещение",
   "structure.d3.b6": "Композиция",
   "structure.d3.b7": "Настроение / Атмосфера",
-
   "structure.sd.b1": "Качество",
   "structure.sd.b2": "Тип изображения",
   "structure.sd.b3": "Объект",
@@ -214,14 +168,12 @@
   "structure.sd.b6": "Свет",
   "structure.sd.b7": "Камера",
   "structure.sd.b8": "Качество-бустеры",
-
   "structure.flux.b1": "Тип и объект",
   "structure.flux.b2": "Действие / Поза",
   "structure.flux.b3": "Окружение",
   "structure.flux.b4": "Освещение",
   "structure.flux.b5": "Стиль",
   "structure.flux.b6": "Технические детали",
-
   "structure.novelai.b1": "Качество",
   "structure.novelai.b2": "Мета-теги",
   "structure.novelai.b3": "Персонаж",
@@ -231,7 +183,6 @@
   "structure.novelai.b7": "Композиция и камера",
   "structure.novelai.b8": "Освещение и эффекты",
   "structure.novelai.b9": "Дополнительные детали",
-
   "structure.anime.b1": "Качество и базовые теги",
   "structure.anime.b2": "Персонаж",
   "structure.anime.b3": "Внешность",
@@ -240,12 +191,6 @@
   "structure.anime.b6": "Локация и время",
   "structure.anime.b7": "Освещение и эффекты",
   "structure.anime.b8": "Детали лица",
-
-  "structure.confirm_title": "Холст изменён",
-  "structure.confirm_save": "Сохранить изменения перед сменой структуры?",
-  "structure.discard": "Не сохранять",
-  "structure.save_and_switch": "Сохранить и переключить",
-
   "canvas.copied": "Промпт скопирован",
   "canvas.select_prompt": "Выберите холст из списка"
 }

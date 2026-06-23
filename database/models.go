@@ -26,17 +26,6 @@ type MainTagGroup struct {
 	CreatedAt  string   `json:"created_at"`
 }
 
-type AiType struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	Categories string `json:"categories"`
-	Enabled    bool   `json:"enabled"`
-	SortOrder  int    `json:"sort_order"`
-	Separator  string `json:"separator"`
-	CreatedAt  string `json:"created_at"`
-	UpdatedAt  string `json:"updated_at"`
-}
-
 type CustomMainTag struct {
 	ID          int      `json:"id"`
 	TagName     string   `json:"tag_name"`

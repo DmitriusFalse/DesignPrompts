@@ -28,7 +28,7 @@ const (
 	presetColumns = "id, name, positive_tags, negative_tags"
 	customColumns    = "id, tag_name, full_text, block_id, structures, created_at"
 	groupColumns     = "id, block_id, name, structures, created_at"
-	aiTypeColumns    = "id, name, categories, enabled, sort_order, separator, created_at, updated_at"
+
 )
 
 type scanner interface{ Scan(dest ...interface{}) error }
@@ -95,27 +95,6 @@ func (r *Repo) SavePrompt(name, positiveText, negativeText string, isFavorite bo
 	}, nil
 }
 
-func (r *Repo) GetHistory(limit int) ([]SavedPrompt, error) {
-	if limit <= 0 {
-		limit = 50
-	}
-	rows, err := r.db.Query(`SELECT `+promptColumns+` FROM saved_prompts WHERE is_favorite = 0 ORDER BY created_at DESC LIMIT ?`, limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var prompts []SavedPrompt
-	for rows.Next() {
-		var p SavedPrompt
-		if err := scanPrompt(rows, &p); err != nil {
-			return nil, err
-		}
-		prompts = append(prompts, p)
-	}
-	return prompts, rows.Err()
-}
-
 func (r *Repo) GetAllSavedPrompts() ([]SavedPrompt, error) {
 	rows, err := r.db.Query(`SELECT ` + promptColumns + ` FROM saved_prompts ORDER BY created_at DESC`)
 	if err != nil {
@@ -134,21 +113,6 @@ func (r *Repo) GetAllSavedPrompts() ([]SavedPrompt, error) {
 	return prompts, rows.Err()
 }
 
-func (r *Repo) TrimHistory(max int) error {
-	if max <= 0 {
-		max = 50
-	}
-	_, err := r.db.Exec(`
-		DELETE FROM saved_prompts
-		WHERE id IN (
-			SELECT id FROM saved_prompts
-			WHERE is_favorite = 0
-			ORDER BY created_at DESC
-			LIMIT -1 OFFSET ?
-		)
-	`, max)
-	return err
-}
 
 func (r *Repo) DeletePrompt(id int) error {
 	_, err := r.db.Exec(`DELETE FROM saved_prompts WHERE id = ?`, id)
@@ -162,10 +126,6 @@ func (r *Repo) UpdatePrompt(id int, name, positiveText, negativeText, chipsData,
 	return err
 }
 
-func (r *Repo) UpdatePromptName(id int, name string) error {
-	_, err := r.db.Exec(`UPDATE saved_prompts SET name=? WHERE id=?`, name, id)
-	return err
-}
 
 // ─── Tag Presets ───
 
@@ -207,10 +167,6 @@ func (r *Repo) SavePreset(name string, positiveTags, negativeTags []string) (*Ta
 	}, nil
 }
 
-func (r *Repo) DeletePreset(id int) error {
-	_, err := r.db.Exec(`DELETE FROM tag_presets WHERE id = ?`, id)
-	return err
-}
 
 // ─── Custom Main Tags ───
 
@@ -313,59 +269,6 @@ func (r *Repo) GetMainTagGroupsByBlock(blockID int) ([]MainTagGroup, error) {
 
 func (r *Repo) DeleteMainTagGroup(id int) error {
 	_, err := r.db.Exec(`DELETE FROM main_tag_groups WHERE id = ?`, id)
-	return err
-}
-
-// ─── Ai Types ───
-
-func (r *Repo) GetAllAiTypes() ([]AiType, error) {
-	rows, err := r.db.Query(`SELECT ` + aiTypeColumns + ` FROM ai_types ORDER BY sort_order`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var types []AiType
-	for rows.Next() {
-		var t AiType
-		var enabled int
-		err := rows.Scan(&t.ID, &t.Name, &t.Categories, &enabled, &t.SortOrder, &t.Separator, &t.CreatedAt, &t.UpdatedAt)
-		if err != nil {
-			return nil, err
-		}
-		t.Enabled = enabled == 1
-		types = append(types, t)
-	}
-	return types, rows.Err()
-}
-
-func (r *Repo) CreateAiType(name, categories string, enabled bool, sortOrder int, separator string) (*AiType, error) {
-	en := 0
-	if enabled {
-		en = 1
-	}
-	now := r.now()
-	res, err := r.db.Exec(`INSERT INTO ai_types (name, categories, enabled, sort_order, separator, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		name, categories, en, sortOrder, separator, now, now)
-	if err != nil {
-		return nil, err
-	}
-	id, _ := res.LastInsertId()
-	return &AiType{ID: int(id), Name: name, Categories: categories, Enabled: enabled, SortOrder: sortOrder, Separator: separator, CreatedAt: now, UpdatedAt: now}, nil
-}
-
-func (r *Repo) UpdateAiType(id int, name, categories string, enabled bool, sortOrder int, separator string) error {
-	en := 0
-	if enabled {
-		en = 1
-	}
-	now := r.now()
-	_, err := r.db.Exec(`UPDATE ai_types SET name=?, categories=?, enabled=?, sort_order=?, separator=?, updated_at=? WHERE id=?`,
-		name, categories, en, sortOrder, separator, now, id)
-	return err
-}
-
-func (r *Repo) DeleteAiType(id int) error {
-	_, err := r.db.Exec(`DELETE FROM ai_types WHERE id = ?`, id)
 	return err
 }
 

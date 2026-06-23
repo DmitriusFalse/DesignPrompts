@@ -1,14 +1,8 @@
 {
   "app.title": "Design Prompts",
-  "app.sync": "⟳ Rescan",
-  "app.syncing": "⟳ Scanning...",
-
   "theme.auto": "Auto",
   "theme.dark": "Dark",
   "theme.light": "Light",
-
-  "packs.label": "Packs",
-
   "settings.title": "Settings",
   "settings.app_settings": "App Settings",
   "settings.port": "Port",
@@ -16,38 +10,20 @@
   "settings.db_path": "DB Path",
   "settings.log_level": "Log Level",
   "settings.logs_dir": "Logs Dir",
-  "settings.packs": "Pack Management",
   "settings.back": "Back",
-
-  "presets.label": "Presets",
-
-
   "tag.copy": "Copy",
   "tag.neg": "Negative",
-
   "workspace.canvas": "Canvas",
   "workspace.positive_prompt": "Positive Prompt",
   "workspace.prompts": "Prompts",
-
   "prompt.positive": "Positive",
   "prompt.negative": "Negative",
   "prompt.copy": "📋",
-
   "actions.clear_tags": "Clear",
-
   "modal.loading.title": "Loading tags...",
-
   "toast.copied": "Copied",
-
-  "packs.rescan": "Rescan",
-  "packs.delete": "Delete",
-  "packs.empty": "No packs",
-  "packs.confirm_delete": "Delete pack \"{name}\" from DB?",
-  "packs.author": "Author",
-  "packs.categories": "Categories",
   "settings.save": "Save",
   "settings.saved": "Settings saved (restart required for some changes)",
-
   "block.1": "Subject",
   "block.2": "Action, Pose & Expression",
   "block.3": "Environment & Background",
@@ -58,7 +34,6 @@
   "block.8": "Quality Boosters",
   "block.9": "Negative Prompt",
   "block.10": "Negative Prompt",
-
   "comfy.enable": "Enable ComfyUI Generation",
   "comfy.address": "ComfyUI Address",
   "comfy.save_path": "Save Path",
@@ -73,7 +48,6 @@
   "comfy.resolution": "Resolution",
   "comfy.generate": "Generate",
   "comfy.generating": "Generating...",
-  "comfy.refresh": "Refresh",
   "comfy.error": "Error",
   "comfy.no_workflow": "No workflows",
   "comfy.result": "Result",
@@ -87,12 +61,9 @@
   "comfy.restoring": "Scanning...",
   "comfy.restore_history_done": "Added {n} images",
   "comfy.restore_history_empty": "No PNGs with metadata found",
-
   "preview.title": "Past Generations",
   "preview.placeholder": "Click Generate",
   "preview.viewer.close": "Close",
-
-  "main.add": "+",
   "main.add_tag": "+Tag",
   "main.modal_title": "Add Tag",
   "main.edit_title": "Edit Tag",
@@ -104,14 +75,11 @@
   "main.add_group": "+Group",
   "main.add_group_title": "Add Group",
   "main.group_name": "Group Name",
-  "main.enter_group_name": "Group name",
   "main.confirm_delete_group": "Delete group \"{name}\"? Tags will remain without a group.",
-  "main.structures": "Apply in styles",
   "main.save": "Save",
   "main.cancel": "Cancel",
   "main.delete": "Delete",
   "main.edit": "Edit",
-
   "tooltip.new_canvas": "Create a new empty canvas",
   "tooltip.save_canvas": "Save current canvas",
   "tooltip.rename_canvas": "Rename canvas",
@@ -123,7 +91,6 @@
   "tooltip.dynamic_title": "Dynamic Prompt",
   "tooltip.dynamic_desc": "Drag onto canvas. Drop tags into from/to slots. [from:to:when] — switch tag at when (0.0-1.0).",
   "dynamic.from": "from",
-  "dynamic.to": "to",
   "tooltip.manager": "Manage saved canvases",
   "tooltip.theme": "Change theme",
   "tooltip.lang": "Switch language",
@@ -134,7 +101,6 @@
   "tooltip.prompts_toggle": "Expand/collapse prompt editor",
   "tooltip.copy_pos": "Copy positive prompt",
   "tooltip.copy_neg": "Copy negative prompt",
-  "tooltip.sidebar_tree": "Tags from the selected pack",
   "tooltip.generate": "Run generation",
   "tooltip.comfy_refresh": "Refresh generation data",
   "tooltip.main_add_tag": "Add a custom tag to this category",
@@ -143,41 +109,32 @@
   "tooltip.sidebar_main": "Main — custom tags",
   "tooltip.edit_chip": "Edit tag",
   "tooltip.weight": "Chip weight",
-  "tooltip.aliases": "Aliases: ",
   "tooltip.restore": "Restore prompt from this image",
   "tooltip.log_level": "Log level: debug for verbose output",
   "tooltip.structure": "Switch prompt structure",
   "tooltip.save_as": "Save canvas as new",
-
   "canvas.save_title": "Save",
   "canvas.save_name": "Name",
   "canvas.save": "Save",
-  "canvas.copy": "Copy",
   "canvas.save_as": "Save As",
   "canvas.cancel": "Cancel",
-  "canvas.close": "Close",
   "canvas.save_success": "Saved",
   "canvas.manager": "Canvases",
   "canvas.manager_title": "Canvases",
-  "canvas.open": "Open",
   "canvas.empty": "No saved canvases",
   "canvas.rename_title": "Rename Canvas",
   "canvas.rename": "Rename",
   "canvas.new_title": "New Canvas",
   "canvas.new_done": "New canvas created",
-  "canvas.duplicate": "Create a copy",
-
   "chip.edit_title": "Edit Tag",
   "chip.tag_name": "Tag Name",
   "chip.full_text": "Full Text",
   "chip.category": "Group",
   "chip.save": "Save",
   "chip.cancel": "Cancel",
-
   "donate.title": "This simple app was made just for fun. Want to support the author? Toss a coin on Boosty",
   "donate.short1": "Toss a coin",
   "donate.short2": "on Boosty",
-
   "structure.standard": "Standard",
   "structure.midjourney": "Midjourney",
   "structure.dalle3": "DALL-E 3",
@@ -185,7 +142,6 @@
   "structure.flux": "Flux",
   "structure.novelai": "NovelAI/Pony",
   "structure.anime": "Anime",
-
   "structure.mj.b1": "Image Type & Subject",
   "structure.mj.b2": "Action / Pose / Emotion",
   "structure.mj.b3": "Environment & Time",
@@ -196,7 +152,6 @@
   "structure.mj.b8": "Stylize (--s)",
   "structure.mj.b9": "MJ Version (--v)",
   "structure.mj.b10": "Style (--style)",
-
   "structure.d3.b1": "Image Type & Subject",
   "structure.d3.b2": "Action / Pose",
   "structure.d3.b3": "Environment",
@@ -204,7 +159,6 @@
   "structure.d3.b5": "Lighting",
   "structure.d3.b6": "Composition",
   "structure.d3.b7": "Mood / Atmosphere",
-
   "structure.sd.b1": "Quality",
   "structure.sd.b2": "Image Type",
   "structure.sd.b3": "Subject",
@@ -213,14 +167,12 @@
   "structure.sd.b6": "Lighting",
   "structure.sd.b7": "Camera",
   "structure.sd.b8": "Quality Boosters",
-
   "structure.flux.b1": "Type & Subject",
   "structure.flux.b2": "Action / Pose",
   "structure.flux.b3": "Environment",
   "structure.flux.b4": "Lighting",
   "structure.flux.b5": "Style",
   "structure.flux.b6": "Technical Details",
-
   "structure.novelai.b1": "Quality",
   "structure.novelai.b2": "Meta Tags",
   "structure.novelai.b3": "Character",
@@ -230,7 +182,6 @@
   "structure.novelai.b7": "Composition & Camera",
   "structure.novelai.b8": "Lighting & Effects",
   "structure.novelai.b9": "Extra Details",
-
   "structure.anime.b1": "Quality & Base Tags",
   "structure.anime.b2": "Character",
   "structure.anime.b3": "Appearance",
@@ -239,12 +190,6 @@
   "structure.anime.b6": "Location & Time",
   "structure.anime.b7": "Lighting & Effects",
   "structure.anime.b8": "Face Details",
-
-  "structure.confirm_title": "Canvas modified",
-  "structure.confirm_save": "Save changes before switching structure?",
-  "structure.discard": "Discard",
-  "structure.save_and_switch": "Save & switch",
-
   "canvas.copied": "Prompt copied",
   "canvas.select_prompt": "Select a canvas from the list"
 }

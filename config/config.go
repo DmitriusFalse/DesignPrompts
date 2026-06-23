@@ -14,7 +14,6 @@ type Config struct {
 	DBPath        string `json:"db_path"`
 	LogLevel      string `json:"log_level"`
 	LogsDir       string `json:"logs_dir"`
-	ComfyEnabled  bool   `json:"comfy_enabled"`
 	ComfyAddress  string `json:"comfy_address"`
 	SavePath      string `json:"save_path"`
 	Resolutions   string `json:"resolutions"`
@@ -29,7 +28,6 @@ func defaultConfig() *Config {
 		DBPath:        "./data.db",
 		LogsDir:       "./logs",
 		LogLevel:      "error",
-		ComfyEnabled:  false,
 		ComfyAddress:  "http://127.0.0.1:8188",
 		SavePath:      "./output",
 		Resolutions:   "Square 1:1#512x512\nSquare HD 1:1#768x768\nSquare XL 1:1#1024x1024\nPortrait 2:3#768x1152\nLandscape 3:2#1152x768\nPortrait 3:4#768x1024\nLandscape 4:3#1024x768\nPortrait Tall 4:7#768x1344\nUltra Wide 7:4#1344x768\nPortrait 9:16#720x1280\nPortrait Wide 13:19#832x1216\nWidescreen 16:9#1280x720\nLandscape Wide 19:13#1216x832",
