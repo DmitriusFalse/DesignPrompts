@@ -1,6 +1,7 @@
 name: Static
 description: "Общие теги для всех стилей"
 version: "1.0"
+type: menu
 categories:
   - id: 1
     category: "Appearance"

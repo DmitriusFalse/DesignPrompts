@@ -124,10 +124,6 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := addon.MigrateFromTags(cfg.AddonsPath); err != nil {
-		logger.Error("Migrate addons: %v", err)
-	}
-
 	addons, err := addon.ScanAddons(cfg.AddonsPath)
 	if err != nil {
 		logger.Error("Load addons: %v", err)

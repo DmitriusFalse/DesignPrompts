@@ -38,7 +38,10 @@ document.addEventListener('alpine:init', () => {
 
 });
 
-const BLOCK_COLORS = [null, '#60cdff', '#6ccb6c', '#e8b84a', '#4ecdc4', '#aa7be0', '#87b6ff', '#d48ebd', '#ff6b6b', '#f59a44', '#ff8c00'];
+const CHIP_COLORS = Array.from({ length: 100 }, (_, i) => {
+  const h = (i * 137.508) % 360;
+  return `hsl(${h.toFixed(1)}, 55%, 80%)`;
+});
 
 function app() {
   return {
@@ -92,9 +95,33 @@ function app() {
     addonTreeOpen: {},
     addonCatTags: {},
     _addonLoading: null,
+    _virtualAddons: {},
+
+    // User-created templates (ai_types)
+    userTemplates: [],
+
+    // Template editor form
+    templateEditForm: { id: 0, name: '', separator: ', ', enabled: true, categories: [] },
+    templateEditIsUser: false,
+    templateEditCategoryEditIdx: -1,
+    treeModal: false,
+    treeModalProgress: 0,
 
     get currentAddon() {
-      return this.addons.find(a => a.info.name === this.selectedAddonName) || null;
+      return this.addons.find(a => a.info.name === this.selectedAddonName) ||
+             (this._virtualAddons && this._virtualAddons[this.selectedAddonName]) || null;
+    },
+
+    get sidebarAddon() {
+      return this.addons.find(a => a.info.name === this.sidebarAddonName) || null;
+    },
+
+    get sortedAddons() {
+      return [...this.addons].sort((a, b) => {
+        const da = this.isAddonDisabled(a.info.name) ? 1 : 0;
+        const db = this.isAddonDisabled(b.info.name) ? 1 : 0;
+        return da - db;
+      });
     },
 
     disabledAddonNames: new Set(),
@@ -110,6 +137,11 @@ function app() {
         this.disabledAddonNames.add(name);
       }
       localStorage.setItem('addon_disabled', JSON.stringify([...this.disabledAddonNames]));
+    },
+
+    addonType(name) {
+      const a = this.addons.find(a => a.info.name === name);
+      return a?.info?.type || 'any';
     },
 
     loadDisabledAddons() {
@@ -128,6 +160,7 @@ function app() {
     sideOpen: false,
     activePanel: '',
     activeAddonName: '',
+    sidebarAddonName: '',
     sidebarTab: 'main',
     version: '',
 
@@ -310,7 +343,7 @@ function app() {
     },
 
     addonTagGroups(catName) {
-      const a = this.currentAddon;
+      const a = this.sidebarAddon;
       if (!a?.tagFiles) return [];
       return (a.tagFiles[catName] || []).filter(g => g.tags?.length > 0);
     },
@@ -384,6 +417,7 @@ function app() {
     // ─── Drag & drop ───
 
     onDragStart(ev, ch) {
+      if (window._dndDebug) console.log('DnD:onDragStart', ch?.name, ch?._key);
       const key = ch._key || this._chipKey();
       this.dragState = { key, name: ch.name };
       ev.dataTransfer.effectAllowed = 'move';
@@ -418,16 +452,25 @@ function app() {
     },
 
     onDragEnd(ev) {
+      if (window._dndDebug) console.log('DnD:onDragEnd');
       ev.currentTarget.classList.remove('chip-dragging');
       this._clearDropVisuals();
       this.dragState = null;
       this.dropTarget = null;
     },
 
+    onTagDragStart(ev, tagData) {
+      if (window._dndDebug) console.log('DnD:onTagDragStart', tagData?.tag_name || tagData?.name);
+      const key = 'tag-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+      ev.dataTransfer.effectAllowed = 'copy';
+      ev.dataTransfer.setData('text/plain', key);
+      this.dragState = { key, name: tagData.tag_name || tagData.name, tagData, isTagSource: true, isBreakSource: false, isGroupSource: false, isDynamicSource: false, isGroupChildDrag: false, isDynamicChildDrag: false };
+    },
+
     onDragOver(ev) {
       if (this.blockDragState) return;
       ev.preventDefault();
-      ev.dataTransfer.dropEffect = 'move';
+      ev.dataTransfer.dropEffect = this.dragState?.isTagSource ? 'copy' : 'move';
       const dragKey = this.dragState?.key;
       if (!dragKey) return;
       const blockEl = ev.currentTarget.closest('[data-block-id]') || ev.currentTarget;
@@ -501,6 +544,7 @@ function app() {
     },
 
     onDrop(ev, targetType) {
+      if (window._dndDebug) console.log('DnD:onDrop', targetType, this.dragState?.key, this.dragState?.name);
       if (this.blockDragState) return;
       ev.preventDefault();
       this._clearDropVisuals();
@@ -510,7 +554,7 @@ function app() {
       const name = this.dragState?.name;
       const allChips = [...this.positiveChips, ...this.negativeChips];
       let chip = allChips.find(c => c._key === key);
-      const raw = parseInt(ev.currentTarget.dataset.blockId);
+      const raw = parseInt(ev.currentTarget.closest('[data-block-id]')?.dataset.blockId);
       const targetBlockId = isNaN(raw) ? 4 : raw;
       const ds = this.dragState;
 
@@ -538,7 +582,7 @@ function app() {
         }
       }
 
-      const isNewChip = !chip || ds.isBreakSource || ds.isGroupSource || ds.isDynamicSource;
+      const isNewChip = !chip || ds.isBreakSource || ds.isGroupSource || ds.isDynamicSource || ds.isTagSource;
       if (isNewChip) {
         if (name === 'BREAK') {
           chip = { name: 'BREAK', prompt_text: 'BREAK', category: 'meta', subcategory: '', block_id: 1, _key: 'brk-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6) };
@@ -546,6 +590,21 @@ function app() {
           chip = { _key: 'grp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6), name: 'группа', category: 'group', prompt_text: null, subcategory: '', block_id: targetBlockId, _groupChildren: [], weight: null };
         } else if (name === 'DYNAMIC') {
           chip = { _key: 'dyn-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6), name: 'dynamic', category: 'dynamic', block_id: targetBlockId, from_tag: null, to_tag: null, when: 0.5, weight: null };
+        } else if (ds.isTagSource && ds.tagData) {
+          if (ds.tagData.full_text !== undefined) {
+            chip = { _key: this._chipKey(), name: ds.tagData.tag_name, prompt_text: ds.tagData.full_text || ds.tagData.tag_name, category: 'custom_main', subcategory: ds.tagData.subcategory || '', block_id: targetBlockId, weight: null };
+          } else {
+            chip = this.makeChip(ds.tagData);
+            chip._key = this._chipKey();
+            chip.block_id = targetBlockId;
+          }
+          const tgtArr = targetType === 'positive' ? this.positiveChips : this.negativeChips;
+          if (tgtArr.find(c => c.name === chip.name)) { this.dragState = null; this.dropTarget = null; return; }
+          tgtArr.push(chip);
+          this.dragState = null;
+          this.dropTarget = null;
+          this.notifyChipChange();
+          return;
         } else {
           return;
         }
@@ -818,6 +877,11 @@ function app() {
     onBlockDrop(ev, block) {
       ev.preventDefault();
       if (!this.blockDragState || this.blockDragState.id === block.id) {
+        // Если это перетаскивание чипа/тега (не блока), перенаправляем в onDrop
+        if (this.dragState && !this.blockDragState) {
+          this.onDrop(ev, 'positive');
+          return;
+        }
         this.blockDropTarget = null;
         return;
       }
@@ -872,7 +936,7 @@ function app() {
         this.sidebarTab = 'main';
       } else if (panel === 'addon') {
         this.sidebarTab = 'addon';
-        this.selectedAddonName = addonName;
+        this.sidebarAddonName = addonName;
       }
     },
 
@@ -950,7 +1014,10 @@ function app() {
     },
 
     getColorForChip(chip) {
-      return BLOCK_COLORS[chip.block_id] || null;
+      const blocks = this.currentStructureAllBlocks;
+      const idx = blocks.findIndex(b => b.id === chip.block_id);
+      if (idx === -1) return null;
+      return CHIP_COLORS[idx % CHIP_COLORS.length];
     },
 
     chipCategoryName(chip) {
@@ -1434,9 +1501,15 @@ function app() {
     },
 
     get allTemplates() {
-      return this.addons
-        .filter(a => !this.isAddonDisabled(a.info.name))
-        .map(a => ({ type: 'addon', id: a.info.name, name: a.info.name }));
+      const addonItems = this.addons
+        .filter(a => this.addonType(a.info.name) !== 'menu' && !this.isAddonDisabled(a.info.name))
+        .map(a => ({ type: 'addon', id: a.info.name, name: a.info.name, disabled: false }));
+      const userItems = (this.userTemplates || [])
+        .filter(t => !this.addons.some(a => a.info.name === t.name))
+        .map(t => ({ type: 'user', id: t.name, name: t.name, disabled: !t.enabled }));
+      const all = [...addonItems, ...userItems];
+      all.sort((a, b) => (a.disabled ? 1 : 0) - (b.disabled ? 1 : 0));
+      return all;
     },
 
     isCurrentTemplate(t) {
@@ -1447,7 +1520,9 @@ function app() {
       try {
         const r = await fetch('/api/ai-types');
         if (!r.ok) return;
-        this.aiTypes = await r.json();
+        const data = await r.json();
+        this.aiTypes = data;
+        this.userTemplates = data;
       } catch(e) {
         console.error('loadAiTypes:', e);
       }
@@ -1455,20 +1530,185 @@ function app() {
 
     selectAiTypeFromDropdown(item) {
       if (this.currentAddon?.info.name === item.id) return;
-      this.selectedAddonName = item.id;
-      this.promptStructure = item.id;
+      if (item.type === 'user') {
+        const tpl = (this.userTemplates || []).find(t => t.id.toString() === item.id || t.name === item.id);
+        if (tpl) {
+          let cats;
+          try { cats = JSON.parse(tpl.categories || '[]'); } catch(e) { cats = []; }
+          const normalized = cats.map((c, i) => ({ category: c.name || c.category || '', id: i + 1 }));
+          this._virtualAddons[tpl.name] = {
+            info: { name: tpl.name, icon: '📋', categories: normalized },
+            tagFiles: {}
+          };
+          // Clean up old virtual addons not matching this name
+          Object.keys(this._virtualAddons).forEach(k => { if (k !== tpl.name) delete this._virtualAddons[k]; });
+          this.selectedAddonName = tpl.name;
+          this.promptStructure = tpl.name;
+        }
+      } else {
+        this._virtualAddons = {};
+        this.selectedAddonName = item.id;
+        this.promptStructure = item.id;
+      }
       this.blockOrder = null;
       this.positiveChips = [];
       this.negativeChips = [];
       this.notifyChipChange();
     },
 
-    // ─── Addon template editor (settings) ───
+    // ─── Template editor (v2) ───
 
-    selectedAddonEditName: null,
+    selectedEditName: null,
+    selectedEditIsUser: false,
 
-    selectAddonEdit(name) {
-      this.selectedAddonEditName = name;
+    async openTemplateEditor() {
+      this.templateEditForm = { id: 0, name: '', separator: ', ', enabled: true, categories: [] };
+      this.selectedEditName = null;
+      this.selectedEditIsUser = false;
+      this.templateEditCategoryEditIdx = -1;
+      await this.loadUserTemplates();
+      this.templateEditorOpen = true;
+    },
+
+    async loadUserTemplates() {
+      try {
+        const r = await fetch('/api/ai-types');
+        if (!r.ok) return;
+        const data = await r.json();
+        this.aiTypes = data;
+        this.userTemplates = data;
+      } catch(e) {
+        console.error('loadUserTemplates:', e);
+      }
+    },
+
+    selectEditTemplate(name, isUser) {
+      this.selectedEditName = name;
+      this.selectedEditIsUser = isUser;
+      this.templateEditCategoryEditIdx = -1;
+      if (isUser) {
+        const tpl = (this.userTemplates || []).find(t => t.name === name);
+        if (tpl) {
+          let cats;
+          try { cats = JSON.parse(tpl.categories || '[]'); } catch(e) { cats = []; }
+          this.templateEditForm = {
+            id: tpl.id,
+            name: tpl.name,
+            separator: tpl.separator || ', ',
+            enabled: tpl.enabled,
+            categories: cats.map((c, i) => ({
+              name: c.name || c.category || '',
+              tags: c.tags || '',
+              order: c.order ?? i
+            }))
+          };
+        }
+      } else {
+        this.templateEditForm = { id: 0, name: '', separator: ', ', enabled: true, categories: [] };
+      }
+    },
+
+    newUserTemplate() {
+      this.selectedEditIsUser = true;
+      this.templateEditCategoryEditIdx = -1;
+      const tpl = (this.userTemplates || []).find(t => t.name === this.currentAddon?.info?.name);
+      if (tpl) {
+        this.selectedEditName = tpl.name;
+        let cats;
+        try { cats = JSON.parse(tpl.categories || '[]'); } catch(e) { cats = []; }
+        this.templateEditForm = {
+          id: tpl.id,
+          name: tpl.name,
+          separator: tpl.separator || ', ',
+          enabled: tpl.enabled,
+          categories: cats.map((c, i) => ({
+            name: c.name || c.category || '',
+            tags: c.tags || '',
+            order: c.order ?? i
+          }))
+        };
+      } else {
+        this.selectedEditName = null;
+        this.templateEditForm = { id: 0, name: '', separator: ', ', enabled: true, categories: [] };
+      }
+    },
+
+    addTemplateCategory() {
+      this.templateEditForm.categories.push({ name: '', tags: '', order: this.templateEditForm.categories.length });
+      this.templateEditCategoryEditIdx = this.templateEditForm.categories.length - 1;
+    },
+
+    removeTemplateCategory(idx) {
+      this.templateEditForm.categories.splice(idx, 1);
+      if (this.templateEditCategoryEditIdx === idx) this.templateEditCategoryEditIdx = -1;
+      if (this.templateEditCategoryEditIdx > idx) this.templateEditCategoryEditIdx--;
+    },
+
+    moveTemplateCategory(idx, dir) {
+      const cats = this.templateEditForm.categories;
+      const target = idx + dir;
+      if (target < 0 || target >= cats.length) return;
+      [cats[idx], cats[target]] = [cats[target], cats[idx]];
+      cats.forEach((c, i) => c.order = i);
+    },
+
+    get templatePreview() {
+      const cats = this.templateEditForm?.categories || [];
+      if (!cats.length) return '';
+      const sep = this.templateEditForm.separator || ', ';
+      return cats.map(c => c.tags || '[' + c.name + ']').join(sep);
+    },
+
+    async saveUserTemplate() {
+      const f = this.templateEditForm;
+      if (!f.name.trim()) { this.showToast('Введите название шаблона'); return; }
+      const catsJson = JSON.stringify(f.categories.map((c, i) => ({
+        name: c.name,
+        tags: c.tags || '',
+        order: c.order ?? i
+      })));
+      const body = {
+        id: f.id || 0,
+        name: f.name.trim(),
+        categories: catsJson,
+        enabled: f.enabled,
+        sort_order: 0,
+        separator: f.separator || ', '
+      };
+      try {
+        const res = await fetch('/api/ai-types', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          this.showToast('Ошибка сохранения: ' + (err.error || res.status));
+          return;
+        }
+        const saved = await res.json();
+        this.showToast('Шаблон сохранён');
+        this.templateEditForm.id = saved.id || saved.name;
+        await this.loadUserTemplates();
+        this.selectedEditName = f.name.trim();
+      } catch(e) {
+        this.showToast('Ошибка: ' + e.message);
+      }
+    },
+
+    async deleteUserTemplate() {
+      const id = this.templateEditForm.id;
+      if (!id) { this.showToast('Сначала сохраните шаблон'); return; }
+      if (!confirm('Удалить шаблон "' + this.templateEditForm.name + '"?')) return;
+      try {
+        const res = await fetch('/api/ai-types?id=' + id, { method: 'DELETE' });
+        if (!res.ok) { this.showToast('Ошибка удаления'); return; }
+        this.showToast('Шаблон удалён');
+        await this.loadUserTemplates();
+        this.newUserTemplate();
+      } catch(e) {
+        this.showToast('Ошибка: ' + e.message);
+      }
     },
 
     // ─── Download / copy manager prompt ───

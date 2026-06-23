@@ -23,6 +23,7 @@ type AddonInfo struct {
 	Version     string          `yaml:"version,omitempty" json:"version"`
 	Author      string          `yaml:"author,omitempty" json:"author"`
 	Icon        string          `yaml:"icon,omitempty" json:"icon"`
+	Type        string          `yaml:"type,omitempty" json:"type"`
 	Categories  []AddonCategory `yaml:"categories" json:"categories"`
 }
 

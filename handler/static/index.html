@@ -30,7 +30,7 @@
       <div x-show="show" class="tooltip" x-text="t('tooltip.manager')"></div>
     </span>
     <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-      <button @click="templateEditorOpen = true" class="px-2 py-0.5 text-xs rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer whitespace-nowrap">🧠 <span>Шаблоны</span></button>
+      <button @click="openTemplateEditor()" class="px-2 py-0.5 text-xs rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer whitespace-nowrap">🧠 <span>Шаблоны</span></button>
       <div x-show="show" class="tooltip">Редактор шаблонов промптов</div>
     </span>
     <div class="flex-1"></div>
@@ -111,8 +111,8 @@
               x-data="tooltip" @mouseenter="enter" @mouseleave="leave">🏠
         <div x-show="show" class="tooltip" x-text="t('tooltip.sidebar_main')"></div>
       </button>
-      <template x-for="a in addons" :key="'ic'+a.info.name">
-        <button @click="togglePanel('addon', a.info.name)" class="icon-btn relative" :class="{ active: activePanel === 'addon' && activeAddonName === a.info.name }"
+      <template x-for="a in addons.filter(a => (a.info.type || 'any') !== 'box' && !isAddonDisabled(a.info.name))" :key="'ic'+a.info.name">
+        <button @click="togglePanel('addon', a.info.name)" class="icon-btn relative" :class="{ active: activePanel === 'addon' && activeAddonName === a.info.name, 'opacity-50 line-through': isAddonDisabled(a.info.name) }"
                 x-data="tooltip" @mouseenter="enter" @mouseleave="leave">
           <span class="icon-btn-inner">
             <span x-text="a.info.icon || '📦'" class="icon-btn-fallback"></span>
@@ -129,7 +129,6 @@
           <template x-for="block in currentStructureAllBlocks" :key="'main'+block.id">
             <div>
               <div class="px-4 py-2 text-sm font-semibold uppercase tracking-wide bg-blue-50 dark:bg-dark-500 border-b border-gray-200 dark:border-dark-600 flex items-center gap-2">
-                <span x-show="BLOCK_COLORS[block.id]" class="tag-color-dot shrink-0" :style="{ '--dot-color': BLOCK_COLORS[block.id] }"></span>
                 <span x-text="structureBlockLabel(block)"></span>
                 <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex ml-auto">
                   <button @click.stop="openMainTagAdd(block.id, '', $event)" class="text-xs px-1.5 py-0.5 rounded border border-green-500 text-green-600 dark:text-green-400 transition-colors cursor-pointer" x-text="t('main.add_tag')"></button>
@@ -164,7 +163,7 @@
                 </template>
                 <template x-for="item in tagsWithInactiveGroup(block.id)" :key="'inact'+item.id">
                   <span class="tag-pill-wrapper">
-                    <span class="tag-pill text-xs" :class="selectedClass(item.tag_name)" @click="addCustomMainTag(item)">
+                    <span class="tag-pill text-xs" :class="selectedClass(item.tag_name)" draggable="true" @dragstart="onTagDragStart($event, item)" @click="addCustomMainTag(item)">
                       <span x-text="item.tag_name" class="max-w-40 truncate"></span>
                     </span>
                     <span class="hover-actions">
@@ -200,9 +199,9 @@
                   <div x-show="mainTagsByBlockAndSubcat(block.id, group.name).length > 0" class="px-3 py-1 flex flex-wrap gap-1">
                     <template x-for="item in mainTagsByBlockAndSubcat(block.id, group.name)" :key="item.id">
                       <span class="tag-pill-wrapper">
-                        <span class="tag-pill text-xs" :class="selectedClass(item.tag_name)" @click="addCustomMainTag(item)">
-                          <span x-text="item.tag_name" class="max-w-40 truncate"></span>
-                        </span>
+                    <span class="tag-pill text-xs" :class="selectedClass(item.tag_name)" draggable="true" @dragstart="onTagDragStart($event, item)" @click="addCustomMainTag(item)">
+                      <span x-text="item.tag_name" class="max-w-40 truncate"></span>
+                    </span>
                         <span class="hover-actions">
                           <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
                             <button @click.stop="openEditMainTag(item)">✎</button>
@@ -229,10 +228,10 @@
         <div x-show="sidebarTab === 'addon'">
         <!-- Addon categories -->
         <div class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wide bg-gray-200 dark:bg-dark-600 text-gray-900 dark:text-dark-100 border-b border-gray-200 dark:border-dark-600">
-          <span x-show="currentAddon?.info?.icon" x-text="currentAddon?.info?.icon" class="text-base"></span>
-          <span x-text="currentAddon?.info?.name"></span>
+          <span x-show="sidebarAddon?.info?.icon" x-text="sidebarAddon?.info?.icon" class="text-base"></span>
+          <span x-text="sidebarAddon?.info?.name"></span>
         </div>
-        <template x-for="cat in currentAddon?.info?.categories || []" :key="cat.category">
+        <template x-for="cat in (sidebarAddon?.info?.categories || []).filter(c => addonTagGroups(c.category).length > 0)" :key="cat.category">
           <div>
             <button @click="toggleAddonCategory(cat.category)" class="cursor-pointer w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-600 text-gray-900 dark:text-dark-100">
               <div class="flex items-center gap-2 min-w-0">
@@ -255,7 +254,7 @@
                     <div class="px-6 py-2 flex flex-wrap gap-1.5">
                       <template x-for="tag in (g.tags || [])" :key="tag.name">
                         <span class="tag-pill-wrapper">
-                          <span class="tag-pill" :class="selectedClass(tag.name)" @click="addTag({ tag_name: tag.name, category_name: cat.category, subcategory_name: g.file || '' })">
+                          <span class="tag-pill" :class="selectedClass(tag.name)" draggable="true" @dragstart="onTagDragStart($event, { tag_name: tag.name, category_name: cat.category, subcategory_name: g.file || '' })" @click="addTag({ tag_name: tag.name, category_name: cat.category, subcategory_name: g.file || '' })">
                             <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="max-w-60 truncate relative inline-flex">
                               <span x-text="tag.name" class="truncate"></span>
                               <div x-show="show && tag.text && tag.text !== tag.name" class="tooltip" x-text="tag.text"></div>
@@ -302,7 +301,7 @@
     <div class="overflow-hidden flex flex-col" :style="{ height: comfyEnabled ? workComfyRatio + '%' : '100%' }">
 
       <!-- Chips (always visible) -->
-      <div class="p-4 border-b border-gray-200 dark:border-dark-600 overflow-y-auto min-h-0 flex flex-col gap-4">
+      <div class="p-4 border-b border-gray-200 dark:border-dark-600 overflow-y-auto min-h-0 flex-1 flex flex-col gap-4">
         <!-- Row 1: canvas name -->
         <div class="flex items-center gap-2 mb-1">
           <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wide"><span x-text="t('workspace.canvas')">Холст</span><span x-show="canvasName"><span x-text="': ' + canvasName"></span></span></div>
@@ -349,7 +348,7 @@
               </button>
               <div x-show="open" x-transition:enter="transition ease-out" x-transition:enter-start="scale-y-0 opacity-0" x-transition:enter-end="scale-y-100 opacity-100" x-transition:leave="transition ease-in" x-transition:leave-start="scale-y-100 opacity-100" x-transition:leave-end="scale-y-0 opacity-0" class="dropdown-menu bg-white dark:bg-dark-600 z-50 shadow-lg border border-gray-300 dark:border-dark-500 rounded-lg" :class="openUp ? 'origin-bottom' : 'origin-top'" :style="panelStyle" style="transition-duration:150ms">
                 <template x-for="t in allTemplates" :key="t.type + '-' + t.id">
-                  <button @click="selectAiTypeFromDropdown(t); close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-xs cursor-pointer transition-colors flex items-center" :class="isCurrentTemplate(t) ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'">
+                  <button @click="selectAiTypeFromDropdown(t); close()" class="whitespace-nowrap w-full text-left px-3 py-1.5 text-xs cursor-pointer transition-colors flex items-center" :class="[isCurrentTemplate(t) ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500', t.disabled ? 'opacity-50 line-through' : '']">
                     <span x-text="t.name"></span>
                   </button>
                 </template>
@@ -407,6 +406,8 @@
             <div class="block-section"
                  :data-block-id="block.id"
                  :class="{ 'block-drop-before': blockDropTarget?.before === block.id, 'block-drop-after': blockDropTarget?.after === block.id }"
+                 @dragenter="onDragEnter($event)"
+                 @dragleave="onDragLeave($event)"
                  @dragover.prevent="onBlockDragOver($event, block)"
                  @drop.prevent="onBlockDrop($event, block)">
               <div class="block-header">
@@ -1033,71 +1034,145 @@
     </div>
   </div>
 
-  <!-- Template Editor Modal (addon read-only) -->
+  <!-- Template Editor Modal v2 -->
   <div x-show="templateEditorOpen" class="fixed inset-0 z-50 flex items-center justify-center" @keydown.escape.window="templateEditorOpen = false">
     <div class="absolute inset-0 bg-black/40" @click="templateEditorOpen = false"></div>
-    <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl text-sm flex flex-col overflow-hidden" style="width:800px;min-height:500px;max-height:80vh" @click.stop>
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-600 shrink-0">
+    <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl text-sm flex flex-col overflow-hidden" style="width:780px;min-height:520px;max-height:85vh" @click.stop>
+      <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-dark-600 shrink-0">
         <div class="text-base font-semibold">Редактор шаблонов промптов</div>
         <button @click="templateEditorOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg leading-none cursor-pointer">✕</button>
       </div>
       <div class="flex flex-1 min-h-0">
-        <!-- Left panel: addon list -->
-        <div class="w-48 border-r border-gray-200 dark:border-dark-600 flex flex-col shrink-0">
+        <!-- ── Left panel ── -->
+        <div class="w-44 border-r border-gray-200 dark:border-dark-600 flex flex-col shrink-0">
           <div class="overflow-y-auto flex-1">
-            <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 px-4 pt-3 pb-1">Аддоны:</div>
-            <template x-for="a in addons" :key="'addon'+a.info.name">
-              <div @click="selectAddonEdit(a.info.name)" class="flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-dark-700 cursor-pointer transition-colors" :class="selectedAddonEditName === a.info.name ? 'border-l-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-l-0 hover:bg-gray-50 dark:hover:bg-dark-600'">
-                <div class="min-w-0 flex-1">
-                  <div class="text-sm truncate font-medium" x-text="a.info.name"></div>
+            <!-- Addons section -->
+            <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 px-3 pt-3 pb-1">Аддоны:</div>
+            <template x-for="a in sortedAddons" :key="'addon'+a.info.name">
+              <div @click="selectEditTemplate(a.info.name, false)" class="flex items-center px-3 py-2 border-b border-gray-100 dark:border-dark-700 cursor-pointer transition-colors text-sm gap-2" :class="[!selectedEditIsUser && selectedEditName === a.info.name ? 'border-l-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-l-0 hover:bg-gray-50 dark:hover:bg-dark-600', isAddonDisabled(a.info.name) ? 'opacity-50 line-through' : '']">
+                <span class="text-base shrink-0" x-text="a.info.icon || '📦'"></span>
+                <span class="truncate font-medium" x-text="a.info.name"></span>
+              </div>
+            </template>
+
+            <!-- User templates -->
+            <template x-if="(userTemplates||[]).filter(t => !addons.some(a => a.info.name === t.name)).length">
+              <div>
+                <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 px-3 pt-3 pb-1">Мои шаблоны:</div>
+                <template x-for="t in (userTemplates||[]).filter(t => !addons.some(a => a.info.name === t.name))" :key="'user'+t.name">
+                  <div @click="selectEditTemplate(t.name, true)" class="flex items-center px-3 py-2 border-b border-gray-100 dark:border-dark-700 cursor-pointer transition-colors text-sm gap-2"
+                       :class="[selectedEditIsUser && selectedEditName === t.name ? 'border-l-2 border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-l-0 hover:bg-gray-50 dark:hover:bg-dark-600', !t.enabled ? 'opacity-50 line-through' : '']">
+                    <span class="text-base shrink-0">📋</span>
+                    <span class="truncate font-medium" x-text="t.name"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+          <div class="p-3 border-t border-gray-200 dark:border-dark-600 space-y-2">
+            <button @click="newUserTemplate()" class="w-full px-3 py-1.5 text-xs font-medium rounded border border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer">+ Новый шаблон</button>
+          </div>
+        </div>
+        <!-- ── Right panel ── -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-y-auto" x-show="selectedEditIsUser || selectedEditName">
+          <div class="p-5 space-y-4">
+            <!-- Enabled toggle -->
+            <template x-if="!selectedEditIsUser">
+              <label class="flex items-center gap-2 text-xs cursor-pointer select-none">
+                <input type="checkbox" :checked="!isAddonDisabled(selectedEditName)" @change="toggleAddonDisabled(selectedEditName)" class="w-3.5 h-3.5">
+                <span class="text-xs font-medium text-gray-700 dark:text-dark-200">Активен</span>
+              </label>
+            </template>
+            <!-- Template editing form (only for user templates) -->
+            <template x-if="selectedEditIsUser">
+              <div class="space-y-4">
+                <!-- Active (top) -->
+                <div class="flex items-center gap-3">
+                  <span class="text-xs font-medium text-gray-700 dark:text-dark-200">Активен</span>
+                  <label class="toggle self-center" x-bind:class="{ 'toggle-active': templateEditForm.enabled }">
+                    <input type="checkbox" class="toggle-input" x-model="templateEditForm.enabled">
+                    <span class="toggle-track"><span class="toggle-knob"></span></span>
+                  </label>
+                </div>
+                <!-- Name -->
+                <div>
+                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Название:</div>
+                  <input type="text" x-model="templateEditForm.name" placeholder="Название шаблона" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+                </div>
+                <!-- Separator -->
+                <div>
+                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1" x-data="tooltip" @mouseenter="enter" @mouseleave="leave">
+                    Разделитель:
+                    <div x-show="show" class="tooltip">Символ между категориями</div>
+                  </div>
+                  <input type="text" x-model="templateEditForm.separator" placeholder=", " class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+                </div>
+                <!-- Categories -->
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-semibold text-gray-500 dark:text-dark-400">Категории:</span>
+                    <button @click="addTemplateCategory()" class="text-xs px-2 py-0.5 rounded border border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors cursor-pointer">+ Добавить</button>
+                  </div>
+                  <div class="space-y-1 max-h-56 overflow-y-auto pr-1">
+                    <template x-for="(cat, idx) in templateEditForm.categories" :key="idx">
+                      <div>
+                        <div class="flex items-center gap-1 px-2 py-1.5 rounded border border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-600">
+                          <span @click="moveTemplateCategory(idx, -1)" class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 select-none shrink-0 cursor-pointer" title="Переместить вверх">▲</span>
+                          <span @click="moveTemplateCategory(idx, 1)" class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 select-none shrink-0 cursor-pointer" title="Переместить вниз">▼</span>
+                          <span x-show="templateEditCategoryEditIdx !== idx" @dblclick="templateEditCategoryEditIdx = idx" class="flex-1 text-sm min-w-0 truncate cursor-pointer" x-text="cat.name || 'Новая категория'" title="Дважды кликните для редактирования"></span>
+                          <input x-show="templateEditCategoryEditIdx === idx" type="text" x-model="cat.name" placeholder="Название" class="flex-1 text-sm bg-white dark:bg-dark-500 border rounded px-1.5 py-0.5 border-gray-300 dark:border-dark-400 min-w-0 outline-none">
+                          <div class="flex items-center gap-0.5 shrink-0">
+                            <button @click="templateEditCategoryEditIdx = (templateEditCategoryEditIdx === idx ? -1 : idx)" class="text-xs px-1 py-0.5 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer" title="Редактировать категорию">✎</button>
+                            <button @click="removeTemplateCategory(idx)" class="text-xs px-1 py-0.5 rounded text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer" title="Удалить категорию">×</button>
+                          </div>
+                        </div>
+                        <!-- Tags by default (shown when editing) -->
+                        <div x-show="templateEditCategoryEditIdx === idx" class="ml-6 mb-1">
+                          <textarea x-model="cat.tags" placeholder="Теги по умолчанию: quality, masterpiece..." class="w-full border rounded px-2 py-1 text-xs bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 resize-none" rows="1" @input="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+                        </div>
+                    </template>
+                    <div x-show="!templateEditForm.categories.length" class="text-xs text-gray-400 text-center py-4">Нет категорий. Нажмите «+ Добавить»</div>
+                  </div>
+                </div>
+                <!-- Preview -->
+                <div>
+                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Предпросмотр:</div>
+                  <div class="w-full border rounded px-3 py-2 text-xs bg-gray-50 dark:bg-dark-600 border-gray-200 dark:border-dark-500 text-gray-600 dark:text-dark-300 min-h-[2em] break-words" x-text="templatePreview || '—'"></div>
+                </div>
+                <!-- Save / Delete buttons -->
+                <div class="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-dark-700">
+                  <button @click="saveUserTemplate()" class="px-3 py-1.5 text-xs font-medium rounded bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer">💾 Сохранить</button>
+                  <button @click="deleteUserTemplate()" class="px-3 py-1.5 text-xs font-medium rounded border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer">🗑 Удалить</button>
                 </div>
               </div>
             </template>
-            <div x-show="addons.length === 0" class="text-center text-gray-400 dark:text-dark-400 text-sm py-8">Нет аддонов</div>
-          </div>
-          <div class="p-4 border-t border-gray-200 dark:border-dark-600">
-            <div class="text-xs text-gray-400 dark:text-dark-500 text-center">Создайте info.pack в папке addons/</div>
-          </div>
-        </div>
-        <!-- Right panel: addon read-only view -->
-        <div class="flex-1 flex flex-col p-6 min-w-0 overflow-y-auto space-y-5" x-show="selectedAddonEditName !== null">
-          <div class="space-y-5">
-            <!-- Enabled toggle -->
-            <div class="flex items-center gap-3" x-data="tooltip" @mouseenter="enter" @mouseleave="leave">
-              <span class="text-xs font-medium text-gray-700 dark:text-dark-200">Активен</span>
-              <label class="toggle self-center" x-bind:class="{ 'toggle-active': !isAddonDisabled(selectedAddonEditName) }">
-                <input type="checkbox" class="toggle-input" :checked="!isAddonDisabled(selectedAddonEditName)" @change="toggleAddonDisabled(selectedAddonEditName)">
-                <span class="toggle-track"><span class="toggle-knob"></span></span>
-              </label>
-              <div x-show="show" class="tooltip !whitespace-nowrap">Аддон отображается в списке выбора</div>
-            </div>
-            <!-- Name (read-only) -->
-            <div>
-              <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1.5">Название:</div>
-              <div class="w-full border rounded px-3 py-2.5 text-sm bg-gray-100 dark:bg-dark-600 border-gray-200 dark:border-dark-500 text-gray-500 dark:text-dark-400" x-text="selectedAddonEditName"></div>
-            </div>
-            <!-- Categories (read-only) -->
-            <div>
-              <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1.5">Категории:</div>
-              <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-                <template x-for="cat in (addons.find(a => a.info.name === selectedAddonEditName)?.info?.categories || [])" :key="cat.id">
-                  <div class="flex items-center gap-1.5 px-3 py-2 rounded border border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-600">
-                    <span class="flex-1 text-sm" x-text="cat.category"></span>
+            <!-- Addon read-only info -->
+            <template x-if="!selectedEditIsUser && selectedEditName">
+              <div class="space-y-4">
+                <div>
+                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Название:</div>
+                  <div class="w-full border rounded px-3 py-2 text-sm bg-gray-100 dark:bg-dark-600 border-gray-200 dark:border-dark-500 text-gray-500 dark:text-dark-400" x-text="selectedEditName"></div>
+                </div>
+                <div>
+                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Категории:</div>
+                  <div class="space-y-1 max-h-56 overflow-y-auto pr-1">
+                    <template x-for="cat in (addons.find(a => a.info.name === selectedEditName)?.info?.categories || [])" :key="cat.id">
+                      <div class="flex items-center gap-1.5 px-3 py-2 rounded border border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-600 text-sm">[<span class="flex-1" x-text="cat.category"></span>]</div>
+                    </template>
+                    <div x-show="!(addons.find(a => a.info.name === selectedEditName)?.info?.categories?.length)" class="text-xs text-gray-400 text-center py-4">Нет категорий</div>
                   </div>
-                </template>
-                <div x-show="!(addons.find(a => a.info.name === selectedAddonEditName)?.info?.categories?.length)" class="text-xs text-gray-400 text-center py-4">Нет категорий</div>
+                </div>
               </div>
-            </div>
+            </template>
           </div>
         </div>
-        <div class="flex-1 flex flex-col items-center justify-center p-8 text-center" x-show="selectedAddonEditName === null">
-          <div class="text-sm font-semibold text-gray-500 dark:text-dark-400 mb-3">Редактор шаблонов промптов</div>
-          <div class="text-xs text-gray-400 dark:text-dark-500 space-y-1 max-w-sm">
-            <p>Шаблоны промптов определяются аддонами.</p>
-            <p>Каждый аддон содержит список категорий — блоков, из которых состоит промпт.</p>
-            <p class="pt-2">• Выберите аддон слева для просмотра</p>
-            <p>• Включите/выключите аддон в списке выбора</p>
-            <p>• Чтобы добавить новый шаблон, создайте аддон в папке addons/</p>
+        <!-- Empty state -->
+        <div class="flex-1 flex flex-col items-center justify-center p-6 text-center" x-show="!selectedEditIsUser && !selectedEditName">
+          <div class="text-sm font-semibold text-gray-500 dark:text-dark-400 mb-2">Редактор шаблонов промптов</div>
+          <div class="text-xs text-gray-400 dark:text-dark-500 space-y-1 max-w-xs">
+            <p>Выберите аддон или пользовательский шаблон слева для просмотра или редактирования.</p>
+            <p class="pt-2">Нажмите «+ Новый шаблон» чтобы создать свой.</p>
+            <p class="pt-2">Созданные шаблоны появятся в разделе «Мои шаблоны».</p>
           </div>
         </div>
       </div>

@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"time"
 )
 
@@ -372,24 +371,6 @@ func (r *Repo) DeleteAiType(id int) error {
 
 // ─── Seed ───
 
-type AiTemplateSeed struct {
-	Name       string
-	Categories string
-	Enabled    bool
-}
-
-func DefaultAiTypeSeeds() []AiTemplateSeed {
-	return []AiTemplateSeed{
-		{"Стандартный", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`, true},
-		{"NovelAI/Pony", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Theme","tags":"","order":4},{"name":"Environment","tags":"","order":5},{"name":"Clothing","tags":"","order":6},{"name":"Pose","tags":"","order":7},{"name":"Action Detail","tags":"","order":8}]`, true},
-		{"Аниме", `[{"name":"Персонаж","tags":"","order":0},{"name":"Действие","tags":"","order":1},{"name":"Стиль","tags":"","order":2},{"name":"Окружение","tags":"","order":3},{"name":"Освещение","tags":"","order":4},{"name":"Настроение","tags":"","order":5},{"name":"Композиция","tags":"","order":6},{"name":"Качество","tags":"","order":7}]`, false},
-		{"Flux", `[{"name":"Subject","tags":"","order":0},{"name":"Environment","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Composition","tags":"","order":4},{"name":"Details","tags":"","order":5}]`, false},
-		{"Stable Diffusion", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`, true},
-		{"DALL-E 3", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6}]`, false},
-		{"Midjourney", `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Environment","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Mood","tags":"","order":4},{"name":"Composition","tags":"","order":5},{"name":"--ar","tags":"","order":6},{"name":"--s","tags":"","order":7},{"name":"--v","tags":"","order":8},{"name":"--style","tags":"","order":9}]`, false},
-	}
-}
-
 func (r *Repo) SeedDefaultPreset() error {
 	var count int
 	r.db.QueryRow(`SELECT COUNT(*) FROM tag_presets WHERE name = 'Quality Only'`).Scan(&count)
@@ -402,35 +383,4 @@ func (r *Repo) SeedDefaultPreset() error {
 
 	_, err := r.SavePreset("Quality Only", positive, negative)
 	return err
-}
-
-func (r *Repo) SeedDefaultAiTypes() error {
-	var count int
-	r.db.QueryRow(`SELECT COUNT(*) FROM ai_types`).Scan(&count)
-	if count == 0 {
-		defaults := DefaultAiTypeSeeds()
-		for i, d := range defaults {
-			if _, err := r.CreateAiType(d.Name, d.Categories, d.Enabled, i, ", "); err != nil {
-				return fmt.Errorf("seed ai_type %s: %w", d.Name, err)
-			}
-		}
-		return nil
-	}
-	r.db.QueryRow(`SELECT COUNT(*) FROM ai_types WHERE categories = ''`).Scan(&count)
-	if count == 0 {
-		return nil
-	}
-	fill := map[string]string{
-		"Стандартный":      `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`,
-		"NovelAI/Pony":     `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Theme","tags":"","order":4},{"name":"Environment","tags":"","order":5},{"name":"Clothing","tags":"","order":6},{"name":"Pose","tags":"","order":7},{"name":"Action Detail","tags":"","order":8}]`,
-		"Аниме":            `[{"name":"Персонаж","tags":"","order":0},{"name":"Действие","tags":"","order":1},{"name":"Стиль","tags":"","order":2},{"name":"Окружение","tags":"","order":3},{"name":"Освещение","tags":"","order":4},{"name":"Настроение","tags":"","order":5},{"name":"Композиция","tags":"","order":6},{"name":"Качество","tags":"","order":7}]`,
-		"Flux":             `[{"name":"Subject","tags":"","order":0},{"name":"Environment","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Composition","tags":"","order":4},{"name":"Details","tags":"","order":5}]`,
-		"Stable Diffusion": `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6},{"name":"Quality","tags":"","order":7}]`,
-		"DALL-E 3":         `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Style","tags":"","order":2},{"name":"Setting","tags":"","order":3},{"name":"Lighting","tags":"","order":4},{"name":"Mood","tags":"","order":5},{"name":"Composition","tags":"","order":6}]`,
-		"Midjourney":       `[{"name":"Subject","tags":"","order":0},{"name":"Action","tags":"","order":1},{"name":"Environment","tags":"","order":2},{"name":"Lighting","tags":"","order":3},{"name":"Mood","tags":"","order":4},{"name":"Composition","tags":"","order":5},{"name":"--ar","tags":"","order":6},{"name":"--s","tags":"","order":7},{"name":"--v","tags":"","order":8},{"name":"--style","tags":"","order":9}]`,
-	}
-	for name, cats := range fill {
-		r.db.Exec(`UPDATE ai_types SET categories = ? WHERE name = ? AND categories = ''`, cats, name)
-	}
-	return nil
 }

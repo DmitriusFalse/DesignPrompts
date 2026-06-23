@@ -182,10 +182,6 @@ func Init(dbPath string) (*sql.DB, error) {
 	if err := repo.SeedDefaultPreset(); err != nil {
 		return nil, fmt.Errorf("seed presets: %w", err)
 	}
-	if err := repo.SeedDefaultAiTypes(); err != nil {
-		return nil, fmt.Errorf("seed ai_types: %w", err)
-	}
-
 	// Drop old pack tables
 	for _, t := range []string{"tags", "files", "packs", "tree_cache"} {
 		if _, err := db.Exec("DROP TABLE IF EXISTS " + t); err != nil {

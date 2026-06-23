@@ -1,5 +1,6 @@
 name: Flux
 version: "1.0"
+type: box
 categories:
     - id: 1
       category: Subject
