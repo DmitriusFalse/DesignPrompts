@@ -3,18 +3,18 @@ version: "1.0"
 type: box
 categories:
     - id: 1
-      category: Персонаж
+      category: Character
     - id: 2
-      category: Действие
+      category: Action
     - id: 3
-      category: Стиль
+      category: Style
     - id: 4
-      category: Окружение
+      category: Environment
     - id: 5
-      category: Освещение
+      category: Lighting
     - id: 6
-      category: Настроение
+      category: Mood
     - id: 7
-      category: Композиция
+      category: Composition
     - id: 8
-      category: Качество
+      category: Quality

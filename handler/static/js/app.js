@@ -43,6 +43,150 @@ const CHIP_COLORS = Array.from({ length: 100 }, (_, i) => {
   return `hsl(${h.toFixed(1)}, 55%, 80%)`;
 });
 
+const ENGLISH = {
+  "app.title": "Design Prompts",
+  "tools.special": "Tools:",
+  "tooltip.break_btn": "Break",
+  "tooltip.grouping_btn": "Group",
+  "theme.auto": "Auto",
+  "theme.dark": "Dark",
+  "theme.light": "Light",
+  "settings.title": "Settings",
+  "settings.app_settings": "App Settings",
+  "settings.port": "Port",
+  "settings.tags_path": "Tags Path",
+  "settings.db_path": "DB Path",
+  "settings.log_level": "Log Level",
+  "settings.logs_dir": "Logs Dir",
+  "settings.back": "Back",
+  "settings.save": "Save",
+  "settings.saved": "Settings saved (restart required for some changes)",
+  "tag.copy": "Copy",
+  "tag.neg": "Negative",
+  "workspace.canvas": "Canvas",
+  "workspace.positive_prompt": "Positive Prompt",
+  "workspace.prompts": "Prompts",
+  "prompt.positive": "Positive",
+  "prompt.negative": "Negative",
+  "prompt.copy": "📋",
+  "actions.clear_tags": "Clear",
+  "modal.loading.title": "Loading tags...",
+  "toast.copied": "Copied",
+  "block.1": "Subject",
+  "block.2": "Action, Pose & Expression",
+  "block.3": "Environment & Background",
+  "block.4": "Lighting",
+  "block.5": "Style & Medium",
+  "block.6": "Camera, Angle & Composition",
+  "block.7": "Color Palette & Mood",
+  "block.8": "Quality Boosters",
+  "block.9": "Negative Prompt",
+  "block.10": "Negative Prompt",
+  "comfy.enable": "Enable ComfyUI Generation",
+  "comfy.address": "ComfyUI Address",
+  "comfy.save_path": "Save Path",
+  "comfy.resolutions": "Resolutions (one per line)",
+  "comfy.resolutions_hint": "Format: Name#WIDTHxHEIGHT, e.g. Square#512x512",
+  "comfy.workflow": "Workflow",
+  "comfy.checkpoint": "Model (CKPT)",
+  "comfy.steps": "Steps (STEPS)",
+  "comfy.cfg": "CFG",
+  "comfy.sampler": "Sampler",
+  "comfy.scheduler": "Scheduler",
+  "comfy.resolution": "Resolution",
+  "comfy.generate": "Generate",
+  "comfy.generating": "Generating...",
+  "comfy.error": "Error",
+  "comfy.no_workflow": "No workflows",
+  "comfy.result": "Result",
+  "comfy.seed": "Seed",
+  "comfy.seed_fix": "Fixed Seed",
+  "comfy.group_main": "Main",
+  "comfy.group_extra": "Extra",
+  "comfy.restore_history": "Restore History",
+  "comfy.restore_history_hint": "Scans the save folder for PNGs with generation metadata",
+  "comfy.restore_history_btn": "Scan",
+  "comfy.restoring": "Scanning...",
+  "comfy.restore_history_done": "Added {n} images",
+  "comfy.restore_history_empty": "No PNGs with metadata found",
+  "preview.title": "Past Generations",
+  "preview.placeholder": "Click Generate",
+  "preview.viewer.close": "Close",
+  "main.add_tag": "+Tag",
+  "main.modal_title": "Add Tag",
+  "main.edit_title": "Edit Tag",
+  "main.tag_name": "Tag Name",
+  "main.full_text": "Full Text (optional)",
+  "main.category": "Category",
+  "main.subcategory": "Subcategory",
+  "main.group_empty": "— Empty —",
+  "main.add_group": "+Group",
+  "main.add_group_title": "Add Group",
+  "main.group_name": "Group Name",
+  "main.confirm_delete_group": "Delete group \"{name}\"? Tags will remain without a group.",
+  "main.save": "Save",
+  "main.cancel": "Cancel",
+  "main.delete": "Delete",
+  "main.edit": "Edit",
+  "tooltip.new_canvas": "Create a new empty canvas",
+  "tooltip.save_canvas": "Save current canvas",
+  "tooltip.rename_canvas": "Rename canvas",
+  "tooltip.break_title": "BREAK Separator",
+  "tooltip.break_desc": "Drag onto the canvas between tags. Tags before BREAK form one block, after — another.",
+  "tooltip.grouping_title": "Tag Grouping",
+  "tooltip.grouping_desc": "Drag onto canvas, then drop tags inside. Wraps tags in parentheses: (tag1 tag2 ...)",
+  "tooltip.dynamic_btn": "Dynamic Prompt",
+  "tooltip.dynamic_title": "Dynamic Prompt",
+  "tooltip.dynamic_desc": "Drag onto canvas. Drop tags into from/to slots. [from:to:when] — switch tag at when (0.0-1.0).",
+  "dynamic.from": "from",
+  "tooltip.manager": "Manage saved canvases",
+  "tooltip.theme": "Change theme",
+  "tooltip.lang": "Switch language",
+  "tooltip.settings": "App settings",
+  "tooltip.comfy": "Enable ComfyUI generation",
+  "tooltip.clear_pos": "Clear all tags from positive prompt",
+  "tooltip.clear_neg": "Clear all tags from negative prompt",
+  "tooltip.prompts_toggle": "Expand/collapse prompt editor",
+  "tooltip.copy_pos": "Copy positive prompt",
+  "tooltip.copy_neg": "Copy negative prompt",
+  "tooltip.generate": "Run generation",
+  "tooltip.comfy_refresh": "Refresh generation data",
+  "tooltip.main_add_tag": "Add a custom tag to this category",
+  "tooltip.main_add_group": "Create a tag group in this category",
+  "tooltip.install": "Install app",
+  "tooltip.sidebar_main": "Main — custom tags",
+  "tooltip.edit_chip": "Edit tag",
+  "tooltip.weight": "Chip weight",
+  "tooltip.restore": "Restore prompt from this image",
+  "tooltip.log_level": "Log level: debug for verbose output",
+  "tooltip.structure": "Switch prompt structure",
+  "tooltip.save_as": "Save canvas as new",
+  "canvas.save_title": "Save",
+  "canvas.save_name": "Name",
+  "canvas.save": "Save",
+  "canvas.save_as": "Save As",
+  "canvas.cancel": "Cancel",
+  "canvas.save_success": "Saved",
+  "canvas.manager": "Canvases",
+  "canvas.manager_title": "Canvases",
+  "canvas.empty": "No saved canvases",
+  "canvas.rename_title": "Rename Canvas",
+  "canvas.rename": "Rename",
+  "canvas.new_title": "New Canvas",
+  "canvas.new_done": "New canvas created",
+  "canvas.copied": "Prompt copied",
+  "canvas.select_prompt": "Select a canvas from the list",
+  "chip.edit_title": "Edit Tag",
+  "chip.tag_name": "Tag Name",
+  "chip.full_text": "Full Text",
+  "chip.category": "Group",
+  "chip.save": "Save",
+  "chip.cancel": "Cancel",
+  "donate.title": "This simple app was made just for fun. Want to support the author? Toss a coin on Boosty",
+  "donate.short1": "Toss a coin",
+  "donate.short2": "on Boosty",
+};
+
 function app() {
   return {
     pwaInstallable: false,
@@ -51,22 +195,10 @@ function app() {
     // Theme: 'auto', 'dark', 'light'
     theme: localStorage.getItem('theme') || 'auto',
 
-    // i18n
-    lang: localStorage.getItem('lang') || ((navigator.language || '').startsWith('ru') ? 'ru' : 'en'),
-    translations: {},
+    translations: ENGLISH,
 
     t(key) {
       return this.translations[key] || key;
-    },
-
-    async loadTranslations() {
-      try {
-        const res = await fetch(`/static/i18n/${this.lang}.json`);
-        this.translations = await res.json();
-      } catch (e) {
-        console.error('Failed to load translations:', e);
-        this.translations = {};
-      }
     },
 
 
@@ -247,7 +379,6 @@ function app() {
     // ─── Init ───
 
     async init() {
-      await this.loadTranslations();
       this.loadDisabledAddons();
       await this.loadAddons();
       document.addEventListener('beforeinstallprompt', (e) => {
@@ -569,7 +700,7 @@ function app() {
         if (name === 'BREAK') {
           chip = { name: 'BREAK', prompt_text: 'BREAK', category: 'meta', subcategory: '', block_id: 1, _key: 'brk-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6) };
         } else if (name === 'GROUP') {
-          chip = { _key: 'grp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6), name: 'группа', category: 'group', prompt_text: null, subcategory: '', block_id: targetBlockId, _groupChildren: [], weight: null };
+          chip = { _key: 'grp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6), name: 'group', category: 'group', prompt_text: null, subcategory: '', block_id: targetBlockId, _groupChildren: [], weight: null };
         } else if (name === 'DYNAMIC') {
           chip = { _key: 'dyn-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6), name: 'dynamic', category: 'dynamic', block_id: targetBlockId, from_tag: null, to_tag: null, when: 0.5, weight: null };
         } else if (ds.isTagSource && ds.tagData) {
@@ -859,7 +990,7 @@ function app() {
     onBlockDrop(ev, block) {
       ev.preventDefault();
       if (!this.blockDragState || this.blockDragState.id === block.id) {
-        // Если это перетаскивание чипа/тега (не блока), перенаправляем в onDrop
+        // If it's a chip/tag drag (not a block), delegate to onDrop
         if (this.dragState && !this.blockDragState) {
           this.onDrop(ev, 'positive');
           return;
@@ -1070,7 +1201,6 @@ function app() {
       return this.customMainTags.filter(t => {
         if (t.block_id !== blockId) return false;
         if (!t.subcategory) return false;
-        if (!t.structures || !t.structures.length) return true;
         if (!this._tagVisibleForCurrent(t.structures)) return false;
         return !this.groupExists(blockId, t.subcategory);
       });
@@ -1238,7 +1368,7 @@ function app() {
     // ─── Edit Chip ───
 
     openEditChip(chip) {
-      // Если чип из кастомного тега — открываем Main tag modal (с полным редактированием)
+      // If chip is a custom tag — open Main tag modal (full editing)
       if (chip.category === 'custom_main') {
         const tag = this.customMainTags.find(t => t.tag_name === chip.name);
         if (tag) {
@@ -1455,7 +1585,7 @@ function app() {
 
     get allTemplates() {
       const addonItems = this.addons
-        .filter(a => this.addonType(a.info.name) !== 'menu' && !this.isAddonDisabled(a.info.name))
+        .filter(a => this.addonType(a.info.name) !== 'menu')
         .map(a => ({ type: 'addon', id: a.info.name, name: a.info.name, disabled: false }));
       const userItems = (this.userTemplates || [])
         .filter(t => !this.addons.some(a => a.info.name === t.name))
@@ -1578,7 +1708,7 @@ function app() {
       if (!text) return;
       try {
         await navigator.clipboard.writeText(text);
-        this.showToast(this.t('canvas.copied') || 'Промпт скопирован');
+        this.showToast(this.t('canvas.copied') || 'Prompt copied');
       } catch (e) {
         console.error('copy manager prompt:', e);
       }
@@ -1711,7 +1841,7 @@ function app() {
       if (!name) return;
       try {
         await navigator.clipboard.writeText(name);
-        this.showToast((this.t('toast.copied') || 'Скопировано') + ': ' + name);
+        this.showToast((this.t('toast.copied') || 'Copied') + ': ' + name);
       } catch (e) {
         console.error('copyTagName:', e);
       }
@@ -1734,7 +1864,7 @@ function app() {
       if (!text) return;
       try {
         await navigator.clipboard.writeText(text);
-        this.showToast((this.t('toast.copied') || 'Скопировано: ') + text.substring(0, 30) + (text.length > 30 ? '…' : ''));
+        this.showToast((this.t('toast.copied') || 'Copied: ') + text.substring(0, 30) + (text.length > 30 ? '…' : ''));
       } catch (e) {
         console.error('copy:', e);
       }

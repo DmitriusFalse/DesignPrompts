@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html :lang="lang" x-data="app()" :class="{ 'dark': isDark }" @contextmenu.prevent @keydown.window.escape="closeManager()" @keydown.window.prevent.alt.1="copyPrompt('positive')" @keydown.window.prevent.alt.2="copyPrompt('negative')">
+<html lang="en" x-data="app()" :class="{ 'dark': isDark }" @contextmenu.prevent @keydown.window.escape="closeManager()" @keydown.window.prevent.alt.1="copyPrompt('positive')" @keydown.window.prevent.alt.2="copyPrompt('negative')">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,16 +30,16 @@
       <div x-show="show" class="tooltip" x-text="t('tooltip.manager')"></div>
     </span>
     <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-      <button @click="openTemplateEditor()" class="px-2 py-0.5 text-xs rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer whitespace-nowrap">🧠 <span>Шаблоны</span></button>
-      <div x-show="show" class="tooltip">Редактор шаблонов промптов</div>
+      <button @click="openTemplateEditor()" class="px-2 py-0.5 text-xs rounded border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors cursor-pointer whitespace-nowrap">🧠 <span>Templates</span></button>
+      <div x-show="show" class="tooltip">Prompt Template Editor</div>
     </span>
     <div class="flex-1"></div>
     <div class="flex items-center gap-1.5">
       <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
         <button @click="openExternal('https://boosty.to/sir.geronis/donate')" class="donate-link inline-flex items-center gap-1 px-0.5 rounded self-center cursor-pointer">
         <span class="flex flex-col text-[10px] leading-tight" style="margin-top:5px">
-          <span x-text="t('donate.short1')">Подкинуть копейку</span>
-          <span x-text="t('donate.short2')">на Boosty</span>
+          <span x-text="t('donate.short1')">Toss a coin</span>
+          <span x-text="t('donate.short2')">on Boosty</span>
         </span>
         <svg class="donate-heart" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       </button>
@@ -72,13 +72,6 @@
           <button @click="theme='light';localStorage.setItem('theme','light');close()" class="w-full text-left px-2 py-0.5 text-xs flex items-center gap-1 rounded" :class="theme==='light' ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'"><span>☀</span><span x-text="t('theme.light')"></span></button>
         </div>
       </div>
-      <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
-      <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" @click="lang = (lang === 'ru' ? 'en' : 'ru'); localStorage.setItem('lang', lang); loadTranslations()" class="inline-flex items-center gap-0.5 cursor-pointer select-none text-sm font-medium leading-none self-center py-0.5 relative">
-        <span :class="{'text-blue-600 dark:text-blue-400': lang === 'ru', 'text-gray-400 dark:text-dark-400': lang !== 'ru'}">RU</span>
-        <span class="w-px h-3 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
-        <span :class="{'text-blue-600 dark:text-blue-400': lang === 'en', 'text-gray-400 dark:text-dark-400': lang !== 'en'}">EN</span>
-        <div x-show="show" class="tooltip" x-text="t('tooltip.lang')"></div>
-      </span>
       <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex self-center" x-show="pwaInstallable">
         <button @click="installPwa()" class="inline-flex items-center text-gray-400 dark:text-dark-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-0.5">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -86,7 +79,7 @@
         <div x-show="show" class="tooltip" x-text="t('tooltip.install')"></div>
       </span>
       <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
-      <span class="text-xs text-gray-400 dark:text-dark-400 font-medium self-center select-none mr-1">Генерация</span>
+      <span class="text-xs text-gray-400 dark:text-dark-400 font-medium self-center select-none mr-1">Generation</span>
       <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex self-center">
         <label class="toggle self-center" x-bind:class="{ 'toggle-active': comfyEnabled }">
           <input type="checkbox" class="toggle-input" x-model="comfyEnabled" @change="toggleComfy">
@@ -276,7 +269,7 @@
                   </div>
                 </div>
               </template>
-              <div x-show="addonTagGroups(cat.category).length === 0" class="px-6 py-2 text-xs text-gray-400 dark:text-dark-500 italic">Нет тегов</div>
+              <div x-show="addonTagGroups(cat.category).length === 0" class="px-6 py-2 text-xs text-gray-400 dark:text-dark-500 italic">No tags</div>
             </div>
           </div>
         </template>
@@ -304,7 +297,7 @@
       <div class="p-4 border-b border-gray-200 dark:border-dark-600 overflow-y-auto min-h-0 flex-1 flex flex-col gap-4">
         <!-- Row 1: canvas name -->
         <div class="flex items-center gap-2 mb-1">
-          <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wide"><span x-text="t('workspace.canvas')">Холст</span><span x-show="canvasName"><span x-text="': ' + canvasName"></span></span></div>
+          <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wide"><span x-text="t('workspace.canvas')">Canvas</span><span x-show="canvasName"><span x-text="': ' + canvasName"></span></span></div>
         </div>
         <!-- Row 2: toolbar -->
         <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -338,7 +331,7 @@
             <div x-show="show" class="tooltip" x-text="t('tooltip.rename_canvas')"></div>
           </div>
           <!-- Structure label + dropdown -->
-          <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap">Шаблон:</span>
+          <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap">Template:</span>
           <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
             <div class="relative" x-data="dropdown">
               <button @click="toggle" @click.outside="close" class="toolbar-btn py-1 flex items-center justify-between" style="min-width:120px;max-width:150px">
@@ -358,7 +351,7 @@
           </span>
         </div>
         <div class="flex items-center gap-2 mb-1">
-          <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap" x-text="t('tools.special')">Инструменты:</span>
+          <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap" x-text="t('tools.special')">Tools:</span>
             <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
               <span draggable="true" @dragstart="dragBreakSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none" x-text="t('tooltip.break_btn')">Break</span>
               <div x-show="show" class="tooltip tooltip-wide" >
@@ -367,7 +360,7 @@
               </div>
             </div>
             <div x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-              <span draggable="true" @dragstart="dragGroupSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none" x-text="t('tooltip.grouping_btn')">Группировка</span>
+              <span draggable="true" @dragstart="dragGroupSource($event)" @dragend="onDragEnd($event)" class="break-btn toolbar-btn cursor-grab select-none" x-text="t('tooltip.grouping_btn')">Group</span>
               <div x-show="show" class="tooltip tooltip-wide" >
                 <div class="font-bold mb-1" x-text="t('tooltip.grouping_title')"></div>
                 <p class="text-gray-200" x-text="t('tooltip.grouping_desc')"></p>
@@ -383,14 +376,14 @@
           </div>
         <!-- Positive Prompt label -->
         <div class="flex items-center gap-2">
-          <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wide" x-text="t('workspace.positive_prompt')">Позитивный промпт</div>
+          <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wide" x-text="t('workspace.positive_prompt')">Positive Prompt</div>
           <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
-            <button @click="clearPositiveChips()" class="px-2 py-0.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" x-text="t('actions.clear_tags')">Очистить</button>
+            <button @click="clearPositiveChips()" class="px-2 py-0.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" x-text="t('actions.clear_tags')">Clear</button>
             <div x-show="show" class="tooltip" x-text="t('tooltip.clear_pos')"></div>
           </span>
           <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex" x-show="blockOrder">
-            <button @click="blockOrder = null" class="px-2 py-0.5 text-xs border border-gray-300 dark:border-dark-500 text-gray-600 dark:text-dark-300 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors">↻ Порядок</button>
-            <div x-show="show" class="tooltip" x-text="t('tooltip.reset_block_order') || 'Сбросить порядок групп'"></div>
+            <button @click="blockOrder = null" class="px-2 py-0.5 text-xs border border-gray-300 dark:border-dark-500 text-gray-600 dark:text-dark-300 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors">↻ Order</button>
+            <div x-show="show" class="tooltip" x-text="t('tooltip.reset_block_order') || 'Reset group order'"></div>
           </span>
         </div>
         <!-- Positive blocks (dynamic from structure) -->
@@ -425,7 +418,10 @@
                               @click="removeChip('positive', ch.name)"
                               :data-chip-key="ch._key">
                           <span x-show="getColorForChip(ch)" class="tag-color-dot" :style="{ '--dot-color': getColorForChip(ch) }"></span>
-                          <span x-text="ch.name" class="max-w-32 truncate"></span>
+                          <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="max-w-32 truncate relative inline-flex">
+                            <span x-text="ch.name" class="truncate"></span>
+                            <div x-show="show && ch.prompt_text && ch.prompt_text !== ch.name" class="tooltip" x-text="ch.prompt_text"></div>
+                          </span>
                           <input type="number" step="0.01" min="0" max="99"
                                  x-model="ch.weight"
                                  @input="notifyChipChange()"
@@ -578,7 +574,7 @@
               </span>
               <span class="count" x-text="'(' + negativeChips.length + ')'"></span>
               <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex ml-auto">
-                <button @click="clearNegativeChips()" class="px-2 py-0.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" x-text="t('actions.clear_tags')">Очистить</button>
+                <button @click="clearNegativeChips()" class="px-2 py-0.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" x-text="t('actions.clear_tags')">Clear</button>
                 <div x-show="show" class="tooltip" x-text="t('tooltip.clear_neg')"></div>
               </span>
             </div>
@@ -590,7 +586,10 @@
                       @click="removeChip('negative', ch.name)"
                       :data-chip-key="ch._key">
                   <span x-show="getColorForChip(ch)" class="tag-color-dot" :style="{ '--dot-color': getColorForChip(ch) }"></span>
-                  <span x-text="ch.name" class="max-w-48 truncate"></span>
+                  <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="max-w-48 truncate relative inline-flex">
+                    <span x-text="ch.name" class="truncate"></span>
+                    <div x-show="show && ch.prompt_text && ch.prompt_text !== ch.name" class="tooltip" x-text="ch.prompt_text"></div>
+                  </span>
                   <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
                     <button @click.stop="openEditChip(ch)" class="chip-btn">✎</button>
                     <div x-show="show" class="tooltip" x-text="t('tooltip.edit_chip')"></div>
@@ -608,7 +607,7 @@
         <button @click="promptsOpen = !promptsOpen" x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="w-full flex items-center justify-between px-2 py-1.5 text-sm font-medium rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors relative">
           <div class="flex items-center gap-2">
             <span x-text="promptsOpen ? '▼' : '▶'" class="text-xs"></span>
-            <span x-text="t('workspace.prompts')">Промпты</span>
+            <span x-text="t('workspace.prompts')">Prompts</span>
           </div>
           <div x-show="show" class="tooltip" x-text="t('tooltip.prompts_toggle')"></div>
         </button>
@@ -616,7 +615,7 @@
           <!-- Positive prompt -->
           <div>
             <div class="flex items-center justify-between mb-1">
-              <span class="text-xs font-semibold" x-text="t('prompt.positive')">Позитивный</span>
+              <span class="text-xs font-semibold" x-text="t('prompt.positive')">Positive</span>
               <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
                 <button @click="copyPrompt('positive')" class="px-2 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700" x-text="t('prompt.copy')">📋</button>
                 <div x-show="show" class="tooltip" x-text="t('tooltip.copy_pos')"></div>
@@ -628,7 +627,7 @@
           <!-- Negative prompt -->
           <div>
             <div class="flex items-center justify-between mb-1">
-              <span class="text-xs font-semibold" x-text="t('prompt.negative')">Негативный</span>
+              <span class="text-xs font-semibold" x-text="t('prompt.negative')">Negative</span>
               <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
                 <button @click="copyPrompt('negative')" class="px-2 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700" x-text="t('prompt.copy')">📋</button>
                 <div x-show="show" class="tooltip" x-text="t('tooltip.copy_neg')"></div>
@@ -654,7 +653,7 @@
     <!-- BOTTOM: Generation (only when comfy enabled) -->
     <template x-if="comfyEnabled">
     <div class="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
-          <div class="gen-group-title" x-text="t('comfy.group_main') || 'Основные'">Основные</div>
+          <div class="gen-group-title" x-text="t('comfy.group_main') || 'Main'">Main</div>
           <div class="gen-row">
             <span class="gen-label" x-text="t('comfy.workflow')">Workflow</span>
             <div class="relative" style="flex:1;max-width:300px" x-data="dropdown">
@@ -677,7 +676,7 @@
             </span>
           </div>
           <div class="gen-row">
-            <span class="gen-label" x-text="t('comfy.checkpoint')">Модель</span>
+            <span class="gen-label" x-text="t('comfy.checkpoint')">Model (CKPT)</span>
             <div class="relative" style="flex:1;max-width:300px" x-data="dropdown">
               <button @click="toggle" @click.outside="close" class="w-full flex items-center justify-between gap-1 px-2 py-1 text-sm rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors">
                 <span class="truncate text-left" x-text="selectedCheckpoint || t('comfy.no_workflow')"></span>
@@ -694,7 +693,7 @@
             </div>
           </div>
           <div class="gen-row">
-            <span class="gen-label" x-text="t('comfy.resolution')">Разрешение</span>
+            <span class="gen-label" x-text="t('comfy.resolution')">Resolution</span>
             <div class="relative" style="flex:1;max-width:300px" x-data="dropdown">
               <button @click="toggle" @click.outside="close" class="w-full flex items-center justify-between gap-1 px-2 py-1 text-sm rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors">
                 <span class="truncate text-left" x-text="selectedResolutionText"></span>
@@ -711,7 +710,7 @@
             </div>
           </div>
           <div class="gen-row">
-            <span class="gen-label" x-text="t('comfy.sampler')">Семплер</span>
+            <span class="gen-label" x-text="t('comfy.sampler')">Sampler</span>
             <div class="relative" style="flex:1;max-width:300px" x-data="dropdown">
               <button @click="toggle" @click.outside="close" class="w-full flex items-center justify-between gap-1 px-2 py-1 text-sm rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors">
                 <span class="truncate text-left" x-text="selectedSampler"></span>
@@ -728,7 +727,7 @@
             </div>
           </div>
           <div class="gen-row">
-            <span class="gen-label" x-text="t('comfy.scheduler')">Шедулер</span>
+            <span class="gen-label" x-text="t('comfy.scheduler')">Scheduler</span>
             <div class="relative" style="flex:1;max-width:300px" x-data="dropdown">
               <button @click="toggle" @click.outside="close" class="w-full flex items-center justify-between gap-1 px-2 py-1 text-sm rounded-lg bg-white dark:bg-dark-600 border border-gray-300 dark:border-dark-500 cursor-pointer transition-colors">
                 <span class="truncate text-left" x-text="selectedScheduler"></span>
@@ -745,7 +744,7 @@
             </div>
           </div>
           <div class="gen-row">
-            <span class="gen-label" x-text="t('comfy.steps')">Шаги</span>
+            <span class="gen-label" x-text="t('comfy.steps')">Steps</span>
             <input type="range" min="1" max="100" x-model.number="steps" class="border rounded">
             <input type="number" min="1" max="100" x-model.number="steps" class="border rounded px-2 py-1 text-sm">
           </div>
@@ -755,13 +754,13 @@
             <input type="number" min="1" max="30" step="0.5" x-model.number="cfg" class="border rounded px-2 py-1 text-sm" style="width:70px">
           </div>
 
-          <div class="gen-group-title" x-text="t('comfy.group_extra') || 'Дополнительно'">Дополнительно</div>
+          <div class="gen-group-title" x-text="t('comfy.group_extra') || 'Extra'">Extra</div>
           <div class="gen-row">
             <span class="gen-label" x-text="t('comfy.seed')">Seed</span>
             <input type="number" x-model.number="seed" min="0" max="2147483647" class="border rounded px-2 py-1 text-sm font-mono bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500" style="width:150px">
             <label class="flex items-center gap-1 text-xs cursor-pointer select-none">
               <input type="checkbox" x-model="seedFixed" class="w-3.5 h-3.5">
-              <span x-text="t('comfy.seed_fix')">Фиксированный Seed</span>
+              <span x-text="t('comfy.seed_fix')">Fixed Seed</span>
             </label>
           </div>
 
@@ -787,7 +786,7 @@
         <!-- RIGHT PREVIEW PANEL -->
         <div class="preview-panel shrink-0" :style="{ width: rightWidth + 'px' }">
           <div class="preview-tabs">
-            <button class="preview-tab" :class="{ active: previewTab === 'images' }" @click="previewTab = 'images'" x-text="t('preview.title')">Прошлые генерации</button>
+            <button class="preview-tab" :class="{ active: previewTab === 'images' }" @click="previewTab = 'images'" x-text="t('preview.title')">Past Generations</button>
           </div>
 
           <div x-show="previewTab === 'images'" class="overflow-y-auto flex-1 p-2 flex flex-wrap gap-2" style="align-content: flex-start;">
@@ -800,7 +799,7 @@
               </div>
             </template>
             <div x-show="generationHistory.length === 0" class="w-full flex items-center justify-center text-gray-400 dark:text-dark-400 text-xs py-8">
-              <span x-text="t('preview.placeholder')">Нажмите Сгенерировать</span>
+              <span x-text="t('preview.placeholder')">Click Generate</span>
             </div>
             <div x-show="generationHistory.length > 0" class="paginator w-full" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 0 4px;width:100%">
               <select x-model="previewPerPage" @change="previewPage = 1" style="font-size:11px;padding:2px 4px;border-radius:4px;border:1px solid var(--c-border);background:var(--c-bg-white);color:var(--c-text-500)">
@@ -832,11 +831,11 @@
   <div x-show="viewerImage" class="fixed inset-0 flex items-center justify-center" style="z-index:9999;background:rgba(0,0,0,0.9)" @click.self="closeViewer()" @keydown.escape.window="closeViewer()" @keydown.left.window="prevImage()" @keydown.right.window="nextImage()">
     <button @click="closeViewer()" style="position:absolute;top:12px;right:12px" class="flex items-center gap-1.5 px-3 py-1.5 rounded bg-black/40 hover:bg-black/60 text-white text-sm cursor-pointer">
       <span>✕</span>
-      <span x-text="t('preview.viewer.close')">Закрыть</span>
+      <span x-text="t('preview.viewer.close')">Close</span>
     </button>
     <button @click="restoreFromCurrentImage()" x-data="tooltip" @mouseenter="enter" @mouseleave="leave" style="position:absolute;top:12px;right:90px" class="flex items-center gap-1.5 px-3 py-1.5 rounded bg-black/40 hover:bg-black/60 text-white text-sm cursor-pointer relative">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></polyline></svg>
-      <span>Восстановить</span>
+      <span>Restore</span>
       <div x-show="show" class="tooltip" x-text="t('tooltip.restore')"></div>
     </button>
     <button @click="prevImage()" x-show="generationHistory.length > 1" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:48px;height:48px" class="flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white text-3xl cursor-pointer">‹</button>
@@ -844,7 +843,7 @@
     <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.7);font-size:14px" class="bg-black/40 px-3 py-1 rounded select-none" x-text="(viewerIndex + 1) + ' / ' + generationHistory.length"></div>
     <div x-show="restoreWarnings.length > 0" style="position:absolute;bottom:50px;left:50%;transform:translateX(-50%)" class="bg-red-900/80 text-red-200 text-xs px-4 py-2 rounded select-none flex flex-col gap-1">
       <template x-for="w in restoreWarnings" :key="w.field">
-        <div><span class="font-semibold" x-text="w.field"></span>: <span x-text="w.value"></span> <span class="text-red-300">(не найдено)</span></div>
+        <div><span class="font-semibold" x-text="w.field"></span>: <span x-text="w.value"></span>         <span class="text-red-300">(not found)</span></div>
       </template>
     </div>
     <img :src="viewerImage" alt="Preview" style="max-width:95vw;max-height:90vh;object-fit:contain" class="select-none">
@@ -980,7 +979,7 @@
       <div class="flex flex-1 min-h-0">
         <div class="w-72 border-r border-gray-200 dark:border-dark-600 flex flex-col">
           <div class="p-3 border-b border-gray-200 dark:border-dark-600">
-            <input type="text" x-model="searchQuery" placeholder="Поиск холстов..." class="w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded bg-white dark:bg-dark-600 text-gray-700 dark:text-dark-200 outline-none focus:border-blue-400 dark:focus:border-blue-500">
+            <input type="text" x-model="searchQuery" placeholder="Search canvases..." class="w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded bg-white dark:bg-dark-600 text-gray-700 dark:text-dark-200 outline-none focus:border-blue-400 dark:focus:border-blue-500">
           </div>
           <div class="overflow-y-auto flex-1 p-3 space-y-2">
             <template x-for="item in filteredSavedPrompts" :key="item.id">
@@ -998,30 +997,30 @@
           <div :style="selectedPrompt?.gen_data ? 'width:100%; max-height:60%; flex-shrink:0' : 'width:260px; height:260px; flex-shrink:0'" class="bg-gray-100 dark:bg-dark-600 rounded-lg overflow-hidden mb-3 flex items-center justify-center self-center">
             <img :src="selectedPrompt?.gen_data ? selectedImageSrc : (isDark ? '/static/no-image-black.png' : '/static/no-image-light.png')" class="w-full h-full object-contain" alt="">
           </div>
-          <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Название:</div>
+          <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Name:</div>
           <input readonly :value="selectedPrompt?.name" class="w-full border rounded px-3 py-2 text-sm font-semibold bg-gray-50 dark:bg-dark-600 border-gray-300 dark:border-dark-500 text-gray-700 dark:text-dark-200 mb-3 outline-none">
-          <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Промпт:</div>
+          <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Prompt:</div>
           <textarea readonly class="w-full border rounded px-3 py-2 text-xs bg-gray-50 dark:bg-dark-600 border-gray-300 dark:border-dark-500 text-gray-700 dark:text-dark-200 mb-3 resize-none outline-none" style="height:80px" x-text="selectedPrompt?.positive_text || ''"></textarea>
           <div x-show="selectedPrompt?.gen_data && selectedGenParams" class="mb-3 w-full">
-            <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Параметры генерации:</div>
+            <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Generation Parameters:</div>
             <div class="text-xs text-gray-600 dark:text-dark-300 space-y-0.5">
-              <div x-show="selectedGenParams?.model"><span class="font-medium">Модель:</span> <span x-text="selectedGenParams?.model"></span></div>
+              <div x-show="selectedGenParams?.model"><span class="font-medium">Model:</span> <span x-text="selectedGenParams?.model"></span></div>
               <div x-show="selectedGenParams?.resolution || selectedGenParams?.steps || selectedGenParams?.cfg">
-                <span x-show="selectedGenParams?.resolution"><span class="font-medium">Разрешение:</span> <span x-text="selectedGenParams?.resolution"></span></span>
-                <span x-show="selectedGenParams?.steps"> | <span class="font-medium">Шаги:</span> <span x-text="selectedGenParams?.steps"></span></span>
+                <span x-show="selectedGenParams?.resolution"><span class="font-medium">Resolution:</span> <span x-text="selectedGenParams?.resolution"></span></span>
+                <span x-show="selectedGenParams?.steps"> | <span class="font-medium">Steps:</span> <span x-text="selectedGenParams?.steps"></span></span>
                 <span x-show="selectedGenParams?.cfg"> | <span class="font-medium">CFG:</span> <span x-text="selectedGenParams?.cfg"></span></span>
               </div>
-              <div x-show="selectedGenParams?.seed"><span class="font-medium">Сид:</span> <span x-text="selectedGenParams?.seed"></span></div>
+              <div x-show="selectedGenParams?.seed"><span class="font-medium">Seed:</span> <span x-text="selectedGenParams?.seed"></span></div>
             </div>
           </div>
           <div class="flex items-center gap-3 mt-auto pt-3">
-            <button @click="copyManagerPrompt()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer">📋 Копировать</button>
-            <button @click="openSelectedPrompt()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer">📂 Открыть</button>
-            <button @click="deleteSelectedPrompt()" class="px-3 py-1.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer">🗑 Удалить</button>
+            <button @click="copyManagerPrompt()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer">📋 Copy</button>
+            <button @click="openSelectedPrompt()" class="px-3 py-1.5 text-xs border border-gray-300 dark:border-dark-500 rounded hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors cursor-pointer">📂 Open</button>
+            <button @click="deleteSelectedPrompt()" class="px-3 py-1.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer">🗑 Delete</button>
           </div>
         </div>
         <div class="flex-1 flex items-center justify-center p-5" x-show="!selectedPrompt">
-          <span class="text-gray-400 dark:text-dark-400 text-sm" x-text="t('canvas.select_prompt') || 'Выберите холст из списка'"></span>
+          <span class="text-gray-400 dark:text-dark-400 text-sm" x-text="t('canvas.select_prompt') || 'Select a canvas from the list'"></span>
         </div>
       </div>
     </div>
@@ -1032,7 +1031,7 @@
     <div class="absolute inset-0 bg-black/40" @click="templateEditorOpen = false"></div>
     <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl text-sm flex flex-col overflow-hidden" style="width:780px;min-height:520px;max-height:85vh" @click.stop>
       <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-dark-600 shrink-0">
-        <div class="text-base font-semibold">Редактор шаблонов промптов</div>
+        <div class="text-base font-semibold">Prompt Template Editor</div>
         <button @click="templateEditorOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg leading-none cursor-pointer">✕</button>
       </div>
       <div class="flex flex-1 min-h-0">
@@ -1040,7 +1039,7 @@
         <div class="w-44 border-r border-gray-200 dark:border-dark-600 flex flex-col shrink-0">
           <div class="overflow-y-auto flex-1">
             <!-- Addons section -->
-            <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 px-3 pt-3 pb-1">Аддоны:</div>
+            <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 px-3 pt-3 pb-1">Addons:</div>
             <template x-for="a in sortedAddons" :key="'addon'+a.info.name">
               <div @click="selectEditTemplate(a.info.name, false)" class="flex items-center px-3 py-2 border-b border-gray-100 dark:border-dark-700 cursor-pointer transition-colors text-sm gap-2" :class="[!selectedEditIsUser && selectedEditName === a.info.name ? 'border-l-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-l-0 hover:bg-gray-50 dark:hover:bg-dark-600', isAddonDisabled(a.info.name) ? 'opacity-50 line-through' : '']">
                 <span class="text-base shrink-0" x-text="a.info.icon || '📦'"></span>
@@ -1051,7 +1050,7 @@
             <!-- User templates -->
             <template x-if="(userTemplates||[]).filter(t => !addons.some(a => a.info.name === t.name)).length">
               <div>
-                <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 px-3 pt-3 pb-1">Мои шаблоны:</div>
+                <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 px-3 pt-3 pb-1">My Templates:</div>
                 <template x-for="t in (userTemplates||[]).filter(t => !addons.some(a => a.info.name === t.name))" :key="'user'+t.name">
                   <div @click="selectEditTemplate(t.name, true)" class="flex items-center px-3 py-2 border-b border-gray-100 dark:border-dark-700 cursor-pointer transition-colors text-sm gap-2"
                        :class="[selectedEditIsUser && selectedEditName === t.name ? 'border-l-2 border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-l-0 hover:bg-gray-50 dark:hover:bg-dark-600', !t.enabled ? 'opacity-50 line-through' : '']">
@@ -1063,7 +1062,7 @@
             </template>
           </div>
           <div class="p-3 border-t border-gray-200 dark:border-dark-600 space-y-2">
-            <button @click="newUserTemplate()" class="w-full px-3 py-1.5 text-xs font-medium rounded border border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer">+ Новый шаблон</button>
+            <button @click="newUserTemplate()" class="w-full px-3 py-1.5 text-xs font-medium rounded border border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer">+ New Template</button>
           </div>
         </div>
         <!-- ── Right panel ── -->
@@ -1073,7 +1072,7 @@
             <template x-if="!selectedEditIsUser">
               <label class="flex items-center gap-2 text-xs cursor-pointer select-none">
                 <input type="checkbox" :checked="!isAddonDisabled(selectedEditName)" @change="toggleAddonDisabled(selectedEditName)" class="w-3.5 h-3.5">
-                <span class="text-xs font-medium text-gray-700 dark:text-dark-200">Активен</span>
+                <span class="text-xs font-medium text-gray-700 dark:text-dark-200">Active</span>
               </label>
             </template>
             <!-- Template editing form (only for user templates) -->
@@ -1081,7 +1080,7 @@
               <div class="space-y-4">
                 <!-- Active (top) -->
                 <div class="flex items-center gap-3">
-                  <span class="text-xs font-medium text-gray-700 dark:text-dark-200">Активен</span>
+                  <span class="text-xs font-medium text-gray-700 dark:text-dark-200">Active</span>
                   <label class="toggle self-center" x-bind:class="{ 'toggle-active': templateEditForm.enabled }">
                     <input type="checkbox" class="toggle-input" x-model="templateEditForm.enabled">
                     <span class="toggle-track"><span class="toggle-knob"></span></span>
@@ -1089,53 +1088,53 @@
                 </div>
                 <!-- Name -->
                 <div>
-                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Название:</div>
-                  <input type="text" x-model="templateEditForm.name" placeholder="Название шаблона" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Name:</div>
+                  <input type="text" x-model="templateEditForm.name" placeholder="Template name" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
                 </div>
                 <!-- Separator -->
                 <div>
                   <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1" x-data="tooltip" @mouseenter="enter" @mouseleave="leave">
-                    Разделитель:
-                    <div x-show="show" class="tooltip">Символ между категориями</div>
+                    Separator:
+                    <div x-show="show" class="tooltip">Character between categories</div>
                   </div>
                   <input type="text" x-model="templateEditForm.separator" placeholder=", " class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
                 </div>
                 <!-- Categories -->
                 <div>
                   <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs font-semibold text-gray-500 dark:text-dark-400">Категории:</span>
-                    <button @click="addTemplateCategory()" class="text-xs px-2 py-0.5 rounded border border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors cursor-pointer">+ Добавить</button>
+                    <span class="text-xs font-semibold text-gray-500 dark:text-dark-400">Categories:</span>
+                    <button @click="addTemplateCategory()" class="text-xs px-2 py-0.5 rounded border border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors cursor-pointer">+ Add</button>
                   </div>
                   <div class="space-y-1 max-h-56 overflow-y-auto pr-1">
                     <template x-for="(cat, idx) in templateEditForm.categories" :key="idx">
                       <div>
                         <div class="flex items-center gap-1 px-2 py-1.5 rounded border border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-600">
-                          <span @click="moveTemplateCategory(idx, -1)" class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 select-none shrink-0 cursor-pointer" title="Переместить вверх">▲</span>
-                          <span @click="moveTemplateCategory(idx, 1)" class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 select-none shrink-0 cursor-pointer" title="Переместить вниз">▼</span>
-                          <span x-show="templateEditCategoryEditIdx !== idx" @dblclick="templateEditCategoryEditIdx = idx" class="flex-1 text-sm min-w-0 truncate cursor-pointer" x-text="cat.name || 'Новая категория'" title="Дважды кликните для редактирования"></span>
-                          <input x-show="templateEditCategoryEditIdx === idx" type="text" x-model="cat.name" placeholder="Название" class="flex-1 text-sm bg-white dark:bg-dark-500 border rounded px-1.5 py-0.5 border-gray-300 dark:border-dark-400 min-w-0 outline-none">
+                          <span @click="moveTemplateCategory(idx, -1)" class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 select-none shrink-0 cursor-pointer" title="Move up">▲</span>
+                          <span @click="moveTemplateCategory(idx, 1)" class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 select-none shrink-0 cursor-pointer" title="Move down">▼</span>
+                          <span x-show="templateEditCategoryEditIdx !== idx" @dblclick="templateEditCategoryEditIdx = idx" class="flex-1 text-sm min-w-0 truncate cursor-pointer" x-text="cat.name || 'New category'" title="Double-click to edit"></span>
+                          <input x-show="templateEditCategoryEditIdx === idx" type="text" x-model="cat.name" placeholder="Name" class="flex-1 text-sm bg-white dark:bg-dark-500 border rounded px-1.5 py-0.5 border-gray-300 dark:border-dark-400 min-w-0 outline-none">
                           <div class="flex items-center gap-0.5 shrink-0">
-                            <button @click="templateEditCategoryEditIdx = (templateEditCategoryEditIdx === idx ? -1 : idx)" class="text-xs px-1 py-0.5 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer" title="Редактировать категорию">✎</button>
-                            <button @click="removeTemplateCategory(idx)" class="text-xs px-1 py-0.5 rounded text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer" title="Удалить категорию">×</button>
+                            <button @click="templateEditCategoryEditIdx = (templateEditCategoryEditIdx === idx ? -1 : idx)" class="text-xs px-1 py-0.5 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer" title="Edit category">✎</button>
+                            <button @click="removeTemplateCategory(idx)" class="text-xs px-1 py-0.5 rounded text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer" title="Delete category">×</button>
                           </div>
                         </div>
                         <!-- Tags by default (shown when editing) -->
                         <div x-show="templateEditCategoryEditIdx === idx" class="ml-6 mb-1">
-                          <textarea x-model="cat.tags" placeholder="Теги по умолчанию: quality, masterpiece..." class="w-full border rounded px-2 py-1 text-xs bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 resize-none" rows="1" @input="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+                          <textarea x-model="cat.tags" placeholder="Default tags: quality, masterpiece..." class="w-full border rounded px-2 py-1 text-xs bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 resize-none" rows="1" @input="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
                         </div>
                     </template>
-                    <div x-show="!templateEditForm.categories.length" class="text-xs text-gray-400 text-center py-4">Нет категорий. Нажмите «+ Добавить»</div>
+                    <div x-show="!templateEditForm.categories.length" class="text-xs text-gray-400 text-center py-4">No categories. Click "+ Add" to create one.</div>
                   </div>
                 </div>
                 <!-- Preview -->
                 <div>
-                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Предпросмотр:</div>
+                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Preview:</div>
                   <div class="w-full border rounded px-3 py-2 text-xs bg-gray-50 dark:bg-dark-600 border-gray-200 dark:border-dark-500 text-gray-600 dark:text-dark-300 min-h-[2em] break-words" x-text="templatePreview || '—'"></div>
                 </div>
                 <!-- Save / Delete buttons -->
                 <div class="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-dark-700">
-                  <button @click="saveUserTemplate()" class="px-3 py-1.5 text-xs font-medium rounded bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer">💾 Сохранить</button>
-                  <button @click="deleteUserTemplate()" class="px-3 py-1.5 text-xs font-medium rounded border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer">🗑 Удалить</button>
+                  <button @click="saveUserTemplate()" class="px-3 py-1.5 text-xs font-medium rounded bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer">💾 Save</button>
+                  <button @click="deleteUserTemplate()" class="px-3 py-1.5 text-xs font-medium rounded border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer">🗑 Delete</button>
                 </div>
               </div>
             </template>
@@ -1143,16 +1142,16 @@
             <template x-if="!selectedEditIsUser && selectedEditName">
               <div class="space-y-4">
                 <div>
-                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Название:</div>
+                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Name:</div>
                   <div class="w-full border rounded px-3 py-2 text-sm bg-gray-100 dark:bg-dark-600 border-gray-200 dark:border-dark-500 text-gray-500 dark:text-dark-400" x-text="selectedEditName"></div>
                 </div>
                 <div>
-                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Категории:</div>
+                  <div class="text-xs font-semibold text-gray-500 dark:text-dark-400 mb-1">Categories:</div>
                   <div class="space-y-1 max-h-56 overflow-y-auto pr-1">
                     <template x-for="cat in (addons.find(a => a.info.name === selectedEditName)?.info?.categories || [])" :key="cat.id">
                       <div class="flex items-center gap-1.5 px-3 py-2 rounded border border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-600 text-sm">[<span class="flex-1" x-text="cat.category"></span>]</div>
                     </template>
-                    <div x-show="!(addons.find(a => a.info.name === selectedEditName)?.info?.categories?.length)" class="text-xs text-gray-400 text-center py-4">Нет категорий</div>
+                    <div x-show="!(addons.find(a => a.info.name === selectedEditName)?.info?.categories?.length)" class="text-xs text-gray-400 text-center py-4">No categories</div>
                   </div>
                 </div>
               </div>
@@ -1161,11 +1160,11 @@
         </div>
         <!-- Empty state -->
         <div class="flex-1 flex flex-col items-center justify-center p-6 text-center" x-show="!selectedEditIsUser && !selectedEditName">
-          <div class="text-sm font-semibold text-gray-500 dark:text-dark-400 mb-2">Редактор шаблонов промптов</div>
+          <div class="text-sm font-semibold text-gray-500 dark:text-dark-400 mb-2">Prompt Template Editor</div>
           <div class="text-xs text-gray-400 dark:text-dark-500 space-y-1 max-w-xs">
-            <p>Выберите аддон или пользовательский шаблон слева для просмотра или редактирования.</p>
-            <p class="pt-2">Нажмите «+ Новый шаблон» чтобы создать свой.</p>
-            <p class="pt-2">Созданные шаблоны появятся в разделе «Мои шаблоны».</p>
+            <p>Select an addon or user template on the left to view or edit.</p>
+            <p class="pt-2">Click "+ New Template" to create one.</p>
+            <p class="pt-2">Created templates appear in the "My Templates" section.</p>
           </div>
         </div>
       </div>
@@ -1178,7 +1177,7 @@
   <div x-show="treeModal" class="fixed inset-0 z-50 flex items-center justify-center">
     <div class="absolute inset-0 bg-black/40"></div>
     <div class="relative bg-white dark:bg-dark-700 rounded-lg shadow-xl p-6 w-80 text-center">
-      <div class="text-sm font-medium mb-3" x-text="t('modal.loading.title')">Загрузка тегов...</div>
+      <div class="text-sm font-medium mb-3" x-text="t('modal.loading.title')">Loading tags...</div>
       <div class="w-full bg-gray-200 dark:bg-dark-500 rounded-full h-2.5">
         <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-150" :style="'width: ' + treeModalProgress + '%'"></div>
       </div>
