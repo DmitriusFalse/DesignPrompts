@@ -14,8 +14,4 @@ func handleIndex() http.HandlerFunc {
 	}
 }
 
-func handleSettingsPage() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		serveEmbedded(w, r, "/settings.html")
-	}
-}
+

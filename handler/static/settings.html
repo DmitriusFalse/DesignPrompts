@@ -29,29 +29,7 @@
         </button>
         <div x-show="show" class="tooltip" x-text="t('donate.title')"></div>
       </span>
-      <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
-      <div class="relative self-center" x-data="{ tpOpen: false }">
-        <button @click="tpOpen = !tpOpen" @click.outside="tpOpen = false" class="flex items-center gap-1 px-1.5 py-1 text-xs rounded cursor-pointer transition-colors hover:bg-gray-200 dark:hover:bg-dark-600 select-none whitespace-nowrap">
-          <span x-text="theme === 'auto' ? '◐' : theme === 'dark' ? '☾' : '☀'" class="text-sm"></span>
-          <span x-text="t('theme.' + theme)" class="text-gray-700 dark:text-dark-200"></span>
-          <svg x-show="!tpOpen" width="8" height="5" viewBox="0 0 10 6" class="opacity-40 shrink-0"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <svg x-show="tpOpen" width="8" height="5" viewBox="0 0 10 6" class="opacity-40 shrink-0"><path d="M9 5L5 1 1 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <div x-show="tpOpen"
-             x-transition:enter="transition ease-out origin-top"
-             x-transition:enter-start="scale-y-0 opacity-0"
-             x-transition:enter-end="scale-y-100 opacity-100"
-             x-transition:leave="transition ease-in origin-top"
-             x-transition:leave-start="scale-y-100 opacity-100"
-             x-transition:leave-end="scale-y-0 opacity-0"
-             class="absolute top-full right-0 mt-0.5 bg-white dark:bg-dark-600 rounded-lg shadow-lg z-50 py-0.5 min-w-[90px]"
-             style="transition-duration:100ms">
-          <button @click="theme='auto';localStorage.setItem('theme','auto');tpOpen=false" class="w-full text-left px-2 py-0.5 text-xs flex items-center gap-1 rounded" :class="theme==='auto' ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'"><span>◐</span><span x-text="t('theme.auto')"></span></button>
-          <button @click="theme='dark';localStorage.setItem('theme','dark');tpOpen=false" class="w-full text-left px-2 py-0.5 text-xs flex items-center gap-1 rounded" :class="theme==='dark' ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'"><span>☾</span><span x-text="t('theme.dark')"></span></button>
-          <button @click="theme='light';localStorage.setItem('theme','light');tpOpen=false" class="w-full text-left px-2 py-0.5 text-xs flex items-center gap-1 rounded" :class="theme==='light' ? 'bg-blue-100 dark:bg-blue-900 font-medium text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-500'"><span>☀</span><span x-text="t('theme.light')"></span></button>
-        </div>
-      </div>
-      <span class="w-px h-4 bg-gray-300 dark:bg-dark-500 opacity-40"></span>
+
       <a href="/" class="self-center text-sm text-blue-600 dark:text-blue-400 hover:underline px-0.5" x-text="t('settings.back')">Back</a>
     </div>
   </header>
@@ -158,10 +136,27 @@
               </td>
             </tr>
             <tr>
-              <td class="px-4 py-2.5 text-gray-500 dark:text-dark-400 font-medium align-top" x-text="t('comfy.resolutions')">Resolutions</td>
+              <td class="px-4 py-2.5 text-gray-500 dark:text-dark-400 font-medium align-top">Resolutions</td>
               <td class="px-4 py-2.5">
-                <textarea x-model="cfg.resolutions" rows="9" style="width:200px" class="border rounded px-2 py-1 text-xs font-mono bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500 resize-y" placeholder="Square 1:1#512x512&#10;Landscape 3:2#1152x768&#10;Widescreen 16:9#1280x720"></textarea>
-                <div class="text-xs text-gray-400 mt-1" x-text="t('comfy.resolutions_hint')"></div>
+                <div class="space-y-1.5">
+                  <div class="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-dark-500 font-medium px-1 mb-0.5">
+                    <span class="w-28">Name</span>
+                    <span class="w-14 text-center">W</span>
+                    <span class="w-3"></span>
+                    <span class="w-14 text-center">H</span>
+                    <span class="w-5"></span>
+                  </div>
+                  <template x-for="(r, idx) in resolutionsList" :key="idx">
+                    <div class="flex items-center gap-1.5">
+                      <input type="text" x-model="r.label" placeholder="Name" class="w-28 border rounded px-2 py-1 text-xs bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+                      <input type="number" x-model="r.width" placeholder="W" class="w-14 border rounded px-2 py-1 text-xs bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+                      <span class="text-xs text-gray-400">x</span>
+                      <input type="number" x-model="r.height" placeholder="H" class="w-14 border rounded px-2 py-1 text-xs bg-white dark:bg-dark-600 border-gray-300 dark:border-dark-500">
+                      <button @click="removeResolution(idx)" class="text-xs px-1.5 py-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded cursor-pointer">✕</button>
+                    </div>
+                  </template>
+                  <button @click="addResolution()" class="text-xs px-2 py-1 text-green-600 dark:text-green-400 border border-green-400 rounded hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors cursor-pointer">+ Add</button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -181,7 +176,7 @@
       </div>
     </section>
 
-    <div class="flex items-center gap-3 mt-3">
+    <div class="flex items-center gap-3 mt-8">
       <button @click="saveConfig()" class="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700" x-text="t('settings.save')">Save</button>
       <button @click="window.location.href='/'" class="px-4 py-2 text-sm bg-gray-200 dark:bg-dark-500 text-gray-700 dark:text-dark-200 rounded hover:bg-gray-300 dark:hover:bg-dark-400">Cancel & Exit</button>
       <span x-show="saveMsg" x-text="saveMsg" class="text-sm" :class="saveOk ? 'text-green-600' : 'text-red-600'"></span>
@@ -211,9 +206,11 @@
         restoring: false,
         restoreMsg: '',
         restoreOk: false,
+        resolutionsList: [],
 
         async init() {
           await this.loadConfig();
+          this.parseResolutions();
           await this.loadAddons();
         },
 
@@ -237,6 +234,7 @@
 
         async saveConfig() {
           this.saveMsg = '';
+          this.cfg.resolutions = this.resolutionsToString();
           try {
             const res = await fetch('/api/config', {
               method: 'PUT',
@@ -257,6 +255,46 @@
             this.saveOk = false;
           }
           setTimeout(() => this.saveMsg = '', 5000);
+        },
+
+        parseResolutions() {
+          this.resolutionsList = (this.cfg.resolutions || '')
+            .split('\n')
+            .filter(line => line.trim())
+            .map(line => {
+              const m = line.match(/^(.+?)#(\d+)x(\d+)$/);
+              return m ? { label: m[1], width: parseInt(m[2]), height: parseInt(m[3]) } : null;
+            })
+            .filter(Boolean);
+          if (this.resolutionsList.length === 0) {
+            this.resolutionsList = [
+              { label: 'Square 1:1', width: 512, height: 512 },
+              { label: 'Square HD 1:1', width: 768, height: 768 },
+              { label: 'Square XL 1:1', width: 1024, height: 1024 },
+              { label: 'Portrait 2:3', width: 768, height: 1152 },
+              { label: 'Landscape 3:2', width: 1152, height: 768 },
+              { label: 'Portrait 3:4', width: 768, height: 1024 },
+              { label: 'Landscape 4:3', width: 1024, height: 768 },
+              { label: 'Portrait Tall 4:7', width: 768, height: 1344 },
+              { label: 'Ultra Wide 7:4', width: 1344, height: 768 },
+              { label: 'Portrait 9:16', width: 720, height: 1280 },
+              { label: 'Portrait Wide 13:19', width: 832, height: 1216 },
+              { label: 'Widescreen 16:9', width: 1280, height: 720 },
+              { label: 'Landscape Wide 19:13', width: 1216, height: 832 },
+            ];
+          }
+        },
+
+        resolutionsToString() {
+          return this.resolutionsList.map(r => `${r.label}#${r.width}x${r.height}`).join('\n');
+        },
+
+        addResolution() {
+          this.resolutionsList.push({ label: 'New', width: 512, height: 512 });
+        },
+
+        removeResolution(idx) {
+          this.resolutionsList.splice(idx, 1);
         },
 
         async restoreHistory() {

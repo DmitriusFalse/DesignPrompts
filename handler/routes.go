@@ -24,7 +24,6 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, cfg *config.Config, configPa
 		serveEmbedded(w, r, "/sw.js")
 	})
 	mux.HandleFunc("/", handleIndex())
-	mux.HandleFunc("/settings", handleSettingsPage())
 
 	api := func(h http.HandlerFunc) http.HandlerFunc {
 		return apiMiddleware(h)

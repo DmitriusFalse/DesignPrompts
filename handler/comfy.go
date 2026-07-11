@@ -34,6 +34,47 @@ func validPathComponent(name string) bool {
 
 func handleComfyWorkflows(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPut {
+			var req struct {
+				Name    string `json:"name"`
+				Content string `json:"content"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, "invalid request body", http.StatusBadRequest)
+				return
+			}
+			if !validPathComponent(req.Name) {
+				jsonError(w, "invalid workflow name", http.StatusBadRequest)
+				return
+			}
+			wfPath := filepath.Join(cfg.WorkflowsPath, req.Name+".json")
+			if err := os.MkdirAll(cfg.WorkflowsPath, 0755); err != nil {
+				jsonError(w, "cannot create workflows directory", http.StatusInternalServerError)
+				return
+			}
+			if err := os.WriteFile(wfPath, []byte(req.Content), 0644); err != nil {
+				jsonError(w, "cannot save workflow", http.StatusInternalServerError)
+				return
+			}
+			jsonOK(w, map[string]string{"status": "saved"})
+			return
+		}
+
+		if r.Method == http.MethodDelete {
+			name := r.URL.Query().Get("name")
+			if !validPathComponent(name) {
+				jsonError(w, "invalid workflow name", http.StatusBadRequest)
+				return
+			}
+			wfPath := filepath.Join(cfg.WorkflowsPath, name+".json")
+			if err := os.Remove(wfPath); err != nil {
+				jsonError(w, "cannot delete workflow", http.StatusInternalServerError)
+				return
+			}
+			jsonOK(w, map[string]string{"status": "deleted"})
+			return
+		}
+
 		if name := r.URL.Query().Get("name"); name != "" {
 			if !validPathComponent(name) {
 				jsonError(w, "invalid workflow name", http.StatusBadRequest)

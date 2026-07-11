@@ -101,7 +101,7 @@ const ENGLISH = {
   "comfy.result": "Result",
   "comfy.seed": "Seed",
   "comfy.seed_fix": "Fixed Seed",
-  "comfy.group_main": "Main",
+  "comfy.group_main": "Generation Settings",
   "comfy.group_extra": "Extra",
   "comfy.restore_history": "Restore History",
   "comfy.restore_history_hint": "Scans the save folder for PNGs with generation metadata",
@@ -375,6 +375,29 @@ function app() {
 
     // Template editor
     templateEditorOpen: false,
+
+    // Workflow editor
+    workflowEditorOpen: false,
+    workflows: [],
+    workflowEditName: null,
+    workflowEditContent: '',
+    workflowSaveMsg: '',
+    workflowSaveOk: false,
+    knownVariables: [
+      'SEED', 'STEPS', 'CFG', 'SAMPLER_NAME', 'SCHEDULER',
+      'CKPT', 'WIDTH', 'HEIGHT',
+      'PROMPT_POSITIVE', 'PROMPT_NEGATIVE'
+    ],
+
+    // Settings modal
+    settingsModalOpen: false,
+    settingsResolutionsList: [],
+    settingsSaveMsg: '',
+    settingsSaveOk: false,
+    settingsRestoring: false,
+    settingsRestoreMsg: '',
+    settingsRestoreOk: false,
+    _config: null,
 
     // Preview panel
     previewTab: 'images',
@@ -1705,6 +1728,200 @@ function app() {
       return cats.map(c => c.tags || '[' + c.name + ']').join(sep);
     },
 
+    // ─── Workflow editor ───
+
+    workflowHasVar(v) {
+      return this.workflowEditContent.includes('%' + v + '%');
+    },
+
+    async openWorkflowEditor() {
+      this.workflowSaveMsg = '';
+      this.workflowSaveOk = false;
+      await this.loadWorkflows();
+      this.workflowEditName = null;
+      this.workflowEditContent = '';
+      this.workflowEditorOpen = true;
+    },
+
+    async loadWorkflows() {
+      try {
+        const res = await fetch('/api/comfy/workflows');
+        this.workflows = await res.json();
+      } catch (e) {
+        console.error('loadWorkflows:', e);
+        this.workflows = [];
+      }
+    },
+
+    async selectWorkflow(name) {
+      try {
+        const res = await fetch('/api/comfy/workflows?name=' + encodeURIComponent(name));
+        this.workflowEditContent = await res.text();
+        this.workflowEditName = name;
+        this.workflowSaveMsg = '';
+      } catch (e) {
+        console.error('selectWorkflow:', e);
+      }
+    },
+
+    async saveWorkflow() {
+      const name = this.workflowEditName;
+      if (!name || !this.workflowEditContent) return;
+      this.workflowSaveMsg = '';
+      try {
+        const res = await fetch('/api/comfy/workflows', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, content: this.workflowEditContent })
+        });
+        if (res.ok) {
+          this.workflowSaveMsg = 'Saved';
+          this.workflowSaveOk = true;
+          await this.loadWorkflows();
+        } else {
+          this.workflowSaveMsg = 'Error saving';
+          this.workflowSaveOk = false;
+        }
+      } catch (e) {
+        this.workflowSaveMsg = e.message;
+        this.workflowSaveOk = false;
+      }
+      setTimeout(() => this.workflowSaveMsg = '', 3000);
+    },
+
+    async deleteWorkflow() {
+      if (!this.workflowEditName) return;
+      try {
+        const res = await fetch('/api/comfy/workflows?name=' + encodeURIComponent(this.workflowEditName), { method: 'DELETE' });
+        if (res.ok) {
+          this.workflowEditName = null;
+          this.workflowEditContent = '';
+          this.workflowSaveMsg = 'Deleted';
+          this.workflowSaveOk = true;
+          await this.loadWorkflows();
+        } else {
+          this.workflowSaveMsg = 'Error deleting';
+          this.workflowSaveOk = false;
+        }
+      } catch (e) {
+        this.workflowSaveMsg = e.message;
+        this.workflowSaveOk = false;
+      }
+      setTimeout(() => this.workflowSaveMsg = '', 3000);
+    },
+
+    newWorkflow() {
+      const name = prompt('Workflow name:');
+      if (!name) return;
+      this.workflowEditName = name;
+      this.workflowEditContent = '{}';
+      this.workflowSaveMsg = '';
+    },
+
+    // ─── Settings modal ───
+
+    async openSettingsModal() {
+      this.settingsSaveMsg = '';
+      await this.loadComfyConfig();
+      this.parseSettingsResolutions();
+      this.settingsModalOpen = true;
+    },
+
+    closeSettingsModal() {
+      this.settingsModalOpen = false;
+    },
+
+    parseSettingsResolutions() {
+      this.settingsResolutionsList = ((this._config && this._config.resolutions) || '')
+        .split('\n')
+        .filter(line => line.trim())
+        .map(line => {
+          const m = line.match(/^(.+?)#(\d+)x(\d+)$/);
+          return m ? { label: m[1], width: parseInt(m[2]), height: parseInt(m[3]) } : null;
+        })
+        .filter(Boolean);
+      if (this.settingsResolutionsList.length === 0) {
+        this.settingsResolutionsList = [
+          { label: 'Square 1:1', width: 512, height: 512 },
+          { label: 'Square HD 1:1', width: 768, height: 768 },
+          { label: 'Square XL 1:1', width: 1024, height: 1024 },
+          { label: 'Portrait 2:3', width: 768, height: 1152 },
+          { label: 'Landscape 3:2', width: 1152, height: 768 },
+          { label: 'Portrait 3:4', width: 768, height: 1024 },
+          { label: 'Landscape 4:3', width: 1024, height: 768 },
+          { label: 'Portrait Tall 4:7', width: 768, height: 1344 },
+          { label: 'Ultra Wide 7:4', width: 1344, height: 768 },
+          { label: 'Portrait 9:16', width: 720, height: 1280 },
+          { label: 'Portrait Wide 13:19', width: 832, height: 1216 },
+          { label: 'Widescreen 16:9', width: 1280, height: 720 },
+          { label: 'Landscape Wide 19:13', width: 1216, height: 832 },
+        ];
+      }
+    },
+
+    settingsResolutionsToString() {
+      return this.settingsResolutionsList.map(r => `${r.label}#${r.width}x${r.height}`).join('\n');
+    },
+
+    addSettingsResolution() {
+      this.settingsResolutionsList.push({ label: 'New', width: 512, height: 512 });
+    },
+
+    removeSettingsResolution(idx) {
+      this.settingsResolutionsList.splice(idx, 1);
+    },
+
+    async saveAppConfig() {
+      this.settingsSaveMsg = '';
+      if (!this._config) return;
+      this._config.comfy_enabled = this.comfyEnabled;
+      this._config.resolutions = this.settingsResolutionsToString();
+      try {
+        const res = await fetch('/api/config', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this._config)
+        });
+        if (res.ok) {
+          this.settingsSaveMsg = this.t('settings.saved') || 'Saved';
+          this.settingsSaveOk = true;
+          await this.loadComfyConfig();
+          this.closeSettingsModal();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          this.settingsSaveMsg = data.error || 'Error';
+          this.settingsSaveOk = false;
+        }
+      } catch (e) {
+        this.settingsSaveMsg = e.message;
+        this.settingsSaveOk = false;
+      }
+      setTimeout(() => this.settingsSaveMsg = '', 5000);
+    },
+
+    async restoreGenHistory() {
+      this.settingsRestoring = true;
+      this.settingsRestoreMsg = '';
+      this.settingsRestoreOk = false;
+      try {
+        const res = await fetch('/api/comfy/scan-history', { method: 'POST' });
+        if (!res.ok) { this.settingsRestoreMsg = 'Error: ' + res.status; return; }
+        const data = await res.json();
+        const files = data.files || [];
+        if (files.length === 0) {
+          this.settingsRestoreMsg = this.t('comfy.restore_history_empty') || 'No PNGs with metadata found';
+          return;
+        }
+        const urls = files.map(f => '/api/comfy/image?filename=' + encodeURIComponent(f) + '&subfolder=&type=output');
+        localStorage.setItem('generation_history', JSON.stringify(urls));
+        this.settingsRestoreMsg = (this.t('comfy.restore_history_done') || 'Added {n} images').replace('{n}', urls.length);
+        this.settingsRestoreOk = true;
+      } catch(e) {
+        this.settingsRestoreMsg = e.message;
+      }
+      this.settingsRestoring = false;
+    },
+
     // ─── Download / copy manager prompt ───
 
     async copyManagerPrompt() {
@@ -2005,6 +2222,7 @@ function app() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(this._config)
           });
+          await this.refreshGenerationData();
         } catch(e) { console.error('toggleComfy:', e); }
       }
     },
