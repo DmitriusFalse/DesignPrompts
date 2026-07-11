@@ -192,8 +192,12 @@ function app() {
     pwaInstallable: false,
     _pwaDeferredPrompt: null,
 
-    // Theme: 'auto', 'dark', 'light'
-    theme: localStorage.getItem('theme') || 'auto',
+    // Theme: 'dark' or 'light' (init follows OS preference)
+    theme: (() => {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'dark' || stored === 'light') return stored;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    })(),
 
     translations: ENGLISH,
 
