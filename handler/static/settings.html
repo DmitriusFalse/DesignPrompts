@@ -183,6 +183,7 @@
 
     <div class="flex items-center gap-3 mt-3">
       <button @click="saveConfig()" class="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700" x-text="t('settings.save')">Save</button>
+      <button @click="window.location.href='/'" class="px-4 py-2 text-sm bg-gray-200 dark:bg-dark-500 text-gray-700 dark:text-dark-200 rounded hover:bg-gray-300 dark:hover:bg-dark-400">Cancel & Exit</button>
       <span x-show="saveMsg" x-text="saveMsg" class="text-sm" :class="saveOk ? 'text-green-600' : 'text-red-600'"></span>
     </div>
   </main>
@@ -245,6 +246,7 @@
             if (res.ok) {
               this.saveMsg = this.t('settings.saved');
               this.saveOk = true;
+              window.location.href = '/';
             } else {
               const data = await res.json().catch(() => ({}));
               this.saveMsg = data.error || 'Error';

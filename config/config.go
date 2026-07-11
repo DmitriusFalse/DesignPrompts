@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 )
@@ -22,7 +23,7 @@ type Config struct {
 
 func defaultConfig() *Config {
 	return &Config{
-		Port:          8080,
+		Port:          0,
 		TagsPath:      "./tags",
 		AddonsPath:    "./addons",
 		DBPath:        "./data.db",
@@ -32,6 +33,15 @@ func defaultConfig() *Config {
 		SavePath:      "./output",
 		Resolutions:   "Square 1:1#512x512\nSquare HD 1:1#768x768\nSquare XL 1:1#1024x1024\nPortrait 2:3#768x1152\nLandscape 3:2#1152x768\nPortrait 3:4#768x1024\nLandscape 4:3#1024x768\nPortrait Tall 4:7#768x1344\nUltra Wide 7:4#1344x768\nPortrait 9:16#720x1280\nPortrait Wide 13:19#832x1216\nWidescreen 16:9#1280x720\nLandscape Wide 19:13#1216x832",
 	}
+}
+
+func findFreePort() int {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return 10000
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port
 }
 
 func Load(path string) (*Config, error) {
@@ -44,6 +54,7 @@ func Load(path string) (*Config, error) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			cfg := defaultConfig()
+			cfg.Port = findFreePort()
 			cfgDir := filepath.Dir(absPath)
 			cfg.TagsPath = resolvePath(cfgDir, cfg.TagsPath)
 			cfg.AddonsPath = resolvePath(cfgDir, cfg.AddonsPath)
@@ -66,7 +77,7 @@ func Load(path string) (*Config, error) {
 	cfgDir := filepath.Dir(absPath)
 
 	if cfg.Port == 0 {
-		cfg.Port = 8080
+		cfg.Port = findFreePort()
 	}
 	if cfg.TagsPath == "" {
 		cfg.TagsPath = "./tags"

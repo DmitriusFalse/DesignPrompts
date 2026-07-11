@@ -37,8 +37,8 @@ func TestLoad_Defaults(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if cfg.Port != 8080 {
-		t.Errorf("port = %d, want 8080", cfg.Port)
+	if cfg.Port < 10000 || cfg.Port > 65000 {
+		t.Errorf("port = %d, want between 10000 and 65000", cfg.Port)
 	}
 	if cfg.TagsPath != filepath.Join(dir, "tags") {
 		t.Errorf("tags_path = %s, want %s", cfg.TagsPath, filepath.Join(dir, "tags"))
