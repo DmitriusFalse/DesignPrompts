@@ -801,6 +801,10 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 .chip-btn-x {
   font-size: 12px;
 }
+.chip-dynamic:hover .chip-btn {
+  display: inline-flex;
+  align-items: center;
+}
 
 /* BREAK button */
 .break-btn {

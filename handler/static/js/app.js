@@ -887,6 +887,12 @@ function app() {
       this.notifyChipChange();
     },
 
+    removeDynamicChip(key) {
+      const idx = this.positiveChips.findIndex(c => c._key === key);
+      if (idx !== -1) this.positiveChips.splice(idx, 1);
+      this.notifyChipChange();
+    },
+
     // ─── Dynamic Prompt DnD ───
 
     onDynamicDrop(ev, dynChip, slot) {
