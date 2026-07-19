@@ -494,3 +494,17 @@ func handleComfyWS(cfg *config.Config) http.HandlerFunc {
 		<-ctx.Done()
 	}
 }
+
+func handleComfyCheck(cfg *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		client := &http.Client{Timeout: 3 * time.Second}
+		url := strings.TrimRight(cfg.ComfyAddress, "/") + "/api/system_stats"
+		resp, err := client.Get(url)
+		if err != nil {
+			jsonOK(w, map[string]bool{"ok": false})
+			return
+		}
+		resp.Body.Close()
+		jsonOK(w, map[string]bool{"ok": resp.StatusCode == http.StatusOK})
+	}
+}

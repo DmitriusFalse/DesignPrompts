@@ -357,6 +357,10 @@
             </label>
             <div x-show="show" class="tooltip" x-text="t('tooltip.comfy')"></div>
           </span>
+          <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+            <button @click="openComfyWindow()" class="inline-flex items-center gap-1 text-gray-400 dark:text-dark-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer whitespace-nowrap"><span style="width:8px;height:8px;border-radius:50%;display:inline-block" :style="'background-color:' + (comfyAddressOk ? '#22c55e' : '#ef4444')"></span>Open ComfyUI</button>
+            <div x-show="show" class="tooltip">Open interface ComfyUI</div>
+          </span>
         </div>
         <div class="flex items-center gap-2 mb-1">
           <span class="text-xs font-medium text-gray-500 dark:text-dark-400 whitespace-nowrap" x-text="t('tools.special')">Tools:</span>
@@ -773,10 +777,12 @@
             </label>
           </div>
 
-          <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex w-full mt-4">
-            <button @click="generate()" class="btn-gen w-full" :class="generating ? 'btn-gen-busy' : 'btn-gen-ready'" x-text="generating ? t('comfy.generating') : t('comfy.generate')"></button>
-            <div x-show="show" class="tooltip" x-text="t('tooltip.generate')"></div>
-          </span>
+          <div class="flex items-center gap-2 mt-4">
+            <span x-data="tooltip" @mouseenter="enter" @mouseleave="leave" class="relative inline-flex">
+              <button @click="generate()" class="btn-gen" :class="generating ? 'btn-gen-busy' : 'btn-gen-ready'" x-text="generating ? t('comfy.generating') : t('comfy.generate')"></button>
+              <div x-show="show" class="tooltip" x-text="t('tooltip.generate')"></div>
+            </span>
+          </div>
     </div>
     </template>
   </div>

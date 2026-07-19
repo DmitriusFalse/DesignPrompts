@@ -290,6 +290,8 @@ function app() {
 
     // ComfyUI
     comfyEnabled: false,
+    comfyAddressOk: false,
+    _comfyWindow: null,
     resolutions: [],
 
     promptsOpen: false,
@@ -430,9 +432,13 @@ function app() {
         }
       });
       await this.loadComfyConfig();
+      this.checkComfyAddress();
       this.loadGenerationHistory();
       window.addEventListener('pageshow', (e) => {
         if (e.persisted) this.loadGenerationHistory();
+      });
+      window.addEventListener('beforeunload', () => {
+        if (this._comfyWindow && !this._comfyWindow.closed) this._comfyWindow.close();
       });
     },
 
@@ -1892,6 +1898,7 @@ function app() {
           this.settingsSaveMsg = this.t('settings.saved') || 'Saved';
           this.settingsSaveOk = true;
           await this.loadComfyConfig();
+          this.checkComfyAddress();
           this.closeSettingsModal();
         } else {
           const data = await res.json().catch(() => ({}));
@@ -2233,6 +2240,46 @@ function app() {
       }
     },
 
+    async checkComfyAddress() {
+      this.comfyAddressOk = false;
+      const addr = this.comfyAddress;
+      if (!addr) return;
+      try {
+        const r = await fetch('/api/comfy/check');
+        const data = await r.json();
+        this.comfyAddressOk = data.ok === true;
+      } catch(e) {
+        this.comfyAddressOk = false;
+      }
+    },
+
+    openComfyWindow() {
+      const addr = this.comfyAddress;
+      if (!addr) return;
+      const saved = (() => {
+        try { return JSON.parse(localStorage.getItem('comfy_window_size')); } catch(e) { return null; }
+      })();
+      const w = saved?.width || 1200;
+      const h = saved?.height || 800;
+      const win = window.open(addr, 'comfyui-' + Date.now(), `width=${w},height=${h},scrollbars=yes`);
+      if (!win) return;
+      this._comfyWindow = win;
+      const poll = setInterval(() => {
+        if (!this._comfyWindow || this._comfyWindow.closed) {
+          this._comfyWindow = null;
+          clearInterval(poll);
+          return;
+        }
+        try {
+          const nw = this._comfyWindow.outerWidth;
+          const nh = this._comfyWindow.outerHeight;
+          if (nw && nh && (nw !== w || nh !== h)) {
+            localStorage.setItem('comfy_window_size', JSON.stringify({ width: nw, height: nh }));
+          }
+        } catch(e) {}
+      }, 2000);
+    },
+
     async loadNodeTitles() {
       if (!this.selectedWorkflow) return;
       try {
@@ -2521,6 +2568,10 @@ function app() {
         })
       }));
       return s.renderPositive(blocks, this.t);
+    },
+
+    get comfyAddress() {
+      return this._config?.comfy_address || '';
     },
 
     get selectedResolutionText() {
